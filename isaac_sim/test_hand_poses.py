@@ -94,20 +94,77 @@ if not _STANDALONE:
 set_all_targets = _io.set_all_targets
 HAND_DOFS       = _io.HAND_DOFS
 
-# ── Hilfs-Lambdas ─────────────────────────────────────────────────────────────
+# ── Config laden (Servo-Mapping) ──────────────────────────────────────────────
+_cfg                 = _load_mod("pib_hand_config", os.path.join(_root, "config", "pib_hand_config.py"))
+servo_pose_to_joints = _cfg.servo_pose_to_joints
+GRASP_POSES          = _cfg.GRASP_POSES
+
+# ── Steuer-Modus ──────────────────────────────────────────────────────────────
+# "servo"  — lineare Sehnennäherung via servo_pose_to_joints()
+# "direct" — direkte DOF-Winkel, keine Kopplung
+CONTROL_MODE = "servo"
+DEBUG_SERVO  = True   # Servo→DOF-Mapping in der Isaac-Konsole ausgeben
+
+
+def _log_servo_approx(label: str, servo_dict: dict, joint_dict: dict, side: str) -> None:
+    """Gibt das Servo→DOF-Mapping zeilenweise in der Isaac-Konsole aus."""
+    _log(f"[servo|{side}] {label}")
+    indices = HAND_DOFS[side]["indices"]
+    names   = HAND_DOFS[side]["names"]
+    for servo_name, usd_idxs in HAND_DOFS[side]["servos"].items():
+        servo_val = servo_dict.get(servo_name, 0.0)
+        parts = []
+        for usd_idx in usd_idxs:
+            dof_name = names[indices.index(usd_idx)]
+            suffix   = dof_name.rsplit("_", 1)[-1]   # rotator / proximal / distal / tip
+            parts.append(f"{suffix}: {joint_dict[dof_name]:.1f}°")
+        _log(f"  {servo_name:<10} {servo_val:5.1f}°  →  {',  '.join(parts)}")
+
+
+# ── Hilfs-Funktionen ──────────────────────────────────────────────────────────
+# Posen kommen immer aus GRASP_POSES (config) — kein hardkodierter DOF-Fallback.
+# CONTROL_MODE dispatcht nur in make_pose() für benutzerdefinierte Eingaben.
+
 def _open(side):
-    return {n: 0.0 for n in HAND_DOFS[side]["names"]}
+    return servo_pose_to_joints(GRASP_POSES["open"], side)
 
 def _fist(side):
-    s = side
-    return {
-        f"dof_thumb_{s}_rotator":   30.0,
-        f"dof_thumb_{s}_proximal":  80.0, f"dof_thumb_{s}_distal":    80.0,
-        f"dof_index_{s}_proximal":  85.0, f"dof_index_{s}_distal":    68.0, f"dof_index_{s}_tip":   51.0,
-        f"dof_middle_{s}_proximal": 85.0, f"dof_middle_{s}_distal":   68.0, f"dof_middle_{s}_tip":  51.0,
-        f"dof_ring_{s}_proximal":   85.0, f"dof_ring_{s}_distal":     68.0, f"dof_ring_{s}_tip":    51.0,
-        f"dof_pinky_{s}_proximal":  85.0, f"dof_pinky_{s}_distal":    68.0, f"dof_pinky_{s}_tip":   51.0,
-    }
+    joints = servo_pose_to_joints(GRASP_POSES["closed_fist"], side)
+    if DEBUG_SERVO:
+        _log_servo_approx(f"fist|{side}", GRASP_POSES["closed_fist"], joints, side)
+    return joints
+
+# Peace-Zeichen: Daumen + Ring + Kleiner Finger gebeugt, Zeige- + Mittelfinger gestreckt
+_PEACE_SERVO_RIGHT = {"thumb_opp": 30, "thumb": 60, "index": 0, "middle": 0, "ring": 85, "pinky": 85}
+
+def _peace_right():
+    joints = servo_pose_to_joints(_PEACE_SERVO_RIGHT, "right")
+    if DEBUG_SERVO:
+        _log_servo_approx("peace|right", _PEACE_SERVO_RIGHT, joints, "right")
+    return joints
+
+# ── Pose-Factory ──────────────────────────────────────────────────────────────
+def make_pose(body=None, left=None, right=None):
+    """
+    Erstellt ein vollständiges DOF-Dict aus Teilspezifikationen.
+
+    body  : {dof_name: angle_deg}  — Körper-DOFs, immer direkt
+    left  : "servo"-Modus → {servo_name: angle_deg}, "direct"-Modus → {dof_name: angle_deg}
+    right : wie left
+    """
+    pose = dict(body) if body else {}
+    for side, hand in (("left", left), ("right", right)):
+        if hand is None:
+            continue
+        if CONTROL_MODE == "servo":
+            resolved = servo_pose_to_joints(hand, side)
+            if DEBUG_SERVO:
+                _log_servo_approx(f"make_pose|{side}", hand, resolved, side)
+            pose.update(resolved)
+        else:
+            pose.update(hand)
+    return pose
+
 
 # ── Posen ─────────────────────────────────────────────────────────────────────
 # Winkelangaben in Grad, Onshape-Konvention (positiv = gewünschte Flexionsrichtung).
@@ -186,12 +243,7 @@ POSES = {
         "dof_forearm_right":              0.0,
         "dof_wrist_right":                0.0,
         **_open("left"),
-        "dof_thumb_right_rotator":   30.0,
-        "dof_thumb_right_proximal":  60.0,  "dof_thumb_right_distal":   60.0,
-        "dof_index_right_proximal":   0.0,  "dof_index_right_distal":    0.0,  "dof_index_right_tip":   0.0,
-        "dof_middle_right_proximal":  0.0,  "dof_middle_right_distal":   0.0,  "dof_middle_right_tip":  0.0,
-        "dof_ring_right_proximal":   85.0,  "dof_ring_right_distal":    68.0,  "dof_ring_right_tip":   51.0,
-        "dof_pinky_right_proximal":  85.0,  "dof_pinky_right_distal":   68.0,  "dof_pinky_right_tip":  51.0,
+        **_peace_right(),
     },
 }
 

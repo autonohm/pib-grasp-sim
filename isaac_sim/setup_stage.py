@@ -42,6 +42,13 @@ ROBOT_PRIM_PATH = _cfg.ROBOT_PRIM_PATH
 
 # ── Drive-Klassifizierung ─────────────────────────────────────────────────────
 
+# MaxForce begrenzt das Stallmoment wenn Finger durch Kollision blockiert werden.
+# Verhindert numerische Instabilität (Drive kämpft gegen Kontaktkraft).
+# Tuning: zu niedrig → Finger schließt nicht voll; zu hoch → Jitter bei Kontakt.
+_FINGER_MAX_FORCE  = 20.0   # N·m — proximal / distal / tip
+_ROTATOR_MAX_FORCE =  5.0   # N·m — Daumen CMC (kleinerer Hub)
+
+
 def _classify_dof(name: str) -> tuple:
     """Gibt (stiffness, damping) für einen DOF-Namen zurück."""
     n = name.lower()
@@ -56,6 +63,16 @@ def _classify_dof(name: str) -> tuple:
     if any(k in n for k in ("proximal", "distal", "tip")):
         return 500.0, 20.0
     return 1000.0, 50.0                                 # Fallback
+
+
+def _max_force_for_dof(name: str):
+    """Gibt MaxForce (N·m) für Fingergelenke zurück, None für Körpergelenke."""
+    n = name.lower()
+    if any(k in n for k in ("proximal", "distal", "tip")):
+        return _FINGER_MAX_FORCE
+    if "rotator" in n:
+        return _ROTATOR_MAX_FORCE
+    return None
 
 
 # ── Setup-Funktionen ──────────────────────────────────────────────────────────
@@ -108,15 +125,16 @@ def configure_lights(stg) -> None:
 
 def configure_drives(stg) -> int:
     """
-    Setzt Stiffness und Damping für alle PhysicsRevoluteJoint-Prims.
+    Setzt Stiffness, Damping und MaxForce für alle PhysicsRevoluteJoint-Prims.
 
     Klassifizierung nach DOF-Name:
       head      → stiffness=3000, damping=150
       shoulder/upper_arm/elbow/forearm → 5000 / 200
       wrist     → 2000 / 100
-      rotator   → 1000 / 50   (Daumen CMC)
-      proximal/distal/tip → 500 / 20  (alle Fingerglieder)
+      rotator   → 1000 / 50   (Daumen CMC),  MaxForce=5 N·m
+      proximal/distal/tip → 500 / 20,         MaxForce=20 N·m
 
+    MaxForce nur für Fingergelenke — begrenzt Stallmoment bei Kollision.
     Returns: Anzahl konfigurierter Joints
     """
     count = 0
@@ -135,6 +153,11 @@ def configure_drives(stg) -> int:
 
         drive.GetStiffnessAttr().Set(stiffness)
         drive.GetDampingAttr().Set(damping)
+
+        max_force = _max_force_for_dof(name)
+        if max_force is not None:
+            drive.GetMaxForceAttr().Set(max_force)
+
         count += 1
 
     print(f"configure_drives: {count} Joints konfiguriert")
@@ -220,6 +243,7 @@ def setup_all(stg) -> None:
     configure_drives(stg)
     fix_joint_limits(stg)
     set_initial_pose(stg)
+    # Collision Groups: danach configure_collisions.py ausführen → Ctrl+S → Play
 
 
 # ── Script-Editor-Block ───────────────────────────────────────────────────────
