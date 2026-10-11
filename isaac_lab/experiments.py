@@ -312,8 +312,10 @@ def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = 
     if not require_current(exp):
         return False
     ok = True
+    conds = list(exp["bedingungen"]) + ([stoerung(exp)] if stoerung(exp)["name"] not in
+                                         [c["name"] for c in exp["bedingungen"]] else [])
     with open(log_file, "a", encoding="utf-8") as out:
-        for cond in exp["bedingungen"]:
+        for cond in conds:
             if neu or not (run_dir / f"{stem(exp, cond)}.json").exists():
                 evaluate_condition(run_dir, exp, cond, video, out)
             ok &= (run_dir / f"{stem(exp, cond)}.json").exists()
@@ -325,14 +327,22 @@ def clip_args(run_dir: Path) -> list[str]:
     Ausgaben, die die Policy so nie geschickt hat."""
     params = load_params(run_dir)
     clip = (params.get("agent") or {}).get("clip_actions")
-    alpha = (((params.get("env") or {}).get("actions") or {}).get("servos") or {}).get("alpha")   # EXP-024 ff.
-    return (["--action_clip", str(clip)] if clip else []) + (["--action_filter", str(alpha)] if alpha else [])
+    servos = ((params.get("env") or {}).get("actions") or {}).get("servos") or {}
+    alpha = servos.get("alpha")                                                                   # EXP-024 ff.
+    scale = servos.get("scale")             # einheitliche Skala (Aktionsraum wie Dexsuite, EXP-027 ff.); sonst Dict
+    return ((["--action_clip", str(clip)] if clip else []) + (["--action_filter", str(alpha)] if alpha else [])
+            + (["--action_scale", str(scale)] if isinstance(scale, (int, float)) else []))
 
 
 def kipp_arg(cond: dict) -> str:
     """--max_kipp_deg für eval_policy: Anforderung der Bedingung, -1 = keine (von oben)."""
     v = cond["anforderung"].get("max_kipp_deg")
     return str(v if v is not None else -1)
+
+
+def stoerung_args(cond: dict) -> list[str]:
+    """--stoerung für eval_policy (Störbedingung des Leaderboards v3: ungenaue Vorgreifpose, Verzögerung, Rauschen)."""
+    return ["--stoerung"] if cond.get("stoerung") else []
 
 
 def greifart_args(cond: dict) -> list[str]:
@@ -359,7 +369,7 @@ def evaluate_condition(run_dir: Path, exp: dict, cond: dict, video: bool, out):
     else:
         src = ["--checkpoint", str(ckpts[-1])] + clip_args(run_dir)
     base = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--max_kipp_deg", str(req if req is not None else -1),
-            "--objekt", cond.get("objekt_id") or DEFAULT_OBJECT, "--bedingung", cond["name"]] + greifart_args(cond)
+            "--objekt", cond.get("objekt_id") or DEFAULT_OBJECT, "--bedingung", cond["name"]] + greifart_args(cond) + stoerung_args(cond)
     log(f"    Bedingung {cond['name']}")
     subprocess.run(base + src + ["--num_envs", str(EVAL["umgebungen"]), "--episodes", str(EVAL["episoden"]),
                                  "--out", str(run_dir)], cwd=REPO, stdout=out, stderr=subprocess.STDOUT, timeout=1800)
@@ -1059,6 +1069,16 @@ TESTOBJEKTE_OBEN = [
      "anforderung": {"max_kipp_deg": None}},
 ]
 GREIFARTEN = {"seitlich": (BENCHMARK, TESTOBJEKTE), "oben": (BENCHMARK_OBEN, TESTOBJEKTE_OBEN)}
+# Leaderboard v3 (2026-10-11): Robustheit = Erfolg in einer Störbedingung je Greifart (Hauptobjekt; ungenaue Vorgreifpose,
+# 1 Schritt Verzögerung, Sensorrauschen — eval_policy --stoerung)
+STOERUNG = {"seitlich": {"name": "zylinder_seitlich_gestoert", "objekt_id": "zylinder_d6", "kurz": "Ø 6 gestört",
+                         "stoerung": True, "anforderung": {"max_kipp_deg": 45}},
+            "oben": {"name": "kugel_d7_oben_gestoert", "objekt_id": "kugel_d7", "kurz": "Kugel Ø 7 gestört", "greifart": "oben",
+                     "stoerung": True, "anforderung": {"max_kipp_deg": None}}}
+
+
+def stoerung(exp: dict) -> dict:
+    return STOERUNG[greifart(exp)]
 
 
 def greifart(exp: dict) -> str:
@@ -1392,11 +1412,98 @@ def write_leaderboard():
                 continue
             L += ["", f"# Greifart „{art}“", "", "Benchmark ohne Kippanforderung: " + ", ".join(c["kurz"] for c in bench)
                   + "; Testobjekte: " + ", ".join(c["kurz"] for c in tests) + ". Sonst wie oben."]
+        L += leaderboard_v3(exps, art)
         body, current, n = leaderboard_tables(exps, bench, tests)
         L += body
         n_current, n_rows = n_current + current, n_rows + n
     (EXP_DIR / "leaderboard.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     log(f"leaderboard.md aktualisiert ({n_current} Policies unter {PROTOKOLL}, {n_rows} Zeilen gesamt)")
+
+
+# ── Leaderboard v3 (2026-10-11, Leon): Wünschbarkeitsindex statt reiner Leistung ─────────────────────────────────────
+# Je Größe eine lineare Wunschfunktion d ∈ [0, 1] (0 = inakzeptabel, 1 = Ziel), Gesamtwert = geometrisches Mittel
+# (Derringer & Suich 1980: eine schlechte Größe zieht alles herunter); dazu Pareto-Front über die d-Werte. Zielwerte aus
+# dem Endziel (echte Hand), docs/nachtlauf-2026-10-12.md. Schwingen: Ziel = Regel-Baseline, inakzeptabel = schlechtestes.
+WUNSCH = [  # (Schlüssel, Kurzname, inakzeptabel, Ziel, Format)
+    ("leistung", "Leistung", 0.70, 0.95, "pct"),
+    ("robustheit", "Robust", 0.50, 0.90, "pct"),
+    ("unruhe_wirksam", "Unruhe", 1.0, 0.1, "{:.2f}"),
+    ("schwingen_mm_s", "Schwingen mm/s", None, None, "{:.0f}"),
+    ("objektweg_mm", "Objektweg mm", 100.0, 35.0, "{:.0f}"),
+    ("kipp_median_deg", "Kipp °", 35.0, 5.0, "{:.0f}"),
+    ("unterarm_median_deg", "Unterarm °", 45.0, 5.0, "{:.0f}"),
+    ("servo_last", "Servo-Last", 1.0, 0.20, "pct"),
+]
+
+
+def v3_values(exp: dict) -> dict | None:
+    """Kennzahlen eines Rezepts für das Leaderboard v3: Leistung aus dem Benchmark (Rezept), Robustheit = Erfolg in der
+    Störbedingung (Mittel der Seeds), übrige Größen aus der Hauptbedingung (Mittel der Seeds); Servo-Last = Stall je
+    Servo, gemittelt über die 7 Servos (ohne Handgelenk)."""
+    rec = recipe(exp)
+    if not rec or not rec.get("leistung"):
+        return None
+    main = aggregate(exp, exp["bedingungen"][0])
+    st = aggregate(exp, stoerung(exp))
+    seeds = main.get("je_seed") or []
+
+    def mean_of(key):
+        v = [s["leitplanken"].get(key) for s in seeds if s.get("leitplanken", {}).get(key) is not None]
+        return float(np.mean(v)) if v else None
+    last = [float(np.mean(s["stall_je_servo"]["anteil"])) for s in seeds
+            if s.get("stall_je_servo") and None not in s["stall_je_servo"]["anteil"]]
+    return {"leistung": rec["leistung"]["iqm"], "robustheit": st["aufgabenerfolg"]["mittel"] if st else None,
+            "unruhe_wirksam": mean_of("unruhe_wirksam"),        # an den Servos (begrenzt, ggf. geglättet)
+            "schwingen_mm_s": mean_of("schwingen_mm_s"), "objektweg_mm": mean_of("objektweg_mm"),
+            "kipp_median_deg": mean_of("kipp_median_deg"), "unterarm_median_deg": mean_of("unterarm_median_deg"),
+            "servo_last": float(np.mean(last)) if last else None, "k": rec["k"], "n": rec["n"]}
+
+
+def leaderboard_v3(exps: list, art: str) -> list[str]:
+    rows = [(d, e, v3_values(e)) for d, e in exps if e.get("protokoll") == PROTOKOLL]
+    rows = [r for r in rows if r[2]]
+    if not rows:
+        return []
+    sw = [v["schwingen_mm_s"] for _, _, v in rows if v["schwingen_mm_s"] is not None]
+    sw_rule = [v["schwingen_mm_s"] for _, e, v in rows if e.get("regel") and v["schwingen_mm_s"] is not None]
+    bounds = {"schwingen_mm_s": (max(sw) if sw else None, (min(sw_rule) if sw_rule else min(sw)) if sw else None)}
+
+    def d(key, x):
+        bad, good = bounds.get(key, next((w[2], w[3]) for w in WUNSCH if w[0] == key))
+        if x is None or bad is None or good is None or bad == good:
+            return None
+        return float(min(1.0, max(0.0, (x - bad) / (good - bad))))
+    scored = []
+    for dd, e, v in rows:
+        ds = {w[0]: d(w[0], v[w[0]]) for w in WUNSCH}
+        have = [x for x in ds.values() if x is not None]
+        idx = float(np.prod([max(x, 0.01) for x in have]) ** (1 / len(have))) if have else 0.0
+        scored.append((idx, dd, e, v, ds, len(have) < len(WUNSCH)))
+    scored.sort(key=lambda r: -r[0])
+    complete = [r for r in scored if not r[5]]
+
+    def dominated(r):
+        return any(all(o[4][k] >= r[4][k] for k in r[4]) and any(o[4][k] > r[4][k] for k in r[4])
+                   for o in complete if o is not r)
+    fmt = lambda f, x: "–" if x is None else (f"{100 * x:.0f} %" if f == "pct" else f.format(x))  # noqa: E731
+    L = ["", f"## Leaderboard v3 — {PROTOKOLL}, Greifart „{art}“ (Wünschbarkeitsindex)", "",
+         "Sortiert nach dem **Index** = geometrisches Mittel der Wünschbarkeiten (0 = inakzeptabel, 1 = Ziel; Derringer & Suich "
+         "1980). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
+         "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
+         "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
+         + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
+                     for w in WUNSCH) + ". Zuverlässigkeit nur zur Info.", "",
+         "| Rang | Experiment | Titel | Index | Pareto | " + " | ".join(w[1] for w in WUNSCH) + " | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|" + "---|" * len(WUNSCH) + "---|---|"]
+    for i, (idx, dd, e, v, ds, incomplete) in enumerate(scored, 1):
+        p = (e.get("training") or {})
+        weg = ("Regel" if e.get("regel") else
+               "Filter" if "Filter" in (p.get("task") or "") else
+               "Begrenzung ±1" if "Clip" in (p.get("task") or "") or "Clip" in str(p.get("zusatz_args")) else "frei")
+        L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
+                 f"{'★' if not incomplete and not dominated((idx, dd, e, v, ds, incomplete)) else ''} | "
+                 + " | ".join(fmt(w[4], v[w[0]]) for w in WUNSCH) + f" | {v['k']}/{v['n']} | {weg} |")
+    return L
 
 
 def leaderboard_tables(exps: list, bench: list[dict], tests: list[dict]) -> tuple[list[str], int, int]:

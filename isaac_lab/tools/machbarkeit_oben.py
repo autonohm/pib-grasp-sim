@@ -24,7 +24,8 @@ from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--objekt", default="kugel_d7", help="Objekt aus env_cfg_oben.OBJECTS_OBEN")
-parser.add_argument("--abstand", type=float, default=None, help="Hand ↔ Objekt mindestens [m] (Standard HAND_MARGIN)")
+parser.add_argument("--abstand", type=float, default=None,
+                    help="feste Höhe der tiefsten Fingerspitze über dem Tisch [m] (Standard: Regel je Objekt, env_cfg_oben)")
 parser.add_argument("--x", type=float, default=None, help="Objektmitte quer [m] (Standard GRASP_XY)")
 parser.add_argument("--y", type=float, default=None, help="Objektmitte längs [m] (Standard GRASP_XY)")
 parser.add_argument("--thumb_rot", type=str, default="45,90", help="Rotator-Ziele [°], reihum je Umgebung")
@@ -44,21 +45,23 @@ from isaaclab.sensors import ContactSensorCfg  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # isaac_lab/
 from pib_grasp.env_cfg import DROP_DEPTH, DROP_SPEED, GRASP_TIME_S  # noqa: E402
-from pib_grasp.env_cfg_oben import GRASP_XY, HAND_MARGIN, PibGraspEnvCfg_Oben, apply_object_oben  # noqa: E402
+from pib_grasp.env_cfg_oben import GRASP_XY, PibGraspEnvCfg_Oben, apply_object_oben  # noqa: E402
 from pib_grasp import mdp  # noqa: E402
 from pib_hand_left_v5_cfg import SERVO_JOINTS  # noqa: E402
 
 BODIES = ["urdf_elbow_lower", "urdf_forearm_left", "urdf_palm_left", "urdf_thumb_rotator_left", "urdf_thumb_proximal",
           "urdf_thumb_tip"] + [f"urdf_finger_{seg}{sfx}" for sfx in ("", "_2", "_3", "_4")
                                for seg in ("proximal", "distal", "tip")]
-gap = HAND_MARGIN if args.abstand is None else args.abstand
+gap = args.abstand
 xy = (GRASP_XY[0] if args.x is None else args.x, GRASP_XY[1] if args.y is None else args.y)
 rots = [float(v) for v in args.thumb_rot.split(",")]
 
 cfg = apply_object_oben(PibGraspEnvCfg_Oben(), args.objekt)
 cfg.scene.num_envs = args.num_envs
 cfg.seed = 1000
-cfg.events.place_objects.params.update(margin=gap, center_xy=xy)
+cfg.events.place_objects.params.update(center_xy=xy)
+if gap is not None:                          # feste Höhe statt Regel: Versätze so groß, dass min_tip_height greift
+    cfg.events.place_objects.params.update(min_tip_height=gap, sphere_offset=1.0, block_offset=1.0)
 if args.rot_start_max is not None:
     cfg.events.reset_hand.params["ranges_deg"]["thumb_left_rotator"] = (0.0, args.rot_start_max)
 cfg.scene.object.spawn.activate_contact_sensors = True
@@ -136,7 +139,7 @@ with torch.inference_mode():
             time.sleep(max(0.0, dt - (time.time() - t0)))
     path = torch.norm(obj.data.root_pos_w[:, :2] - xy0, dim=-1)
 
-lines = [f"== {args.objekt} | gekippt, Hand ≥ {1000 * gap:.0f} mm über dem Objekt, Spitzen {1000 * env.pib_tip_height.mean():.0f} mm "
+lines = [f"== {args.objekt} | Pose env_cfg_oben, tiefste Spitze {1000 * env.pib_tip_height.mean():.0f} mm "
          f"über dem Tisch (Mittel) | Mitte x {1000 * xy[0]:+.0f} y {1000 * xy[1]:+.0f} mm | "
          + (f"Rotator-Start 0–{args.rot_start_max:.0f}° | " if args.rot_start_max is not None else "")
          + (f"Handgelenk {args.handgelenk:.0f}° | " if args.handgelenk is not None else "")

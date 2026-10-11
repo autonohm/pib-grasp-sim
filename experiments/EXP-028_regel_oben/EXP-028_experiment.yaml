@@ -1,0 +1,71 @@
+# EXP-NNN_experiment.yaml — Vorlage (Ablauf und Metriken: experiments/README.md)
+id: EXP-028
+titel: 'Regel-Baseline von oben: alle Finger schließen (kein RL), gestreute Vorgreifpose'
+datum: '2026-10-12'
+eltern: EXP-014
+status: geplant                 # geplant | läuft | ausgewertet | verworfen
+
+# --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
+hypothese: Wie gut greift eine einfache Regel von oben (Startpose aus der Suche)?
+  Maßstab für den Spezialisten.
+aenderung: Regel „alle schließen“ (ADR-020) in der Szene von oben; Raster schliessen
+  × Rotator-Ziel (Seed 2000), final eval-v2 und Störbedingung.
+bedingungen:
+- name: kugel_d7_oben
+  objekt: Kugel Ø 7
+  objekt_id: kugel_d7
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: kugel_d5_oben
+  objekt: Kugel Ø 5
+  objekt_id: kugel_d5
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: dose_oben
+  objekt: Dose
+  objekt_id: dose_d68x10
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: schachtel_oben
+  objekt: Schachtel
+  objekt_id: quader_9x6x4
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: ycb_suppe_oben
+  objekt: Suppendose (YCB)
+  objekt_id: ycb_005_suppe
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+protokoll: eval-v2
+entscheidungsregel: standard    # README → „Statistik und Entscheidungsregel“
+
+# --- Training ---
+training: null
+fenstertest: false
+# --- automatisch (experiments.py run) ---
+commit: null
+laeufe: []
+
+# --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
+ergebnis: ""                    # Kurzfassung der Zahlen
+urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
+schluss: ""                     # was folgt daraus, nächstes Experiment
+laeufe_von: null
+greifart: oben
+regel:
+  name: alle_schliessen
+  raster:
+  - schliessen=0.2,rotator_deg=75
+  - schliessen=0.4,rotator_deg=75
+  - schliessen=0.2,rotator_deg=90
+  - schliessen=0.4,rotator_deg=90

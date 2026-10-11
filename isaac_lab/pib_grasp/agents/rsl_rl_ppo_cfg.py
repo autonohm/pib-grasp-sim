@@ -44,3 +44,27 @@ class PibGraspPPORunnerCfg_Clip(PibGraspPPORunnerCfg):
     überzieht die Policy weit über die Servo-Sättigung (|a| 2–3, ADR-022). 1 · Skala 0,1 rad > 5° Sättigungsfehler:
     volle Kraft bleibt erreichbar. Firmware: Netzausgabe ebenso auf [−1, 1] begrenzen."""
     clip_actions = 1.0
+
+
+@configclass
+class PibGraspPPORunnerCfg_Bounds(PibGraspPPORunnerCfg):
+    """EXP-027 ff. („Aktionsraum wie Dexsuite“): keine Begrenzung zur Laufzeit, stattdessen bounds_loss wie Dexsuite in
+    rl_games (pib_grasp/rsl_rl_ext.py: Koeffizient 1e-4, weiche Grenze 1,1). Netz wie PibGraspPPORunnerCfg."""
+
+    def __post_init__(self):
+        from pib_grasp.rsl_rl_ext import RslRlPpoActorCriticBoundsCfg
+        base = self.policy
+        self.policy = RslRlPpoActorCriticBoundsCfg(
+            init_noise_std=base.init_noise_std, actor_obs_normalization=base.actor_obs_normalization,
+            critic_obs_normalization=base.critic_obs_normalization, actor_hidden_dims=base.actor_hidden_dims,
+            critic_hidden_dims=base.critic_hidden_dims, activation=base.activation,
+            entropy_coef=self.algorithm.entropy_coef)
+
+
+@configclass
+class PibGraspPPORunnerCfg_BoundsGross(PibGraspPPORunnerCfg_Bounds):
+    """EXP-031/032: wie _Bounds, Actor 512-256-128 wie Dexsuite (DexsuiteKukaAllegroPPORunnerCfg)."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.policy.actor_hidden_dims = [512, 256, 128]

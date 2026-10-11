@@ -208,47 +208,28 @@ def place_objects_by_size(env: ManagerBasedRLEnv, env_ids: torch.Tensor | None, 
                                                              else lift + size[2] / 2)
 
 
-def tip_height_for_object(kind: str, size: tuple[float, float, float], clearance: tuple[tuple[float, float], ...],
-                          margin: float, min_tip_height: float) -> float:
-    """Höhe der Fingerspitzenebene über dem Tisch [m] für ein Objekt unter der gekippten Hand „von oben“: so tief wie
-    möglich, aber die Hand (außer den Spitzen) bleibt überall mindestens margin über der Objektoberfläche, und die Spitzen
-    stehen mindestens min_tip_height über dem Tisch (wie ein Planer die Vorgreifhöhe je Objekt setzen würde).
-    clearance: gemessener Platz unter der Hand über der Spitzenebene je Abstand r von der Greifmitte
-    (tools/probe_neigung_oben.py); jenseits der Tabelle linear mit der letzten Steigung fortgesetzt.
-    kind: kugel (Radius = size[2]/2), zylinder (Radius = size[0]/2) oder quader (halbe Diagonale des Grundrisses, weil
-    die Gierdrehung beliebig sein kann); size = Bounding Box (x, y, z)."""
-    import math
-    rs, cs = [c[0] for c in clearance], [c[1] for c in clearance]
-
-    def c_at(r: float) -> float:
-        for i in range(1, len(rs)):
-            if r <= rs[i]:
-                w = (r - rs[i - 1]) / (rs[i] - rs[i - 1])
-                return cs[i - 1] + w * (cs[i] - cs[i - 1])
-        return cs[-1] + (r - rs[-1]) * (cs[-1] - cs[-2]) / (rs[-1] - rs[-2])
-
+def tip_height_for_object(kind: str, size: tuple[float, float, float], sphere_offset: float, block_offset: float,
+                          min_tip_height: float) -> float:
+    """Höhe der tiefsten Fingerspitze über dem Tisch [m] für ein Objekt unter der Hand „von oben“ — Regel aus der
+    Startpose-Suche (docs/startpose-oben/ergebnis.md, 48 Episoden je Höhe nachgeprüft: Kugel Ø 5/7/9 → 10/15/30 mm, Dose
+    10 cm → 60 mm, Schachtel 4 cm → 10–15 mm): Kugeln max(min, Ø − sphere_offset), sonst max(min, Höhe − block_offset).
+    kind: kugel, zylinder oder quader; size = Bounding Box (x, y, z)."""
     if kind == "kugel":
-        R = size[2] / 2
-        surface = lambda r: R + math.sqrt(max(R * R - r * r, 0.0))  # noqa: E731
-    else:
-        R = size[0] / 2 if kind == "zylinder" else math.hypot(size[0], size[1]) / 2
-        surface = lambda r: size[2]  # noqa: E731
-    radii = sorted({*[r for r in rs if r <= R], R})
-    need = max(surface(r) + margin - c_at(r) for r in radii)
-    return max(min_tip_height, need)
+        return max(min_tip_height, size[2] - sphere_offset)
+    return max(min_tip_height, size[2] - block_offset)
 
 
 def place_objects_from_above(env: ManagerBasedRLEnv, env_ids: torch.Tensor | None, center_xy: tuple[float, float],
-                             tip_plane_z: float, clearance: tuple[tuple[float, float], ...], margin: float,
-                             min_tip_height: float, table_thickness: float, lift: float = 0.0,
+                             tip_low_z: float, sphere_offset: float, block_offset: float, min_tip_height: float,
+                             height_jitter: float, table_thickness: float, lift: float = 0.0,
                              object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
                              table_cfg: SceneEntityCfg = SceneEntityCfg("table")) -> None:
-    """Startup, Greifart „von oben“ (env_cfg_oben, gekippte Hand): je Umgebung aus der Bounding Box des gespawnten Objekts
-    (inkl. Zufallsgröße) und seiner Form die Höhe der Fingerspitzen über dem Tisch (tip_height_for_object), Objekt in der
-    Greifmitte center_xy auf dem Tisch, Tisch tip_height unter der Spitzenebene tip_plane_z (− lift: YCB fällt kurz auf den
-    Tisch statt im Collider zu starten). Die Hand ist fest — Objekt und Tisch werden gesetzt; lower_table und
-    reset_scene_to_default nutzen die geänderte Standardlage. Höhe je Umgebung in env.pib_tip_height (Diagnose).
-    Grundriss für reset_object_gap_aware ohne Eckkorrektur (eckig = 0): die Gierdrehung ist in der Höhe berücksichtigt."""
+    """Startup, Greifart „von oben“ (env_cfg_oben, Pose aus der Startpose-Suche): je Umgebung aus Bounding Box und Form des
+    gespawnten Objekts (inkl. Zufallsgröße) die Höhe der tiefsten Fingerspitze über dem Tisch (tip_height_for_object), dazu
+    eine feste Streuung je Umgebung ±height_jitter (ungenaue Vorgreifpose); Objekt in der Greifmitte center_xy auf dem
+    Tisch, Tischplatte = tip_low_z − Höhe (− lift: YCB fällt kurz auf den Tisch). Die Hand ist fest — Objekt und Tisch
+    werden gesetzt; lower_table und reset_scene_to_default nutzen die geänderte Standardlage. Höhe je Umgebung in
+    env.pib_tip_height (Diagnose). Grundriss für reset_object_gap_aware ohne Eckkorrektur (eckig = 0)."""
     import re
     import isaaclab.sim as sim_utils
     from pxr import Usd, UsdGeom
@@ -258,16 +239,18 @@ def place_objects_from_above(env: ManagerBasedRLEnv, env_ids: torch.Tensor | Non
     stage = env.scene.stage
     env.pib_object_footprint = torch.zeros(env.num_envs, 4, device=env.device)
     env.pib_tip_height = torch.zeros(env.num_envs, device=env.device)
+    jitter = (torch.rand(env.num_envs) * 2 - 1) * height_jitter
     for path in sim_utils.find_matching_prim_paths(obj.cfg.prim_path):
         idx = int(re.search(r"env_(\d+)", path).group(1))
         prim = stage.GetPrimAtPath(path)
         size = cache.ComputeWorldBound(prim).ComputeAlignedRange().GetSize()
-        types = {p.GetTypeName() for p in Usd.PrimRange(prim)}
+        types = {q.GetTypeName() for q in Usd.PrimRange(prim)}
         kind = "kugel" if "Sphere" in types else ("zylinder" if "Cylinder" in types else "quader")
-        h = tip_height_for_object(kind, (size[0], size[1], size[2]), clearance, margin, min_tip_height)
+        h = tip_height_for_object(kind, (size[0], size[1], size[2]), sphere_offset, block_offset, min_tip_height)
+        h = max(min_tip_height * 0.5, h + float(jitter[idx]))
         env.pib_tip_height[idx] = h
         env.pib_object_footprint[idx] = torch.tensor([size[0] / 2, size[1] / 2, 0.0, size[2]])
-        top = tip_plane_z - h                                         # Tischplatte
+        top = tip_low_z - h                                           # Tischplatte
         obj.data.default_root_state[idx, 0] = center_xy[0]
         obj.data.default_root_state[idx, 1] = center_xy[1]
         obj.data.default_root_state[idx, 2] = top + lift + size[2] / 2  # Ursprung = Boxmitte (auch YCB)

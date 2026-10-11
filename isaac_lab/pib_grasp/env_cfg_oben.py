@@ -1,20 +1,19 @@
 """
 env_cfg_oben.py — Greifart „von oben“ (Stufe 4b, ADR-018, Plan: docs/plan-griff-von-oben.md).
 
-Hand von oben, **gekippt** (Leon, 2026-10-10): so geneigt, dass bei Daumen-Rotator 90° alle fünf Fingerspitzen gleich
-hoch über dem Tisch stehen (tools/probe_neigung_oben.py: 36,5° um x, Finger nach unten, 4° um y; Streuung 5,5 mm) — die
-Greifachse Daumen ↔ Finger liegt parallel zum Tisch, wie bei objektbezogenen Vorgreifposen (UniDexGrasp, RobustDexGrasp:
-Handfläche zur Objektmitte). Das Objekt steht in der Greifmitte zwischen Daumen und Fingern; die Höhe der Spitzen über dem
-Tisch hängt vom Objekt ab (mdp.tip_height_for_object: Hand ≥ 5 mm über dem Objekt, Spitzen ≥ 10 mm über dem Tisch).
+Startpose aus der parallelen Suche (tools/suche_startpose_oben.py, docs/startpose-oben/ergebnis.md, 2026-10-11; Vorbild
+Greifplaner „vorschlagen → schließen → bewerten“): Hand von oben, **20° um x gekippt** (Finger leicht nach unten), nicht
+gerollt, **Daumen-Rotator beim Start 75°**, Objekt in der Greifmitte zwischen Daumen- und Fingerspitzen. Die Höhe der
+tiefsten Fingerspitze (der Daumen) über dem Tisch hängt vom Objekt ab (mdp.tip_height_for_object; Regel „alle schließen“
+damit 90–100 % auf Kugel Ø 5/7/9, Dose, Schachtel und YCB-Suppe, 48 Episoden je Höhe). Im Training wird die Höhe je
+Umgebung ±5 mm gestreut und die Lage ±1 cm (ungenaue Vorgreifpose des Arms).
 Ablauf wie seitlich: 0–2 s greifen, 2–2,5 s senkt sich der Tisch um 10 cm (≙ Arm hebt an), danach halten.
 
-Vorher (bis 2026-10-10) waagrecht mit 3,5 cm Abstand: der eingedrehte Daumen reichte 111 mm unter die Handfläche und stieß
-bei der Kugel Ø 7 in 21/24 Episoden gegen den Tisch (bis 427 N), die Handfläche berührte das Objekt nie
-(tools/machbarkeit_oben.py, Fenstertest Leon).
+Verworfen: waagrecht mit 3,5 cm Abstand (Daumen stieß gegen den Tisch, Kugel Ø 5/Schachtel ≤ 3/24) und 36,5° gekippt mit
+gleich hohen Spitzen (Finger streiften beim Schließen den Tisch, 3–5/24) — Plan, Abschnitte „Gemessen“ und „Stand 2026-10-11“.
 
-Belohnung = bestes seitliches Rezept (EXP-022: Fortschritt je Fingerspitze, Aktionen auf ±1 im Agenten) ohne
-Orientierungsterme, wie Dexsuite Lift (orientation_tracking = None, success ohne rot_std): beim Heben zählt nur, dass
-das Objekt in der Hand bleibt. Bewertung ohne Kippanforderung (eval_policy --max_kipp_deg -1).
+Belohnung = seitliches Rezept ohne Orientierungsterme, wie Dexsuite Lift (orientation_tracking = None, success ohne
+rot_std): beim Heben zählt nur, dass das Objekt in der Hand bleibt. Bewertung ohne Kippanforderung (--max_kipp_deg -1).
 """
 import math
 
@@ -25,19 +24,17 @@ from isaaclab.utils import configclass
 
 from . import mdp
 from .env_cfg import (GRASP_TIME_S, HAND_POS, HOLD_STD_M, START_REF_S, XY_PENALTY_WEIGHT, YCB_SPAWN_LIFT,
-                      PibGraspEnvCfg, RewardsProgressCfg, ycb_upright_usd)
+                      PibGraspEnvCfg, RewardsProgressCfg, dexsuite_action_space, ycb_upright_usd)
 
-# Geometrie der gekippten Hand (tools/probe_neigung_oben.py, 2026-10-11, _probe_neigung_oben.txt; Mesh-Punkte der Glieder,
-# Daumen-Rotator 90°, übrige Gelenke 0), relativ zum Hand-Root nach der Drehung, in Weltachsen:
-HAND_ROT_OBEN = (0.94912, 0.31297, 0.03314, -0.01093)       # (w, x, y, z) = 4° um y · 36,5° um x
-TIP_PLANE_Z = HAND_POS[2] - 0.247                            # Ebene der tiefsten Punkte der fünf Fingerspitzen
-GRASP_XY = (HAND_POS[0] - 0.029, HAND_POS[1] - 0.232)        # Greifmitte: zwischen Daumenspitze und Mitte der Fingerspitzen
-# Platz unter der Hand (tiefster Punkt außer den Spitzen) über der Spitzenebene je Abstand r von der Greifmitte [m]
-HAND_CLEARANCE = ((0.000, 0.067), (0.005, 0.058), (0.010, 0.054), (0.015, 0.050), (0.020, 0.047), (0.025, 0.040),
-                  (0.030, 0.040), (0.035, 0.035), (0.040, 0.032), (0.045, 0.028), (0.050, 0.024), (0.055, 0.019),
-                  (0.060, 0.016), (0.065, 0.013))
-HAND_MARGIN = 0.005                 # Hand mindestens so weit über dem Objekt (Vorgreifpose ohne Berührung)
-MIN_TIP_HEIGHT = 0.010              # Fingerspitzen mindestens so hoch über dem Tisch
+# Pose und Geometrie (Mesh-Punkte der Fingerspitzen bei Rotator 75°, übrige Gelenke 0, logs/startpose_oben/geometrie.npz aus
+# tools/probe_neigung_oben.py --dump), relativ zum Hand-Root nach der Drehung, in Weltachsen:
+HAND_ROT_OBEN = (0.98481, 0.17365, 0.0, 0.0)                 # (w, x, y, z) = 20° um x
+ROTATOR_START_DEG = 75.0
+TIP_LOW_Z = HAND_POS[2] - 0.1914                             # tiefster Punkt aller fünf Spitzen (Daumen; Finger ≈ −0,150)
+GRASP_XY = (HAND_POS[0] - 0.0203, HAND_POS[1] - 0.2870)      # Greifmitte: zwischen Daumenspitze und Mitte der Fingerspitzen
+# Höhe der tiefsten Spitze über dem Tisch (Suche): Kugeln max(10 mm, Ø − 60 mm), sonst max(10 mm, Höhe − 40 mm)
+SPHERE_OFFSET, BLOCK_OFFSET, MIN_TIP_HEIGHT = 0.060, 0.040, 0.010
+TRAIN_HEIGHT_JITTER = 0.005          # Training: Höhe je Umgebung ±5 mm (Bewertung: 0; Störbedingung ±5 mm)
 OBJECT_XY_RANGE = {"x": (-0.01, 0.01), "y": (-0.01, 0.01)}
 # Tisch um die Greifmitte, je Umgebung in der Höhe an die Objektunterseite gesetzt (mdp.place_objects_from_above)
 TABLE_SIZE_OBEN = (0.30, 0.30, 0.04)
@@ -92,16 +89,18 @@ class PibGraspEnvCfg_Oben(PibGraspEnvCfg):
             **{k: getattr(old, k) for k in ("rigid_props", "collision_props", "mass_props", "physics_material",
                                              "visual_material")})
         h = _height(OBJECTS_OBEN[DEFAULT_OBJECT_OBEN])
-        self.scene.object.init_state.pos = (*GRASP_XY, TIP_PLANE_Z - 0.03 + h / 2)       # Ausgangswert, s. u.
+        self.scene.object.init_state.pos = (*GRASP_XY, TIP_LOW_Z - 0.03 + h / 2)       # Ausgangswert, s. u.
         self.scene.table.spawn.size = TABLE_SIZE_OBEN
-        self.scene.table.init_state.pos = (*GRASP_XY, TIP_PLANE_Z - 0.03 - TABLE_SIZE_OBEN[2] / 2)
+        self.scene.table.init_state.pos = (*GRASP_XY, TIP_LOW_Z - 0.03 - TABLE_SIZE_OBEN[2] / 2)
         # Startlage je Umgebung aus Bounding Box und Form (inkl. Zufallsgröße): Objekt in der Greifmitte, Tisch so hoch,
-        # dass die Hand knapp über dem Objekt bleibt — ersetzt place_objects_by_size
+        # wie die Suche je Objekt ergab — ersetzt place_objects_by_size
         self.events.place_objects = EventTerm(
             func=mdp.place_objects_from_above, mode="startup",
-            params={"center_xy": GRASP_XY, "tip_plane_z": TIP_PLANE_Z, "clearance": HAND_CLEARANCE,
-                    "margin": HAND_MARGIN, "min_tip_height": MIN_TIP_HEIGHT, "table_thickness": TABLE_SIZE_OBEN[2],
-                    "lift": 0.0})
+            params={"center_xy": GRASP_XY, "tip_low_z": TIP_LOW_Z, "sphere_offset": SPHERE_OFFSET,
+                    "block_offset": BLOCK_OFFSET, "min_tip_height": MIN_TIP_HEIGHT, "height_jitter": 0.0,
+                    "table_thickness": TABLE_SIZE_OBEN[2], "lift": 0.0})
+        # Vorgreifpose: Daumen-Rotator fest auf 75° (wie in der Suche), übrige Servos wie seitlich fast offen
+        self.events.reset_hand.params["ranges_deg"]["thumb_left_rotator"] = (ROTATOR_START_DEG, ROTATOR_START_DEG)
         self.events.reset_object.params["pose_range"] = {**OBJECT_XY_RANGE, "yaw": (-math.pi, math.pi)}
         # von schräg vorn/oben auf Fingerspitzen und Daumen (Hand liegt waagrecht)
         self.viewer.eye = (1.6, -2.6, 1.5)
@@ -124,7 +123,7 @@ def apply_object_oben(cfg: PibGraspEnvCfg_Oben, key: str) -> PibGraspEnvCfg_Oben
     else:
         cfg.scene.object.spawn = _spawn(spec, common)
     h = _height(spec)
-    cfg.scene.object.init_state.pos = (*GRASP_XY, TIP_PLANE_Z - 0.03 + h / 2)
+    cfg.scene.object.init_state.pos = (*GRASP_XY, TIP_LOW_Z - 0.03 + h / 2)
     cfg.events.reset_object.params["pose_range"]["yaw"] = spec["gier"]
     return cfg
 
@@ -151,6 +150,16 @@ class PibGraspEnvCfg_ObenMulti(PibGraspEnvCfg_Oben):
                   + [sim_utils.CuboidCfg(size=s, **mat) for s in TRAIN_CUBOIDS_OBEN])
         self.scene.object.spawn = sim_utils.MultiAssetSpawnerCfg(assets_cfg=shapes, random_choice=False, **common)
         self.events.reset_object.params["pose_range"]["yaw"] = (-math.radians(15), math.radians(15))
+        self.events.place_objects.params["height_jitter"] = TRAIN_HEIGHT_JITTER     # ungenaue Vorgreifpose
+
+
+@configclass
+class PibGraspEnvCfg_ObenMultiDex(PibGraspEnvCfg_ObenMulti):
+    """EXP-029: Spezialist „von oben“ mit dem Rezept von EXP-027 (Aktionsraum wie Dexsuite, Agent mit bounds_loss)."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        dexsuite_action_space(self)
 
 
 @configclass

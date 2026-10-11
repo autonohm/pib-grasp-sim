@@ -2,6 +2,26 @@
 
 Automatisch erzeugt (auswertung-v2). Benchmark: Kippwinkel ≤ 45°, Ø 6 cm, Ø 8 cm, Quader. Sortiert nach **Leistung** = IQM des Aufgabenerfolgs der erfolgreichen Seeds (Mittel über die Objekte ≥ 50 %) über Seeds × Objekte — Ziel ist eine brauchbare Policy je Greifart; je Objekt als Median; Testobjekte (nie trainiert) ebenso, nicht in der Leistung. **Gesamt** = IQM über alle Seeds (rliable). **Zuverlässigkeit** = erfolgreiche Seeds. **P(1 > X)**: Wahrscheinlichkeit, dass ein erfolgreicher Lauf von Platz 1 besser ist (gesichert, wenn die untere KI-Grenze > 0,5). ⚠: unter 5 Seeds oder unter 3 erfolgreichen — Leistung vorläufig. Werte in %, KI 95 %. Vorschlag = Urteilsregel v2 gegenüber den Eltern (✓: Leon hat das Experiment bewertet, Urteil im Bericht). Je Bewertungsprotokoll eine Tabelle; verglichen wird nur innerhalb eines Protokolls (ADR-021). Quellen: Agarwal et al. 2021 (rliable), Chan et al. 2020 (Zuverlässigkeit).
 
+## Leaderboard v3 — eval-v2, Greifart „seitlich“ (Wünschbarkeitsindex)
+
+Sortiert nach dem **Index** = geometrisches Mittel der Wünschbarkeiten (0 = inakzeptabel, 1 = Ziel; Derringer & Suich 1980). **Robust** = Erfolg in der Störbedingung (Ø 6 gestört: ungenaue Vorgreifpose, 1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: Leistung 95 % → 70 %; Robust 90 % → 50 %; Unruhe 0.10 → 1.00; Schwingen mm/s Regel → schlechtestes; Objektweg mm 35 → 100; Kipp ° 5 → 35; Unterarm ° 5 → 45; Servo-Last 20 % → 100 %. Zuverlässigkeit nur zur Info.
+
+| Rang | Experiment | Titel | Index | Pareto | Leistung | Robust | Unruhe | Schwingen mm/s | Objektweg mm | Kipp ° | Unterarm ° | Servo-Last | Seeds | Aktionsweg |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | [EXP-024](EXP-024_aktionsfilter/EXP-024_aktionsfilter.md) | EXP-022 mit geglätteter Aktion (gleitender Mittelwert α = 0,3) | **0.53** | ★ | 87 % | 72 % | 0.17 | 50 | 94 | 13 | 11 | 43 % | 5/5 | Filter |
+| 2 | [EXP-017](EXP-017_curriculum_dexsuite/EXP-017_curriculum_dexsuite.md) | Curriculum wie Dexsuite (Schwerkraft und Beobachtungsrauschen nach Erfolg), 1500 Iterationen | **0.47** ⚠ |  | 86 % | – | – | – | – | 25 | 27 | – | 2/5 | frei |
+| 3 | [EXP-014](EXP-014_regel_alle_schliessen/EXP-014_regel_alle_schliessen.md) | Regel-Baseline: alle Finger schließen (kein RL) | **0.43** | ★ | 69 % | 59 % | 0.01 | 14 | 47 | 16 | 0 | 0 % | 1/1 | Regel |
+| 4 | [EXP-015](EXP-015_regel_bis_kontakt/EXP-015_regel_bis_kontakt.md) | Regel-Baseline: schließen bis Kontakt, taktiler Reflex (kein RL) | **0.41** |  | 68 % | 59 % | 0.01 | 21 | 48 | 18 | 0 | 0 % | 1/1 | Regel |
+| 5 | [EXP-013](EXP-013_objektvielfalt/EXP-013_objektvielfalt.md) | Objektvielfalt im Training (18 Formen der Kategorie seitlich) | **0.34** ⚠ |  | 83 % | – | – | – | – | 28 | 33 | – | 3/5 | frei |
+| 6 | [EXP-022](EXP-022_fortschritt_begrenzt/EXP-022_fortschritt_begrenzt.md) | EXP-019 mit Aktionen auf ±1 begrenzt | **0.31** |  | 83 % | 70 % | 0.36 | 59 | 112 | 20 | 25 | 59 % | 5/5 | Begrenzung ±1 |
+| 7 | [EXP-025](EXP-025_servomoment/EXP-025_servomoment.md) | EXP-022 mit Strafe auf das normierte Servo-Moment | **0.30** | ★ | 86 % | 61 % | 0.40 | 48 | 128 | 26 | 23 | 51 % | 4/5 | Begrenzung ±1 |
+| 8 | [EXP-023](EXP-023_objektweg_xy/EXP-023_objektweg_xy.md) | EXP-022 mit Strafe auf die Verschiebung in der Tischebene | **0.25** | ★ | 87 % | 70 % | 1.65 | 77 | 75 | 21 | 22 | 54 % | 5/5 | Begrenzung ±1 |
+| 9 | [EXP-026](EXP-026_fingerzahl/EXP-026_fingerzahl.md) | EXP-022 mit Belohnung nach Zahl der Finger am Objekt | **0.22** |  | 81 % | 67 % | 0.77 | 72 | 117 | 23 | 30 | 55 % | 5/5 | Begrenzung ±1 |
+| 10 | [EXP-021](EXP-021_critic_objekt/EXP-021_critic_objekt.md) | Critic kennt Objektgröße, Masse und Reibung (privilegiert, wie HORA) | **0.20** |  | 85 % | 53 % | 0.34 | 58 | 139 | 22 | 41 | 52 % | 4/5 | frei |
+| 11 | [EXP-019](EXP-019_annaeherung_fortschritt/EXP-019_annaeherung_fortschritt.md) | Annäherung je Fingerspitze als Fortschritt (wie NVIDIA AllegroKuka/DexPBT) | **0.19** |  | 81 % | 59 % | 0.56 | 59 | 124 | 29 | 41 | 51 % | 10/10 | frei |
+| 12 | [EXP-018](EXP-018_neuer_reset/EXP-018_neuer_reset.md) | Neue Basis: EXP-013 mit Reset ohne Überlappung (ADR-021) | **0.13** |  | 86 % | 33 % | 0.36 | 82 | 136 | 18 | 22 | 53 % | 5/10 | frei |
+| 13 | [EXP-020](EXP-020_aktionen_begrenzt/EXP-020_aktionen_begrenzt.md) | Aktionen auf ±1 begrenzt (clip_actions, Ersatz für NVIDIAs bounds_loss) | **0.10** |  | 84 % | 41 % | 1.13 | 73 | 113 | 22 | 28 | 56 % | 4/5 | Begrenzung ±1 |
+
 ## eval-v2 — aktuell (Reset ohne Überlappung, ADR-021)
 
 | Rang | Experiment | Titel | Leistung [KI] | Gesamt [KI] | Ø 6 cm | Ø 8 cm | Quader | Flasche (Test) | Saftpackung (Test) | Cracker (YCB) | Zucker (YCB) | Senf (YCB) | erfolgreiche Seeds | Unruhe | P(1 > X) | Vorschlag (v2) | beste Videos |

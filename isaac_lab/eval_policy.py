@@ -60,6 +60,11 @@ parser.add_argument("--action_clip", type=float, default=0.0,
                     help="Policy-Ausgabe auf ±Wert begrenzen wie im Training (agent clip_actions, EXP-020 ff.); 0 = aus")
 parser.add_argument("--action_filter", type=float, default=0.0,
                     help="Aktion wie im Training glätten (gleitender Mittelwert, α; EXP-024 ff.); 0 = aus")
+parser.add_argument("--action_scale", type=float, default=0.0,
+                    help="einheitliche Aktionsskala aller Servos wie im Training (Aktionsraum wie Dexsuite, EXP-027 ff.); 0 = Standard")
+parser.add_argument("--stoerung", action="store_true",
+                    help="Störbedingung (Leaderboard v3, Robustheit): Objektlage stärker gestreut (ungenaue Vorgreifpose), "
+                         "1 Policy-Schritt Verzögerung, Rauschen auf Gelenkwinkeln und FSR")
 parser.add_argument("--nur-medien", dest="nur_medien", action="store_true",
                     help="keine eval-Dateien schreiben (nur Video/Verlauf)")
 AppLauncher.add_app_launcher_args(parser)
@@ -101,6 +106,22 @@ cfg.seed = args_cli.seed
 if args_cli.action_filter > 0:                                 # wie im Training (env.yaml: actions.servos.alpha)
     from pib_grasp.env_cfg import filtered_servo_action
     cfg.actions.servos = filtered_servo_action(args_cli.action_filter)
+if args_cli.action_scale > 0:                                  # wie im Training (env.yaml: actions.servos.scale)
+    cfg.actions.servos.scale = args_cli.action_scale
+if args_cli.stoerung:
+    # Robustheit (Leaderboard v3, Sim-to-Real-Lücken docs/pruefung-aktionsweg.md): ungenaue Vorgreifpose wie ein IK-Team sie
+    # liefert (seitlich: Objekt bis 2 cm weiter weg / 1 cm näher, ±3 cm längs der Finger; von oben ±1,5 cm), Sensorrauschen
+    # (Gelenkwinkel σ 0,01 rad, FSR σ 0,5 N, vor dem Verlauf) und 1 Policy-Schritt Verzögerung (≈ 17 ms, in der Schleife)
+    from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
+    pr = cfg.events.reset_object.params["pose_range"]
+    if args_cli.greifart == "oben":
+        pr.update(x=(-0.015, 0.015), y=(-0.015, 0.015))
+        cfg.events.place_objects.params["height_jitter"] = 0.005           # Höhe der Vorgreifpose ±5 mm
+    else:
+        pr.update(x=(-0.02, 0.01), y=(-0.03, 0.03))
+    cfg.observations.policy.joint_pos.noise = Gnoise(mean=0.0, std=0.01)
+    cfg.observations.policy.fsr.noise = Gnoise(mean=0.0, std=0.5)
+    cfg.observations.policy.enable_corruption = True
 if getattr(cfg.terminations, "object_tilted", None) is not None:   # trainingsspezifisch (EXP-001/002)
     cfg.terminations.object_tilted = None
     cfg.rewards.early_termination = None      # verweist auf object_tilted; Belohnung hier unbenutzt
@@ -239,6 +260,11 @@ eff_prev = torch.zeros(N, len(SERVO_JOINTS), device=dev)
 stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # Stall-Anteil je Servo (beschreibend, seit 2026-10-11)
 xy_path, xy_path_max = zeros(), zeros()     # Objektweg in der Tischebene ggü. t = EARLY_S (abgesetzt, Größe eingeschwungen)
 xy0 = obj.data.root_pos_w[:, :2].clone()
+# Schwingen (Leaderboard v3): Objektbewegung in der Haltephase (Hand fest → jede Bewegung ist Wackeln/Rutschen) und
+# Frequenz der Servo-Befehle (amplitudengewichtete mittlere Frequenz des Spektrums, angelehnt an CAPS, Mysore et al. 2021)
+hold_v2, hold_w2 = zeros(), zeros()
+T_EP = int(uenv.max_episode_length) + 2
+ep_act = torch.zeros(N, T_EP, len(SERVO_JOINTS), device=dev)
 hold_touch = torch.zeros(N, 5, device=dev)       # Fingernutzung: Schritte mit Objektkontakt > 1 N je Finger
 hold_fobj = torch.zeros(N, 5, device=dev)        # … und Objektkraft je Finger (Reihenfolge Daumen … klein)
 forearm0 = robot.data.joint_pos[:, forearm].clone()
@@ -250,6 +276,19 @@ trace_keys = ("hoehe_mm", "kipp_deg", "finger", "kraft_n")
 trace_sum = {k: torch.zeros(T, device=dev) for k in trace_keys}
 trace_n = torch.zeros(T, device=dev)
 ep_trace = {k: torch.zeros(N, T, device=dev) for k in trace_keys}   # laufende Episode je Umgebung
+
+
+def action_frequency(i) -> float | None:
+    """Amplitudengewichtete mittlere Frequenz [Hz] der Servo-Befehle einer Episode, gemittelt über die Servos."""
+    n_i = int(steps[i].item())
+    if n_i < 16:
+        return None
+    seq = ep_act[i, :n_i]
+    amp = torch.fft.rfft(seq - seq.mean(0), dim=0).abs()[1:]                  # ohne Gleichanteil
+    freq = torch.fft.rfftfreq(n_i, d=dt, device=dev)[1:, None]
+    tot = amp.sum(0)
+    ok = tot > 1e-6                                                           # Servos, die sich überhaupt bewegen
+    return float(((amp * freq).sum(0)[ok] / tot[ok]).mean()) if ok.any() else 0.0
 
 
 def finish(i, reason):
@@ -278,6 +317,9 @@ def finish(i, reason):
         "finger_kontakt": (hold_touch[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
         "finger_kraft_n": (hold_fobj[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
         "stall_je_servo": (stall_joint[i] / n).tolist(),
+        "schwingen_mm_s": 1000 * (hold_v2[i] / hold_steps[i]).sqrt().item() if hold_steps[i] > 0 else None,
+        "drehschwingen_deg_s": math.degrees((hold_w2[i] / hold_steps[i]).sqrt().item()) if hold_steps[i] > 0 else None,
+        "aktion_frequenz_hz": action_frequency(i),
     })
 
 
@@ -291,6 +333,8 @@ with torch.inference_mode():
         act = policy(obs["policy"])
         if args_cli.action_clip > 0 and not args_cli.regel:       # wie rsl_rl clip_actions im Training
             act = act.clamp(-args_cli.action_clip, args_cli.action_clip)
+        if args_cli.stoerung:                                      # 1 Schritt Verzögerung: ausgeführt wird die vorige Aktion
+            act, act_queued = (act_queued if total_steps > 1 else torch.zeros_like(act)), act
         obs, _, terminated, truncated, _ = env.step(act)
         done = terminated | truncated
         for i in done.nonzero().flatten().tolist():
@@ -298,7 +342,7 @@ with torch.inference_mode():
                 finish(i, next((n for n in term_names if uenv.termination_manager.get_term(n)[i]), "?"))
         # neue Episoden zurücksetzen, laufende fortschreiben (Werte nach dem Schritt)
         for buf in (steps, max_tilt, early_tilt, max_forearm, hold_steps, hold_force, hold_over, stall, act_rate, act_rate_eff, sink,
-                    hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint):
+                    hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act):
             buf[done] = 0.0
         forearm0[done] = robot.data.joint_pos[done, forearm]
         z0[done] = obj.data.root_pos_w[done, 2]
@@ -326,6 +370,10 @@ with torch.inference_mode():
         eff = (servo_term.filtered_actions if hasattr(servo_term, "filtered_actions") else am.action).clamp(-1, 1)
         act_rate_eff[live] += ((eff - eff_prev) ** 2).sum(-1)[live]
         eff_prev = torch.where(done[:, None], torch.zeros_like(eff), eff)
+        rows_live = live.nonzero().flatten()
+        ep_act[rows_live, (steps[rows_live] - 1).long().clamp(0, T_EP - 1)] = eff[rows_live]
+        hold_v2[in_hold] += (obj.data.root_lin_vel_w[in_hold] ** 2).sum(-1)
+        hold_w2[in_hold] += (obj.data.root_ang_vel_w[in_hold] ** 2).sum(-1)
         sink[live] = (z0 - obj.data.root_pos_w[:, 2]).clamp(min=0.0)[live]   # Hand fest → ggü. Startlage
         ref = live & (steps <= early_steps)                                   # bis 0,1 s mitführen, dann fest
         xy0[ref] = obj.data.root_pos_w[ref, :2]
@@ -375,6 +423,9 @@ summary = {
         "unruhe_wirksam": mean([e["unruhe_wirksam"] for e in held]),
         "objektweg_mm": mean([e["objektweg_mm"] for e in held]),
         "objektweg_max_mm": mean([e["objektweg_max_mm"] for e in held]),
+        "schwingen_mm_s": mean([e["schwingen_mm_s"] for e in held]),
+        "drehschwingen_deg_s": mean([e["drehschwingen_deg_s"] for e in held]),
+        "aktion_frequenz_hz": mean([e["aktion_frequenz_hz"] for e in held]),
     },
     # beschreibend (keine Leitplanke): Kontaktanteil/Kraft je Finger in der Haltephase, gehaltene Episoden
     "fingernutzung": {
@@ -389,6 +440,7 @@ summary = {
 }
 result = {
     "protokoll": PROTOCOL, "bedingung": args_cli.bedingung, "objekt": args_cli.objekt, "greifart": args_cli.greifart,
+    "stoerung": args_cli.stoerung,
     "policy": args_cli.policy if args_cli.regel else str(Path(args_cli.policy).resolve()), "seed": args_cli.seed,
     "episoden": E, "umgebungen": N, "anforderung": {"max_kipp_deg": REQ_DEG},
     "dauer_s": round(time.time() - t_start, 1), "zusammenfassung": summary,
@@ -426,6 +478,8 @@ lines = [
     f"  Unruhe               {num(L['unruhe'], digits=3)}",
     f"  Unruhe wirksam       {num(L['unruhe_wirksam'], digits=3)}",
     f"  Objektweg Ende/max   {num(L['objektweg_mm'], ' mm')} / {num(L['objektweg_max_mm'], ' mm')}",
+    f"  Schwingen Objekt     {num(L['schwingen_mm_s'], ' mm/s')}, Drehung {num(L['drehschwingen_deg_s'], ' °/s')}",
+    f"  Aktionsfrequenz      {num(L['aktion_frequenz_hz'], ' Hz', 2)}",
     "Fingernutzung (Haltephase, Kontakt > 1 N / Kraft an der Dose), Daumen … klein:",
     "  Kontakt  " + "  ".join(pct(x) for x in summary["fingernutzung"]["kontakt_anteil"]),
     "  Kraft    " + "  ".join(num(x, " N") for x in summary["fingernutzung"]["kraft_n"]),

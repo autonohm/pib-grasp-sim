@@ -641,6 +641,27 @@ class PibGraspEnvCfg_HeavyMultiProgressFingers(PibGraspEnvCfg_HeavyMulti):
     rewards: RewardsProgressFingersCfg = RewardsProgressFingersCfg()
 
 
+# ── Aktionsraum wie Dexsuite (EXP-027 ff., docs/pruefung-aktionsweg.md): Skala 0,1 rad für ALLE Servos (Dexsuite:
+# RelativeJointPositionActionCfg(scale=0.1) für alle Gelenke inkl. Arm) — vorher Unterarm/Handgelenk 0,03 rad (≈ 34 %
+# Moment, ~63/47 °/s statt 270/135 °/s). Begrenzung zur Laufzeit entfällt (Agent PibGraspPPORunnerCfg_Bounds: bounds_loss).
+DEXSUITE_ACTION_SCALE = 0.1
+
+
+def dexsuite_action_space(cfg):
+    """Gleiche Skala für alle 8 Servos (Dexsuite). Bewertung: eval_policy --action_scale 0.1 (experiments.clip_args)."""
+    cfg.actions.servos.scale = DEXSUITE_ACTION_SCALE
+    return cfg
+
+
+@configclass
+class PibGraspEnvCfg_HeavyMultiProgressDex(PibGraspEnvCfg_HeavyMultiProgress):
+    """EXP-027: Grundrezept (EXP-019/022: Fortschritt je Fingerspitze) mit Aktionsraum wie Dexsuite."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        dexsuite_action_space(self)
+
+
 @configclass
 class PibGraspEnvCfg_HeavyMultiPriv(PibGraspEnvCfg_HeavyMulti):
     """EXP-021: wie EXP-018, Critic zusätzlich mit Objektgröße, Masse und Reibung (privilegiert, wie HORA/Dexsuite)."""

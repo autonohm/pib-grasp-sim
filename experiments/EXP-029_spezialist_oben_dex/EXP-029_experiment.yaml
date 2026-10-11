@@ -1,0 +1,75 @@
+# EXP-NNN_experiment.yaml — Vorlage (Ablauf und Metriken: experiments/README.md)
+id: EXP-029
+titel: Spezialist von oben, Rezept EXP-027 (Aktionsraum wie Dexsuite)
+datum: '2026-10-12'
+eltern: EXP-028
+status: geplant                 # geplant | läuft | ausgewertet | verworfen
+
+# --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
+hypothese: Ein RL-Spezialist von oben (17 Formen, gestreute Vorgreifpose) schlägt
+  die Regel (EXP-028) in Leistung und vor allem in der Störbedingung.
+aenderung: 'Szene von oben (env_cfg_oben: 20°, Rotator 75°, Höhe je Objekt ±5 mm,
+  Lage ±1 cm), 17 Formen, Belohnung ohne Orientierung (Dexsuite Lift), Rezept von
+  EXP-027 (Skala 0,1, bounds_loss). Vergleich gegen die Regel.'
+bedingungen:
+- name: kugel_d7_oben
+  objekt: Kugel Ø 7
+  objekt_id: kugel_d7
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: kugel_d5_oben
+  objekt: Kugel Ø 5
+  objekt_id: kugel_d5
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: dose_oben
+  objekt: Dose
+  objekt_id: dose_d68x10
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: schachtel_oben
+  objekt: Schachtel
+  objekt_id: quader_9x6x4
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+- name: ycb_suppe_oben
+  objekt: Suppendose (YCB)
+  objekt_id: ycb_005_suppe
+  greifart: oben
+  startpose: von oben, 20° gekippt, Rotator 75°, Höhe je Objekt (Suche)
+  anforderung:
+    max_kipp_deg: null
+protokoll: eval-v2
+entscheidungsregel: standard    # README → „Statistik und Entscheidungsregel“
+
+# --- Training ---
+training:
+  task: Pib-Grasp-Hand-Left-ObenMultiDex-v0
+  iterationen: 300
+  umgebungen: 1024
+  seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  zusatz_args: []
+fenstertest: false
+# --- automatisch (experiments.py run) ---
+commit: null
+laeufe: []
+
+# --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
+ergebnis: ""                    # Kurzfassung der Zahlen
+urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
+schluss: ""                     # was folgt daraus, nächstes Experiment
+laeufe_von: null
+greifart: oben

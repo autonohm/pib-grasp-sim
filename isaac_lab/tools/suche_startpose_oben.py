@@ -23,6 +23,7 @@ import itertools
 import math
 import os
 import sys
+import time
 from pathlib import Path
 
 from isaaclab.app import AppLauncher
@@ -32,6 +33,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--objekt", default="kugel_d7", help="Objekt aus env_cfg_oben.OBJECTS_OBEN")
 parser.add_argument("--geometrie", default=str(REPO / "logs" / "startpose_oben" / "geometrie.npz"))
 parser.add_argument("--wiederholungen", type=int, default=3)
+parser.add_argument("--pose", default=None, help="feste Pose „Kippung,Rollen,Rotator“ statt des Rasters (Prüfung/Fenstertest)")
+parser.add_argument("--hoehen", default=None, help="Höhen [m] mit Komma, nur mit --pose (Standard 0.015)")
+parser.add_argument("--real_time", action="store_true", help="Echtzeit; mit Fenster läuft es nach der Wertung weiter")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 app = AppLauncher(args).app
@@ -55,6 +59,10 @@ ROLL_Y = [0.0, 4.0, 8.0]
 ROTATOR = [60, 75, 90]
 HOEHE = [0.010, 0.020, 0.030, 0.045, 0.060, 0.080]
 VERSATZ_Y = [-0.02, 0.0, 0.02]                 # Objektmitte ggü. Greifmitte längs der Finger (− = Richtung Fingerspitzen)
+if args.pose:                                  # feste Pose (Nachprüfung, Fenstertest): nur die Höhen variieren
+    _k, _r, _rot = (float(v) for v in args.pose.split(","))
+    KIPP_X, ROLL_Y, ROTATOR, VERSATZ_Y = [_k], [_r], [int(_rot)], [0.0]
+    HOEHE = [float(v) for v in (args.hoehen or "0.015").split(",")]
 combos = list(itertools.product(KIPP_X, ROLL_Y, ROTATOR, HOEHE, VERSATZ_Y))
 params = [c for c in combos for _ in range(args.wiederholungen)]
 N = len(params)
@@ -140,6 +148,19 @@ def zeros():
     return torch.zeros(N, device=dev)
 
 
+def rule_action(hold_q):
+    """Regel je Umgebung nach ihrer Episodenzeit (auch nach automatischem Reset): Unterarm/Handgelenk halten, Rotator
+    hält seine Stellung, ab 0,4 s Daumen + Finger mit 0,2 schließen."""
+    q = robot.data.joint_pos[:, ids]
+    new = env.episode_length_buf == 0
+    hold_q[new] = q[new]
+    a = torch.zeros(N, 8, device=dev)
+    a[:, :2] = ((hold_q[:, :2] - q[:, :2]) / scale[:2]).clamp(-1, 1)
+    a[:, 2] = ((rot_target - q[:, 2]) / scale[2]).clamp(-1, 1)
+    a[:, 3:] = 0.2 * (env.episode_length_buf + 1 >= close_step).float()[:, None]
+    return a
+
+
 with torch.inference_mode():
     env.reset(seed=1000)
     hold_q = robot.data.joint_pos[:, ids].clone()
@@ -149,12 +170,10 @@ with torch.inference_mode():
     n_hold = 0
     xy0 = obj.data.root_pos_w[:, :2].clone()
     for step in range(1, int(env.max_episode_length)):
-        q = robot.data.joint_pos[:, ids]
-        a = torch.zeros(N, 8, device=dev)
-        a[:, :2] = ((hold_q[:, :2] - q[:, :2]) / scale[:2]).clamp(-1, 1)
-        a[:, 2] = ((rot_target - q[:, 2]) / scale[2]).clamp(-1, 1)
-        a[:, 3:] = 0.2 * float(step >= close_step)
-        _, _, term, trunc, _ = env.step(a)
+        t0 = time.time()
+        _, _, term, trunc, _ = env.step(rule_action(hold_q))
+        if args.real_time:
+            time.sleep(max(0.0, dt - (time.time() - t0)))
         alive &= ~(term | trunc)
         of = obj_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)      # (N, Körper)
         tf = table_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)
@@ -179,7 +198,8 @@ cols = ["kipp_x", "roll_y", "rotator", "hoehe_m", "versatz_y_m", "gehalten", "st
 rows = np.column_stack([P, alive.float().cpu(), start_contact.cpu(), table_early.cpu(), table_thumb.cpu(),
                         table_fingers.cpu(), (palm / max(n_hold, 1)).cpu(), (fingers / max(n_hold, 1)).cpu(), path.cpu(),
                         env.pib_tip_height.cpu()])
-with open(out_dir / f"{args.objekt}.csv", "w", newline="", encoding="utf-8") as f:
+# feste Pose (Prüfung/Fenster): eigene Datei, die Raster-Ergebnisse der Suche bleiben unverändert
+with open(out_dir / (f"{args.objekt}_pose.csv" if args.pose else f"{args.objekt}.csv"), "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     w.writerow(cols)
     w.writerows(rows.tolist())
@@ -204,4 +224,12 @@ text = "\n".join(lines)
 print(text, flush=True)
 with open(REPO / "isaac_sim" / "tools" / "_suche_startpose_oben.txt", "a", encoding="utf-8") as f:
     f.write(text + "\n")
+if not args.headless:                  # mit Fenster: weiterlaufen lassen (gewertet ist nur die erste Episode)
+    print("Fenster: läuft weiter, bis es geschlossen wird", flush=True)
+    with torch.inference_mode():
+        while app.is_running():
+            t0 = time.time()
+            env.step(rule_action(hold_q))
+            if args.real_time:
+                time.sleep(max(0.0, dt - (time.time() - t0)))
 os._exit(0)

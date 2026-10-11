@@ -39,7 +39,10 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
                             # Nachtlauf 2026-10-11 (EXP-024–026): je eine Änderung ggü. EXP-022
                             ("HeavyMultiProgressClipFilter", "PibGraspEnvCfg_HeavyMultiProgressFilter", "PibGraspPPORunnerCfg_Clip"),
                             ("HeavyMultiProgressClipTorque", "PibGraspEnvCfg_HeavyMultiProgressTorque", "PibGraspPPORunnerCfg_Clip"),
-                            ("HeavyMultiProgressClipFingers", "PibGraspEnvCfg_HeavyMultiProgressFingers", "PibGraspPPORunnerCfg_Clip")):
+                            ("HeavyMultiProgressClipFingers", "PibGraspEnvCfg_HeavyMultiProgressFingers", "PibGraspPPORunnerCfg_Clip"),
+                            # Nachtlauf 2026-10-12: Aktionsraum wie Dexsuite (Skala 0,1 alle, bounds_loss statt Begrenzung)
+                            ("HeavyMultiProgressDex", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Bounds"),
+                            ("HeavyMultiProgressDexGross", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_BoundsGross")):
     gym.register(
         id=f"Pib-Grasp-Hand-Left-{_name}-v0",
         entry_point="isaaclab.envs:ManagerBasedRLEnv",
@@ -54,7 +57,8 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
 # dem EXP-022-Rezept (Fortschritt, Aktionen auf ±1)
 for _name, _cfg, _agent in (("Oben", "PibGraspEnvCfg_Oben", "PibGraspPPORunnerCfg_Clip"),
                             ("ObenMulti", "PibGraspEnvCfg_ObenMulti", "PibGraspPPORunnerCfg_Clip"),
-                            ("ObenMultiXY", "PibGraspEnvCfg_ObenMultiXY", "PibGraspPPORunnerCfg_Clip")):
+                            ("ObenMultiXY", "PibGraspEnvCfg_ObenMultiXY", "PibGraspPPORunnerCfg_Clip"),
+                            ("ObenMultiDex", "PibGraspEnvCfg_ObenMultiDex", "PibGraspPPORunnerCfg_Bounds")):
     gym.register(
         id=f"Pib-Grasp-Hand-Left-{_name}-v0",
         entry_point="isaaclab.envs:ManagerBasedRLEnv",
