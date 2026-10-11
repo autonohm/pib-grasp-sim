@@ -17,7 +17,6 @@ RSL_RL_SCRIPTS = Path(os.environ.get("ISAACLAB_PATH", Path.home() / "IsaacLab"))
 
 sys.path[:0] = [str(HERE), str(RSL_RL_SCRIPTS)]
 import pib_grasp  # noqa: E402,F401  (registriert die Gym-Tasks)
-import pib_grasp.rsl_rl_ext  # noqa: E402,F401  (ActorCriticBounds für rsl_rl, EXP-027)
 
 # play.py setzt PIB_RSL_RL_SCRIPT=play (runpy überschreibt sys.argv[0], daran lässt es sich
 # nicht erkennen)

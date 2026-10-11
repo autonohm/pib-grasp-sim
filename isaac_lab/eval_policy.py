@@ -135,6 +135,15 @@ if args_cli.checkpoint:
     from rsl_rl.runners import OnPolicyRunner
     from pib_grasp.agents.rsl_rl_ppo_cfg import PibGraspPPORunnerCfg
     agent_cfg = PibGraspPPORunnerCfg()
+    # Netzgröße wie im Training (EXP-031/032: Actor 512-256-128) aus params/agent.yaml des Laufs
+    agent_yaml = os.path.join(os.path.dirname(args_cli.checkpoint), "params", "agent.yaml")
+    if os.path.exists(agent_yaml):
+        import yaml
+        with open(agent_yaml, encoding="utf-8") as f:
+            trained = (yaml.unsafe_load(f) or {}).get("policy") or {}
+        for key in ("actor_hidden_dims", "critic_hidden_dims", "activation"):
+            if trained.get(key):
+                setattr(agent_cfg.policy, key, list(trained[key]) if key != "activation" else trained[key])
     runner = OnPolicyRunner(RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions), agent_cfg.to_dict(),
                             log_dir=None, device=uenv.device)
     # Nur der Actor wird bewertet: Critic-Gewichte mit anderer Form überspringen — Trainingsvarianten mit

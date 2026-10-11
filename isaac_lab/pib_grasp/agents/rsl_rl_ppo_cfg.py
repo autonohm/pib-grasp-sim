@@ -47,12 +47,21 @@ class PibGraspPPORunnerCfg_Clip(PibGraspPPORunnerCfg):
 
 
 @configclass
+class RslRlPpoActorCriticBoundsCfg(RslRlPpoActorCriticCfg):
+    """Policy-Konfiguration für pib_grasp/rsl_rl_ext.ActorCriticBounds (bounds_loss wie Dexsuite rl_games)."""
+    class_name: str = "ActorCriticBounds"
+    bounds_loss_coef: float = 1e-4        # Dexsuite rl_games
+    soft_bound: float = 1.1               # rl_games
+    entropy_coef: float = 0.005           # = algorithm.entropy_coef (Umrechnung in rsl_rl_ext)
+
+
+@configclass
 class PibGraspPPORunnerCfg_Bounds(PibGraspPPORunnerCfg):
     """EXP-027 ff. („Aktionsraum wie Dexsuite“): keine Begrenzung zur Laufzeit, stattdessen bounds_loss wie Dexsuite in
     rl_games (pib_grasp/rsl_rl_ext.py: Koeffizient 1e-4, weiche Grenze 1,1). Netz wie PibGraspPPORunnerCfg."""
 
     def __post_init__(self):
-        from pib_grasp.rsl_rl_ext import RslRlPpoActorCriticBoundsCfg
+        import pib_grasp.rsl_rl_ext  # noqa: F401  (registriert ActorCriticBounds beim rsl_rl-Runner)
         base = self.policy
         self.policy = RslRlPpoActorCriticBoundsCfg(
             init_noise_std=base.init_noise_std, actor_obs_normalization=base.actor_obs_normalization,

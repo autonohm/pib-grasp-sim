@@ -124,3 +124,42 @@ Automatisch erzeugt (`experiments.py done`). Aufgabenerfolg/Haltequote in %, [95
 | ↳ EXP-026 | | | ycb_cracker_seitlich ≤45° (eval-v2) | 5 | [256, 128, 64] elu, V5 | 68808 | 300 × 1024 | 85.1 [80.5–90.5] | 84.7 | 0.0 | 86.1 [81.4–92.0] | 17 | 24 | 98.5 | 3.3 | kein messbarer Unterschied (ggü. EXP-022) |  |
 | ↳ EXP-026 | | | ycb_zucker_seitlich ≤45° (eval-v2) | 5 | [256, 128, 64] elu, V5 | 68808 | 300 × 1024 | 85.0 [77.7–92.5] | 85.2 | 0.0 | 86.2 [79.7–92.6] | 20 | 23 | 98.5 | 3.3 | kein messbarer Unterschied (ggü. EXP-022) |  |
 | ↳ EXP-026 | | | ycb_senf_seitlich ≤45° (eval-v2) | 5 | [256, 128, 64] elu, V5 | 68808 | 300 × 1024 | 79.2 [71.1–87.3] | 80.4 | 0.0 | 83.4 [78.1–88.7] | 24 | 23 | 98.5 | 3.3 | kein messbarer Unterschied (ggü. EXP-022) |  |
+| [EXP-027](EXP-027_aktionsraum_dexsuite/EXP-027_experiment.yaml) | Aktionsraum wie Dexsuite: Skala 0,1 für alle Servos, bounds_loss statt Begrenzung | EXP-024 | zylinder_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-027 | | | zylinder_d8_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | quader_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | flasche_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | saftpackung_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | ycb_cracker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | ycb_zucker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-027 | | | ycb_senf_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| [EXP-028](EXP-028_regel_oben/EXP-028_experiment.yaml) | Regel-Baseline von oben: alle Finger schließen (kein RL), gestreute Vorgreifpose | EXP-014 | kugel_d7_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-028 | | | kugel_d5_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-028 | | | dose_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-028 | | | schachtel_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-028 | | | ycb_suppe_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| [EXP-029](EXP-029_spezialist_oben_dex/EXP-029_experiment.yaml) | Spezialist von oben, Rezept EXP-027 (Aktionsraum wie Dexsuite) | EXP-028 | kugel_d7_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-029 | | | kugel_d5_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-029 | | | dose_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-029 | | | schachtel_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-029 | | | ycb_suppe_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| [EXP-030](EXP-030_spezialist_oben_022/EXP-030_experiment.yaml) | Spezialist von oben, Rezept EXP-022 (Rückfallebene) | EXP-028 | kugel_d7_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-030 | | | kugel_d5_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-030 | | | dose_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-030 | | | schachtel_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-030 | | | ycb_suppe_oben ≤None° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| [EXP-031](EXP-031_netz_gross/EXP-031_experiment.yaml) | Großes Netz 512-256-128 wie Dexsuite | EXP-027 | zylinder_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-031 | | | zylinder_d8_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | quader_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | flasche_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | saftpackung_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | ycb_cracker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | ycb_zucker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-031 | | | ycb_senf_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| [EXP-032](EXP-032_netz_gross_budget/EXP-032_experiment.yaml) | Großes Netz mit 8-fachem Budget (4096 Umgebungen × 600 Iterationen) | EXP-031 | zylinder_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| ↳ EXP-032 | | | zylinder_d8_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | quader_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | flasche_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | saftpackung_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | ycb_cracker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | ycb_zucker_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |
+| ↳ EXP-032 | | | ycb_senf_seitlich ≤45° (eval-v2) | – | – | – | – | – | – | – | – | – | – | – | – | – |  |

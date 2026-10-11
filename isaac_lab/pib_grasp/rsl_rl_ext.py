@@ -9,16 +9,14 @@ rsl_rl kennt den Term nicht. Statt PPO.update zu kopieren, steckt er in der Entr
 loss' = loss + coef · mean(Σ_j penalty_j). Nebenwirkung: die geloggte Entropie (Policy/mean_entropy) enthält den Term.
 Zur Laufzeit greift nichts ein; die Firmware begrenzt nur zur Sicherheit.
 
-Einbinden: isaac_lab/train.py importiert dieses Modul — es macht die Klasse für rsl_rl unter ihrem Namen auffindbar
-(der Runner löst `class_name` per eval() im Modul rsl_rl.runners.on_policy_runner auf).
+Einbinden: die Agenten-Konfiguration (agents/rsl_rl_ppo_cfg.py → PibGraspPPORunnerCfg_Bounds) importiert dieses Modul
+nach dem App-Start; der Import macht die Klasse für rsl_rl unter ihrem Namen auffindbar (der Runner löst `class_name` per
+eval() im Modul rsl_rl.runners.on_policy_runner auf). Kein Isaac-Lab-Import hier (pxr gibt es erst nach dem App-Start).
 """
 from __future__ import annotations
 
 import torch
 from rsl_rl.modules import ActorCritic
-
-from isaaclab.utils import configclass
-from isaaclab_rl.rsl_rl import RslRlPpoActorCriticCfg
 
 
 class ActorCriticBounds(ActorCritic):
@@ -39,14 +37,6 @@ class ActorCriticBounds(ActorCritic):
     @property
     def entropy(self) -> torch.Tensor:
         return ActorCritic.entropy.fget(self) - (self.bounds_loss_coef / self.bounds_entropy_coef) * self.bounds_penalty()
-
-
-@configclass
-class RslRlPpoActorCriticBoundsCfg(RslRlPpoActorCriticCfg):
-    class_name: str = "ActorCriticBounds"
-    bounds_loss_coef: float = 1e-4        # Dexsuite rl_games
-    soft_bound: float = 1.1               # rl_games
-    entropy_coef: float = 0.005           # = algorithm.entropy_coef (für die Umrechnung oben)
 
 
 def register():
