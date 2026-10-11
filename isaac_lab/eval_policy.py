@@ -236,6 +236,7 @@ steps, max_tilt, early_tilt, max_forearm = zeros(), zeros(), zeros(), zeros()
 hold_steps, hold_force, hold_over, stall, act_rate, sink = zeros(), zeros(), zeros(), zeros(), zeros(), zeros()
 act_rate_eff = zeros()      # Unruhe wirksam: Änderung der Aktion, die die Servos bekommen (auf ±1 begrenzt, ggf. geglättet)
 eff_prev = torch.zeros(N, len(SERVO_JOINTS), device=dev)
+stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # Stall-Anteil je Servo (beschreibend, seit 2026-10-11)
 xy_path, xy_path_max = zeros(), zeros()     # Objektweg in der Tischebene ggü. t = EARLY_S (abgesetzt, Größe eingeschwungen)
 xy0 = obj.data.root_pos_w[:, :2].clone()
 hold_touch = torch.zeros(N, 5, device=dev)       # Fingernutzung: Schritte mit Objektkontakt > 1 N je Finger
@@ -276,6 +277,7 @@ def finish(i, reason):
         "objektweg_max_mm": 1000 * xy_path_max[i].item(),
         "finger_kontakt": (hold_touch[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
         "finger_kraft_n": (hold_fobj[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
+        "stall_je_servo": (stall_joint[i] / n).tolist(),
     })
 
 
@@ -296,7 +298,7 @@ with torch.inference_mode():
                 finish(i, next((n for n in term_names if uenv.termination_manager.get_term(n)[i]), "?"))
         # neue Episoden zurücksetzen, laufende fortschreiben (Werte nach dem Schritt)
         for buf in (steps, max_tilt, early_tilt, max_forearm, hold_steps, hold_force, hold_over, stall, act_rate, act_rate_eff, sink,
-                    hold_touch, hold_fobj, xy_path, xy_path_max):
+                    hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint):
             buf[done] = 0.0
         forearm0[done] = robot.data.joint_pos[done, forearm]
         z0[done] = obj.data.root_pos_w[done, 2]
@@ -315,7 +317,9 @@ with torch.inference_mode():
         fo = mdp.fingertip_object_forces(uenv)
         hold_touch[in_hold] += (fo[in_hold] > 1.0).float()
         hold_fobj[in_hold] += fo[in_hold]
-        stall[live] += (robot.data.applied_torque[live][:, stall_ids].abs() >= STALL_FRACTION * stall_limit[live]).any(-1).float()
+        at_limit = (robot.data.applied_torque[:, stall_ids].abs() >= STALL_FRACTION * stall_limit).float()
+        stall[live] += at_limit[live].max(-1).values
+        stall_joint[live] += at_limit[live]
         am = uenv.action_manager
         act_rate[live] += ((am.action - am.prev_action) ** 2).sum(-1)[live]
         servo_term = am.get_term("servos")
@@ -379,6 +383,9 @@ summary = {
         "kraft_n": [mean([e["finger_kraft_n"][k] for e in held if e["finger_kraft_n"]]) for k in range(5)],
         "finger_mit_kontakt": mean([sum(e["finger_kontakt"]) for e in held if e["finger_kontakt"]]),
     },
+    # beschreibend: Anteil der Schritte je Servo (außer Handgelenk) mit ≥ 90 % des Stall-Moments, gehaltene Episoden
+    "stall_je_servo": {"servo": [n for n in SERVO_JOINTS if n != WRIST_JOINT],
+                       "anteil": [mean([e["stall_je_servo"][k] for e in held]) for k in range(len(stall_ids))]},
 }
 result = {
     "protokoll": PROTOCOL, "bedingung": args_cli.bedingung, "objekt": args_cli.objekt, "greifart": args_cli.greifart,
@@ -423,6 +430,8 @@ lines = [
     "  Kontakt  " + "  ".join(pct(x) for x in summary["fingernutzung"]["kontakt_anteil"]),
     "  Kraft    " + "  ".join(num(x, " N") for x in summary["fingernutzung"]["kraft_n"]),
     f"  Finger mit Kontakt im Mittel: {num(summary['fingernutzung']['finger_mit_kontakt'], digits=2)}",
+    "Stall je Servo (Anteil der Schritte ≥ 90 % des Stall-Moments): " + "  ".join(
+        f"{n.replace('_left', '')} {pct(x)}" for n, x in zip(summary["stall_je_servo"]["servo"], summary["stall_je_servo"]["anteil"])),
 ]
 if args_cli.video and getattr(env, "recording", False):
     env.stop_recording()                        # Video schreiben, auch wenn kürzer als --video

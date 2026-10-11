@@ -377,6 +377,16 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        **Stand 2026-10-10**: Szene gebaut (Tasks `Oben-v0`/`ObenMulti-v0`, `eval_policy --greifart oben`, Leaderboard je
        Greifart), Geometrie gemessen, Raster: 3,5 cm Abstand, Mitte (−0,01, −0,33); Regel: Dose 75 %, Kugel Ø 7 64,5 %
        (13 % Startfehler, Kugeln rollen); kleine/flache Objekte mit waagrechter Hand nicht greifbar. Offene Fragen im Plan
+5f. [x] **Nachtlauf 2026-10-11** (je eine Änderung ggü. EXP-022, 5 Seeds; Berichte als Entwurf, Urteil Leon):
+       **EXP-024 Aktionsfilter** (gleitender Mittelwert α 0,3 wie Isaac Lab ShadowHand-OpenAI): 87 %, 5/5, **Platz 1**, Unruhe an
+       den Servos halbiert (0,17), Kippen 13°, Unterarm 11°, Griffkraft 78 N, weniger Stall je Servo → Kandidat neue Basis
+       (Firmware braucht denselben Filter). **EXP-025 Moment-Strafe** (−0,1): kein Effekt auf Stall (96,5 %), Kippen-Leitplanke
+       verletzt — Stall kommt von der Aktionsart (volle relative Aktion > Sättigungsfehler). **EXP-026 Fingerzahl**: keine
+       zusätzlichen Finger (3,3), unruhiger → verworfen. Neue Kennzahl Stall je Servo (eval_policy, beschreibend).
+       **int8 EXP-023 s43** (`docs/int8/EXP-023_s43.md`): alle Schichten auf der NPU, 71 kB, int8 ggü. float −1,4 PP (nicht
+       gesichert). **Durchsatz**: 1024/2048/4096 Umgebungen → 19,9k/26,8k/56,4k Schritte/s (`experiments/_bench.json`).
+       **Startpose von oben** (`docs/startpose-oben/ergebnis.md`): 20° gekippt, Rotator 75°, Höhe je Objekt → Regel 90–100 %
+       auf allen Objekten inkl. Kugel Ø 5 und Schachtel (Plan, Abschnitt „Ergebnis der Suche“)
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“

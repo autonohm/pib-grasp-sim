@@ -475,7 +475,12 @@ def verdict(child: dict, parent: dict) -> dict:
     diff = child["aufgabenerfolg"]["_boot"] - parent["aufgabenerfolg"]["_boot"]
     ci = [float(np.percentile(diff, 2.5)), float(np.percentile(diff, 97.5))]
     violated = []
+    # Mit geglätteter Aktion (EXP-024 ff.) erreicht der rohe Netzausgang die Servos nicht — die Leitplanke Unruhe gilt dann
+    # nur für „Unruhe wirksam“ (Aktion an den Servos), die rohe Unruhe ist dort keine Aussage über die Bewegung
+    filtered = bool((((child.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
     for key, label, tol, kind in GUARDRAILS:
+        if filtered and key == "unruhe":
+            continue
         c, p = child["leitplanken"].get(key), parent["leitplanken"].get(key)
         if c is None or p is None:
             continue
@@ -666,8 +671,10 @@ def head_lines(d: Path, exp: dict, pexp: dict | None, rec: dict, prec: dict | No
         lp, pp = res["leitplanken"], parent_main["leitplanken"]
         fc = (res.get("fingernutzung") or {}).get("finger_mit_kontakt")
         fp = (parent_main.get("fingernutzung") or {}).get("finger_mit_kontakt")
+        filtered = bool((((res.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
+        uk, ul = ("unruhe_wirksam", "Unruhe wirksam") if filtered else ("unruhe", "Unruhe")   # geglättet: an den Servos
         for label, c, q, f in (("Kippwinkel", lp.get("kipp_median_deg"), pp.get("kipp_median_deg"), "{:.0f}°"),
-                               ("Finger am Objekt", fc, fp, "{:.1f}"), ("Unruhe", lp.get("unruhe"), pp.get("unruhe"), "{:.2f}")):
+                               ("Finger am Objekt", fc, fp, "{:.1f}"), (ul, lp.get(uk), pp.get(uk), "{:.2f}")):
             if c is not None and q and abs(c - q) / abs(q) >= 0.25:
                 finds.append(f"{label} {f.format(c)} ({exp['eltern']}: {f.format(q)})")
     l4 = "**Befund** " + ("; ".join(finds) if finds else "–")
@@ -1457,7 +1464,9 @@ def leaderboard_table(rows: list, version: str, bench: list[dict] = BENCHMARK,
             best = 0
         bv = [exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos") for c in bench] if best is not None else []
         vids = " ".join(f"[▶]({d.name}/beste_videos/{f.name})" for f in bv if f.exists()) or "–"
-        unruhe = rec["_res"][0]["leitplanken"].get("unruhe")
+        lp0 = rec["_res"][0]
+        filtered = bool((((lp0.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
+        unruhe = lp0["leitplanken"].get("unruhe_wirksam" if filtered else "unruhe")    # geglättet: an den Servos
         warn = "" if rec["n"] >= 5 and rec["k"] >= 3 else " ⚠"
         current = exp.get("protokoll") == version
         L.append(f"| {i} | {link} | {exp.get('titel', '')} | "

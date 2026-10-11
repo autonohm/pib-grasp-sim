@@ -3,8 +3,7 @@ id: EXP-024
 titel: EXP-022 mit geglätteter Aktion (gleitender Mittelwert α = 0,3)
 datum: '2026-10-11'
 eltern: EXP-022
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-022 ist unruhig (Unruhe 0,36, Regel 0,01), EXP-023 zeigte, dass Strafen die Unruhe eher erhöhen. Ein gleitender
   Mittelwert auf der Aktion (Isaac Lab ShadowHand-OpenAI act_moving_average 0,3, DeXtreme-Linie) glättet, was an den
@@ -86,10 +85,18 @@ training:
 fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf, Leon schläft)
 
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: 3adf87d
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_01-42-39_EXP-024_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_02-06-23_EXP-024_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_02-25-23_EXP-024_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_02-44-31_EXP-024_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_03-03-56_EXP-024_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 87 % [81–92] (ggü. EXP-022 kein gesicherter Unterschied, P = 0,63), 5/5; Platz 1 im Leaderboard (eval-v2).
+  Unruhe wirksam 0,17 (EXP-022 0,36, halbiert), Kippwinkel 13° (20°), Unterarm 11° (25°), Griffkraft 78 N (104), YCB Zucker
+  98 % / Senf 97 %. Roh-Ausgabe des Netzes springt stark (Unruhe roh 2,98 — der Filter glättet sie). Stall je Servo (s42):
+  nur noch der Zeigefinger dauerhaft im Stall (89 %), Daumen-Rotator 2 %, Daumen 11 %, Mittel 21 % (EXP-022: 87–90 %).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese bestätigt — bestes Gesamtbild bisher; Kandidat für die neue Basis (Videos: Leon). Firmware muss denselben
+  Filter (α = 0,3, 60 Hz) vor die Servos setzen. Urteilsregel korrigiert: bei geglätteter Aktion zählt nur „Unruhe wirksam“.'

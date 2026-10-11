@@ -3,8 +3,7 @@ id: EXP-026
 titel: EXP-022 mit Belohnung nach Zahl der Finger am Objekt
 datum: '2026-10-11'
 eltern: EXP-022
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-022 greift mit Daumen + ~2 Fingern (2,9–3,8 im Mittel, je Seed andere), die Regel mit allen fünf. Der Term aus
   EXP-005 (damals mit fehlerhafter Annäherung, eval-v1) auf der heutigen Basis: mehr Finger am Objekt (≥ 4), weniger
@@ -85,10 +84,16 @@ training:
 fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf, Leon schläft)
 
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: 3adf87d
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_05-08-13_EXP-026_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_05-32-24_EXP-026_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_05-52-19_EXP-026_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_06-12-29_EXP-026_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-11_06-31-56_EXP-026_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 81 % [78–85] (kein Unterschied), 5/5; Leitplanke Unruhe verletzt (0,77 vs. 0,36). Finger am Objekt 3,26 (EXP-022
+  3,21) — keine Wirkung; Ring/klein je nach Seed weiter selten.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese widerlegt — wie EXP-005 bringt der Term keine zusätzlichen Finger, aber Unruhe. Verworfen. Welche Finger greifen,
+  bleibt eine Eigenschaft des Seeds (Ring/klein je Seed 0–100 %); die Regel nutzt alle fünf — erreichbar sind sie also.'

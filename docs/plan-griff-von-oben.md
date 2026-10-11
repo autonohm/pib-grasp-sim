@@ -155,6 +155,30 @@ Training plus Bewertung.
   2026-10-11). Erster Lauf Kugel Ø 7: beste Posen wenig gekippt (0–10°), Rotator 60°, tiefste Spitze 10–20 mm über dem Tisch.
   `env_cfg_oben.py` steht noch auf der gekippten Pose (36,5°) — umstellen nach Durchsicht der Suche.
 
+## Ergebnis der Suche (Nachtlauf 2026-10-11, `docs/startpose-oben/ergebnis.md`)
+
+Raster: Kippung {0, 10, 20, 30, 36,5, 45}° × Rollen {0, 4, 8}° × Rotator {60, 75, 90}° × Höhe der tiefsten Spitze {10, 20, 30,
+45, 60, 80} mm × Versatz {−20, 0, +20} mm, je 5 Wiederholungen, 6 Objekte (4860 Umgebungen je Objekt, ~1 min).
+
+**Beste Pose für alle Objekte: 20° gekippt, nicht gerollt, Daumen-Rotator 75° (Start = Ziel), Objekt in der Greifmitte** —
+im Raster 5/5 auf allen fünf Benchmark-Objekten und der YCB-Suppe, ohne Start- und Tischkontakt; Nachbarn (Rollen 4–8°,
+Rotator 90°, Kippung 30°) 88–100 %. Nachprüfung mit 48 Episoden je Höhe (Regel „alle schließen“, ohne RL):
+
+| Objekt | beste Höhe der tiefsten Spitze | gehalten | Starts mit Kontakt |
+|---|---|---|---|
+| Kugel Ø 5 | 10 mm | 90 % | 0 % |
+| Kugel Ø 7 | 15–20 mm | 100 % | 1 % |
+| Kugel Ø 9 | 30 mm | 94 % | 13 % |
+| Dose 6,8 × 10 | 60 mm | 98 % | 5 % |
+| Schachtel 9×6×4 | 10–15 mm | 94 % | 0 % |
+| YCB-Suppe (Test) | 60 mm | 98 % | 0 % |
+
+Zum Vergleich: waagrecht 35 mm (bis 2026-10-10) Kugel Ø 7 14–19/24, Kugel Ø 5 und Schachtel ≤ 3/24; gekippt 36,5° 3–5/24.
+Die Handfläche berührt die Objekte weiterhin nie (Präzisionsgriff). Höhe grob linear ≈ 0,73 · Objekthöhe − 27 mm
+(≥ 10 mm). **Vorschlag**: `env_cfg_oben.py` auf diese Pose umstellen (HAND_ROT aus 20°/0°, Rotator-Start 75° fest, Höhe je
+Objekt aus der Tabelle bzw. der Näherung), danach `analyse_reset.py`, Regel-Baseline (ADR-020) und Spezialist (EXP-0xx) —
+nach Leons Durchsicht.
+
 ## Offene Fragen an Leon
 
 1. **Handpose**: Unterarm waagrecht und Handfläche unten (Vorschlag, wie UniDexGrasp) oder gleich geneigt? Was kann der
