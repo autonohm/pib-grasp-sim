@@ -443,6 +443,28 @@ ggf. adaptive Kopplung
 
 ---
 
+## Abgabe / Veröffentlichung ← demnächst (Leon, 2026-10-12)
+
+**Ziel**: Repo abgabebereit und für die Nachwelt nutzbar machen — englisch, Leon nur als Autor genannt.
+Vorher Stand der Präsentation taggen (z. B. `v0.1-praesentation`), damit Umbauten nichts Belegtes zerstören.
+- [ ] Empfänger, Frist und Sichtbarkeit klären (Hochschule, pib-Team, öffentlich auf GitHub/HF?)
+- [ ] Lizenzen prüfen: eigener Code (z. B. BSD-3 wie Isaac Lab), pib-CAD/Meshes (Lizenz von pib/isento), YCB-Modelle,
+      Isaac-Sim-Assets (nicht weiterverteilen, nur referenzieren); `LICENSE` + Hinweise auf Fremdlizenzen
+- [ ] Englisch: README, Code-Kommentare/Docstrings, Doku (architecture, ADRs, conventions); Experiment-Berichte ggf. als
+      historische Protokolle auf Deutsch lassen (mit Hinweis) oder automatisch übersetzen; Bezeichner nur umbenennen, wenn
+      danach alle Prüfskripte und ein Kurztraining wieder laufen
+- [ ] Name: „Leon“ in Doku/Entscheidungen neutralisieren („decided“, „author“), Autor in README, `CITATION.cff`,
+      `pyproject`/Metadaten; Git-Historie nicht umschreiben (Commit-Autoren bleiben)
+- [ ] Aufräumen: absolute Pfade (`/home/leon`, u. a. `isaac_sim/autostart.py`, `README.md`, `.claude/settings.json`,
+      Ergebnis-JSONs), `CLAUDE.md`/`.claude/` (Assistenten-Konfiguration) raus oder als `CONTRIBUTING`-Notiz umschreiben,
+      tote Skripte/Branches, v4-Altlasten markieren; Geheimnisse scannen (z. B. `gitleaks` über die ganze Historie)
+- [ ] Reproduzierbarkeit: Umgebung festschreiben (Isaac Sim 5.1, Isaac Lab 2.3.2, conda-`environment.yml`, Versionen),
+      Schritt-für-Schritt „Setup → Training → Bewertung → Leaderboard“, Hardware-Anforderung (8 GB VRAM)
+- [ ] Große Dateien: Policies/Videos auf Hugging Face (Model Card), nicht ins Git; Repo-Größe prüfen (`.git` 269 MB)
+- [ ] Archivierung: Release-Tag + DOI über Zenodo (GitHub-Integration), `CITATION.cff`
+- [ ] Ergebnisse + Grenzen: Ergebnisüberblick (Leaderboard, Folien-Zahlen), bekannte Sim-to-Real-Lücken, offene Punkte
+- [ ] KI-Unterstützung offenlegen, falls die Hochschule das verlangt (Commits tragen bereits `Co-Authored-By`)
+
 ## Nicht in diesem Sprint
 - Team-Integration (Koordinatenrahmen, IK-/Greifpunkt-Interface) — siehe `feature/ros2-control`
 - AS5600-Sensoren, LSTM-Training — siehe `feature/ros2-control`

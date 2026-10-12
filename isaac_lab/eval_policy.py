@@ -65,6 +65,9 @@ parser.add_argument("--action_scale", type=float, default=0.0,
 parser.add_argument("--stoerung", action="store_true",
                     help="Störbedingung (Leaderboard v3, Robustheit): Objektlage stärker gestreut (ungenaue Vorgreifpose), "
                          "1 Policy-Schritt Verzögerung, Rauschen auf Gelenkwinkeln und FSR")
+parser.add_argument("--bewegung", type=str, default="",
+                    help="Belastungstest Armbewegung ART:PARAM (Scheinkräfte, mdp.apply_arm_motion): rampe:40 (a_max m/s², "
+                         "bis zum Versagen), transport:5 (a_max), gieren:0.6 / nicken:0.6 (Dauer s für 45°); leer = aus")
 parser.add_argument("--nur-medien", dest="nur_medien", action="store_true",
                     help="keine eval-Dateien schreiben (nur Video/Verlauf)")
 AppLauncher.add_app_launcher_args(parser)
@@ -92,6 +95,8 @@ EARLY_S = 0.1                                              # Startfehler (Reset-
 FORCE_LIMIT_N = 15.0
 STALL_FRACTION = 0.9
 REQ_DEG = args_cli.max_kipp_deg if args_cli.max_kipp_deg >= 0 else None
+BEW_ART, BEW_PARAM = (args_cli.bewegung.split(":")[0], float(args_cli.bewegung.split(":")[1])) if args_cli.bewegung else (None, 0.0)
+RUTSCH_M = 0.02          # Rutschen = Objekt > 2 cm relativ zur Hand ab Bewegungsbeginn (GenDexGrasp/GAGrasp)
 
 # ── Umgebung: wie im Training, nur Abbrüche „gefallen“ und „instabil“ ─────────────────────
 if args_cli.greifart == "oben":
@@ -279,6 +284,11 @@ hold_fobj = torch.zeros(N, 5, device=dev)        # … und Objektkraft je Finger
 forearm0 = robot.data.joint_pos[:, forearm].clone()
 z0 = obj.data.root_pos_w[:, 2].clone()           # Dosenhöhe beim Episodenstart (Größe randomisiert)
 episodes = []                                   # abgeschlossene Episoden
+# Belastungstest (--bewegung): Lage beim Bewegungsbeginn, größter Rutschweg danach, Beschleunigung beim ersten Rutschen
+p_bew0 = obj.data.root_pos_w.clone()
+rutsch_max = zeros()
+a_grenz = torch.full((N,), float("nan"), device=dev)
+a_last = zeros()
 # Verlauf je Zeitschritt seit Episodenstart (Summen über laufende Episoden, nur abgeschlossene zählen)
 T = int(uenv.max_episode_length) + 2
 trace_keys = ("hoehe_mm", "kipp_deg", "finger", "kraft_n")
@@ -308,6 +318,11 @@ def finish(i, reason):
             trace_sum[k][:n_i] += ep_trace[k][i, :n_i]
     held = reason == "time_out"
     req_ok = REQ_DEG is None or math.degrees(max_tilt[i].item()) <= REQ_DEG
+    bewegt = BEW_ART is not None and steps[i].item() * dt > mdp.BEWEGUNG_START_S
+    if bewegt and reason == "object_dropped" and math.isnan(a_grenz[i].item()):
+        a_grenz[i] = a_last[i]                     # gefallen, bevor 2 cm Rutschen gemessen waren
+    if BEW_ART is not None:
+        req_ok = req_ok and rutsch_max[i].item() < RUTSCH_M
     n = max(steps[i].item(), 1.0)
     early = (not held and steps[i].item() <= early_steps) or (
         REQ_DEG is not None and math.degrees(early_tilt[i].item()) > REQ_DEG)
@@ -329,6 +344,9 @@ def finish(i, reason):
         "schwingen_mm_s": 1000 * (hold_v2[i] / hold_steps[i]).sqrt().item() if hold_steps[i] > 0 else None,
         "drehschwingen_deg_s": math.degrees((hold_w2[i] / hold_steps[i]).sqrt().item()) if hold_steps[i] > 0 else None,
         "aktion_frequenz_hz": action_frequency(i),
+        "rutsch_max_mm": 1000 * rutsch_max[i].item() if bewegt else None,
+        "a_grenz": None if not bewegt or math.isnan(a_grenz[i].item()) else a_grenz[i].item(),   # None = hält bis zum Ende
+        "richtung": i % len(mdp.BEWEGUNG_RICHTUNGEN[BEW_ART]) if BEW_ART else None,
     })
 
 
@@ -344,6 +362,16 @@ with torch.inference_mode():
             act = act.clamp(-args_cli.action_clip, args_cli.action_clip)
         if args_cli.stoerung:                                      # 1 Schritt Verzögerung: ausgeführt wird die vorige Aktion
             act, act_queued = (act_queued if total_steps > 1 else torch.zeros_like(act)), act
+        if BEW_ART:                                                # Scheinkräfte für diesen Schritt (Episodenzeit)
+            a_now = mdp.apply_arm_motion(uenv, BEW_ART, BEW_PARAM, mdp.episode_time(uenv))
+            a_last = torch.where(steps * dt > mdp.BEWEGUNG_START_S - dt, a_now, a_last)
+            pos_now = obj.data.root_pos_w
+            started = steps * dt > mdp.BEWEGUNG_START_S
+            slip = torch.norm(pos_now - p_bew0, dim=-1)
+            rutsch_max = torch.where(started, torch.maximum(rutsch_max, slip), rutsch_max)
+            first = started & (slip > RUTSCH_M) & torch.isnan(a_grenz)
+            a_grenz = torch.where(first, a_last, a_grenz)
+            p_bew0 = torch.where((~started)[:, None], pos_now, p_bew0)
         obs, _, terminated, truncated, _ = env.step(act)
         done = terminated | truncated
         for i in done.nonzero().flatten().tolist():
@@ -354,6 +382,8 @@ with torch.inference_mode():
                     hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act):
             buf[done] = 0.0
         forearm0[done] = robot.data.joint_pos[done, forearm]
+        rutsch_max[done], a_last[done] = 0.0, 0.0
+        a_grenz[done] = float("nan")
         z0[done] = obj.data.root_pos_w[done, 2]
         live = ~done
         steps[live] += 1
@@ -447,9 +477,25 @@ summary = {
     "stall_je_servo": {"servo": [n for n in SERVO_JOINTS if n != WRIST_JOINT],
                        "anteil": [mean([e["stall_je_servo"][k] for e in held]) for k in range(len(stall_ids))]},
 }
+if BEW_ART:
+    # Belastungstest: Episoden, die die Bewegung erreicht haben (kein Startfehler, nicht vorher gefallen)
+    bew = [e for e in episodes if e["rutsch_max_mm"] is not None]
+    richt = mdp.BEWEGUNG_RICHTUNGEN[BEW_ART]
+    grenz = lambda es: median([BEW_PARAM if e["a_grenz"] is None else e["a_grenz"] for e in es])  # noqa: E731
+    summary["bewegung"] = {
+        "art": BEW_ART, "param": BEW_PARAM, "episoden_bewegt": len(bew),
+        "erfolg_bewegt": sum(1 for e in bew if e["erfolg"]) / max(len(bew), 1),
+        "rutsch_median_mm": median([e["rutsch_max_mm"] for e in bew]),
+        # Rampe: Beschleunigung beim ersten Rutschen > 2 cm; hält bis zum Ende → a_max (zensiert)
+        "a_grenz_median": grenz(bew) if BEW_ART == "rampe" else None,
+        "je_richtung": {r: {"episoden": len(es), "erfolg": sum(1 for e in es if e["erfolg"]) / max(len(es), 1),
+                            "a_grenz_median": grenz(es) if BEW_ART == "rampe" else None,
+                            "rutsch_median_mm": median([e["rutsch_max_mm"] for e in es])}
+                        for j, r in enumerate(richt) for es in [[e for e in bew if e["richtung"] == j]]},
+    }
 result = {
     "protokoll": PROTOCOL, "bedingung": args_cli.bedingung, "objekt": args_cli.objekt, "greifart": args_cli.greifart,
-    "stoerung": args_cli.stoerung,
+    "stoerung": args_cli.stoerung, "bewegung": args_cli.bewegung or None,
     "policy": args_cli.policy if args_cli.regel else str(Path(args_cli.policy).resolve()), "seed": args_cli.seed,
     "episoden": E, "umgebungen": N, "anforderung": {"max_kipp_deg": REQ_DEG},
     "dauer_s": round(time.time() - t_start, 1), "zusammenfassung": summary,
@@ -459,6 +505,9 @@ result = {
     "gehalten_je_episode": [int(e["gehalten"]) for e in episodes],
     "kipp_je_episode": [round(e["kipp_max_deg"], 2) for e in episodes],
 }
+if BEW_ART:
+    result["rutsch_je_episode"] = [None if e["rutsch_max_mm"] is None else round(e["rutsch_max_mm"], 1) for e in episodes]
+    result["a_grenz_je_episode"] = [None if e["a_grenz"] is None else round(e["a_grenz"], 2) for e in episodes]
 
 
 def pct(x):

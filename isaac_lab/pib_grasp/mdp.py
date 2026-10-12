@@ -493,3 +493,96 @@ def abnormal_robot_state(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = Sce
     """Gelenkgeschwindigkeit > 2× Limit — instabile Physik (Dexsuite: abnormal_robot_state)."""
     robot: Articulation = env.scene[asset_cfg.name]
     return (robot.data.joint_vel.abs() > (robot.data.joint_vel_limits * 2)).any(dim=1)
+
+
+# ── Armbewegung (Belastungstest, 2026-10-12) ──────────────────────────────────
+# Die Hand ist fest montiert. Eine Bewegung des ganzen Arms ist im Bezugssystem der Hand gleichwertig zu Scheinkräften
+# auf jeden Körper (Objekt und Handglieder, im Schwerpunkt):
+#   F = m·[−a_P + (Rᵀg − g) − α×r − ω×(ω×r) − 2·ω×v]
+# a_P = Beschleunigung des Drehpunkts, R = Drehung der Hand seit Bewegungsbeginn (Schwerkraft dreht relativ zur Hand),
+# ω/α um eine feste Achse n, r = Schwerpunkt − Drehpunkt, v = Geschwindigkeit im Handrahmen (Coriolis). Für reine
+# Translation exakt −m·a (Äquivalenzprinzip; DexGraspNet prüft Griffe genauso mit gedrehter Schwerkraft). Momente aus dem
+# ungleichmäßigen Feld vernachlässigt. Profile: Minimum-Jerk (Flash & Hogan 1985), Rampe bis zum Versagen (Grasp to Act
+# 2026, SoGraB), Drehen ±45° wie GRASPA. Drehpunkt = Hand-Root (Ellbogen, `elbow_lower`); Gieren um die senkrechte Achse
+# (Oberarm hängt senkrecht), Nicken um die waagrechte Achse quer zum Unterarm (Unterarm/Hand zeigen nach −y).
+
+BEWEGUNG_START_S = 2.6          # Haltephase ab 2,5 s (Tisch unten), Episode 4,5 s
+RAMPE_S = 1.8                   # Rampe 0 → a_max bis kurz vor Episodenende
+TRANSPORT_M = 0.3               # Strecke der Transportbewegung
+DREH_RAD = 0.7853981633974483   # 45° (GRASPA)
+_ACHSEN6 = ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))
+BEWEGUNG_RICHTUNGEN = {"rampe": ("+x", "−x", "+y", "−y", "+z", "−z"), "transport": ("+x", "−x", "+y", "−y", "+z", "−z"),
+                       "gieren": ("+", "−"), "nicken": ("+", "−")}
+
+
+def min_jerk(t: torch.Tensor, T: float):
+    """Minimum-Jerk-Profil auf Strecke 1: Weg s, Geschwindigkeit ṡ, Beschleunigung s̈ (0 vor dem Start, konstant 1 danach).
+    Spitzenbeschleunigung 10/√3/T² ≈ 5,77/T²."""
+    x = (t / T).clamp(0.0, 1.0)
+    s = x ** 3 * (10 - 15 * x + 6 * x ** 2)
+    sd = 30 * x ** 2 * (1 - x) ** 2 / T
+    sdd = 60 * x * (1 - x) * (1 - 2 * x) / T ** 2
+    return s, sd, sdd
+
+
+def transport_dauer(a_max: float, strecke: float = TRANSPORT_M) -> float:
+    """Dauer T der Minimum-Jerk-Bewegung über `strecke` mit Spitzenbeschleunigung a_max."""
+    return (10 / 3 ** 0.5 * strecke / a_max) ** 0.5
+
+
+def _rotate(v: torch.Tensor, n: torch.Tensor, phi: torch.Tensor) -> torch.Tensor:
+    """Rodrigues: v (…, 3) um die Einheitsachse n (3,) um phi (…, 1) drehen."""
+    c, s = torch.cos(phi), torch.sin(phi)
+    n = n.expand_as(v)
+    return v * c + torch.cross(n, v, dim=-1) * s + n * (n * v).sum(-1, keepdim=True) * (1 - c)
+
+
+def apply_arm_motion(env: ManagerBasedRLEnv, art: str, param: float, t: torch.Tensor,
+                     start_s: float = BEWEGUNG_START_S) -> torch.Tensor:
+    """Scheinkräfte einer Armbewegung auf Objekt und Hand setzen (bleiben bis zum nächsten Aufruf gesetzt).
+    art: rampe (param = a_max [m/s²], linear in RAMPE_S), transport (param = a_max, Minimum-Jerk über TRANSPORT_M),
+    gieren/nicken (param = Dauer T [s] für 45°). Richtung je Umgebung `env_id % len(Richtungen)`, t = Episodenzeit zu
+    Beginn des Schritts.
+    Gibt den Betrag der Beschleunigung des Drehpunkts bzw. ω²·r am Objekt [m/s²] je Umgebung zurück (Grenzwert)."""
+    robot: Articulation = env.scene["robot"]
+    obj: RigidObject = env.scene["object"]
+    dev, N = env.device, env.num_envs
+    k = torch.arange(N, device=dev) % len(BEWEGUNG_RICHTUNGEN[art])
+    tau = t + env.step_dt / 2 - start_s           # in der Mitte des Policy-Schritts (Kraft je Schritt konstant)
+    g = torch.tensor((0.0, 0.0, -9.81), device=dev)
+    bodies = [(obj, obj.data.body_com_pos_w, obj.data.body_com_lin_vel_w),
+              (robot, robot.data.body_com_pos_w, robot.data.body_com_lin_vel_w)]
+    if art in ("rampe", "transport"):
+        d = torch.tensor(_ACHSEN6, dtype=torch.float32, device=dev)[k]                  # (N, 3)
+        if art == "rampe":
+            amag = param * (tau / RAMPE_S).clamp(0.0, 1.0) * (tau >= 0)
+            acc = amag[:, None] * d
+        else:
+            _, _, sdd = min_jerk(tau, transport_dauer(param))
+            acc = (TRANSPORT_M * sdd)[:, None] * d
+            amag = acc.norm(dim=-1)
+        per_body = lambda p, v: (-acc)[:, None, :].expand_as(p)                          # noqa: E731
+    elif art in ("gieren", "nicken"):
+        n = torch.tensor((0.0, 0.0, 1.0) if art == "gieren" else (1.0, 0.0, 0.0), device=dev)
+        sign = torch.tensor((1.0, -1.0), device=dev)[k]
+        s, sd, sdd = min_jerk(tau, param)
+        theta, w, al = (sign * DREH_RAD * x for x in (s, sd, sdd))
+        pivot = robot.data.root_pos_w                                                    # Ellbogen
+        g_rel = _rotate(g.expand(N, 3), n, -theta[:, None]) - g                          # Rᵀg − g
+
+        def per_body(p, v):
+            r = p - pivot[:, None, :]
+            nn = n.expand_as(r)
+            nxr = torch.cross(nn, r, dim=-1)
+            return (g_rel[:, None, :] - al[:, None, None] * nxr - w[:, None, None] ** 2 * torch.cross(nn, nxr, dim=-1)
+                    - 2 * w[:, None, None] * torch.cross(nn, v, dim=-1))
+        r_obj = obj.data.root_pos_w - pivot
+        r_perp = (r_obj - n * (r_obj @ n)[:, None]).norm(dim=-1)
+        amag = torch.sqrt((al * r_perp) ** 2 + (w ** 2 * r_perp) ** 2)                  # Bahnbeschleunigung am Objekt
+    else:
+        raise ValueError(f"unbekannte Bewegung {art}")
+    for asset, pos, vel in bodies:
+        m = asset.root_physx_view.get_masses().to(dev)[..., None]                        # (N, B, 1)
+        f = (m * per_body(pos, vel)).contiguous()
+        asset.permanent_wrench_composer.set_forces_and_torques(forces=f, torques=torch.zeros_like(f), is_global=True)
+    return amag

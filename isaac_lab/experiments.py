@@ -345,6 +345,11 @@ def stoerung_args(cond: dict) -> list[str]:
     return ["--stoerung"] if cond.get("stoerung") else []
 
 
+def bewegung_args(cond: dict) -> list[str]:
+    """--bewegung für eval_policy (Belastungstest „Arm bewegt sich“, mdp.apply_arm_motion)."""
+    return ["--bewegung", cond["bewegung"]] if cond.get("bewegung") else []
+
+
 def greifart_args(cond: dict) -> list[str]:
     """--greifart für eval_policy (Bedingungen „von oben“ tragen greifart: oben; ohne Angabe seitlich)."""
     return ["--greifart", cond["greifart"]] if cond.get("greifart") else []
@@ -369,7 +374,7 @@ def evaluate_condition(run_dir: Path, exp: dict, cond: dict, video: bool, out):
     else:
         src = ["--checkpoint", str(ckpts[-1])] + clip_args(run_dir)
     base = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--max_kipp_deg", str(req if req is not None else -1),
-            "--objekt", cond.get("objekt_id") or DEFAULT_OBJECT, "--bedingung", cond["name"]] + greifart_args(cond) + stoerung_args(cond)
+            "--objekt", cond.get("objekt_id") or DEFAULT_OBJECT, "--bedingung", cond["name"]] + greifart_args(cond) + stoerung_args(cond) + bewegung_args(cond)
     log(f"    Bedingung {cond['name']}")
     subprocess.run(base + src + ["--num_envs", str(EVAL["umgebungen"]), "--episodes", str(EVAL["episoden"]),
                                  "--out", str(run_dir)], cwd=REPO, stdout=out, stderr=subprocess.STDOUT, timeout=1800)
@@ -446,7 +451,10 @@ def aggregate(exp: dict, cond: dict, req="eigene") -> dict:
         held = np.array(e["gehalten_je_episode"], bool)
         if "kipp_je_episode" not in e:          # ältere Bewertung: Anforderung schon angewandt
             return np.array(e["erfolg_je_episode"], float)
-        return (held & ((np.array(e["kipp_je_episode"]) <= req) if req is not None else True)).astype(float)
+        ok = held & ((np.array(e["kipp_je_episode"]) <= req) if req is not None else True)
+        if "rutsch_je_episode" in e:            # Belastungstest: zusätzlich < 2 cm Rutschen ab Bewegungsbeginn
+            ok = ok & np.array([r is None or r < 20.0 for r in e["rutsch_je_episode"]])
+        return ok.astype(float)
 
     res["anforderung_max_kipp_deg"] = req
     res["_erfolg_je_seed"] = [success(e) for e in evals]
@@ -955,6 +963,115 @@ def cmd_eval(a):
     cmd_done(a)
 
 
+def _belastung_runs(exp: dict) -> tuple[str | None, list[str]]:
+    """Top-Seed (Einsatz-Kandidat, `best_seed`) und alle erfolgreichen Läufe eines Rezepts; Regel: ihr einer Lauf."""
+    runs = list(dict.fromkeys(exp.get("laeufe") or []))
+    if exp.get("regel"):
+        return (runs[0] if runs else None), runs[:1]
+    rec = recipe(exp)
+    if not rec or not rec["k"]:
+        return None, []
+    bench = benchmark(exp)
+    best, _ = best_seed({c["name"]: aggregate(exp, c) for c in bench}, bench)
+    by_seed = {int(m.group(1)): r for r in runs for m in [re.search(r"_s(\d+)$", r)] if m}
+    ok = [by_seed[s] for s, o in zip(rec["seed_ids"], rec["erfolgreich"]) if o and s in by_seed]
+    return by_seed.get(best), ok
+
+
+def _bew_result(run: str, exp: dict, cond: dict) -> dict | None:
+    f = REPO / run / f"{stem(exp, cond)}.json"
+    return json.loads(f.read_text())["zusammenfassung"].get("bewegung") if f.exists() else None
+
+
+def cmd_belastung(a):
+    """Belastungstest „Arm bewegt sich“ (nur Bewertung): Rampe und Dreh-Treppe am Top-Seed, Transport auf allen
+    erfolgreichen Seeds; fehlende Bewertungen werden nachgeholt, vorhandene bleiben. Danach experiments/belastung.md."""
+    check_env()
+    for exp_id in a.ids:
+        d, exp = load(exp_id)
+        B = BEWEGUNG[greifart(exp)]
+        top, ok = _belastung_runs(exp)
+        if not top:
+            log(f"{exp_id}: kein erfolgreicher Seed — übersprungen")
+            continue
+        log(f"== Belastung {exp_id}: Top {Path(top).name}, Transport auf {len(ok)} Läufen")
+
+        def ensure(run, cond):
+            if _bew_result(run, exp, cond) is None:
+                with open(LOGS / f"{exp_id}_belastung.log", "a", encoding="utf-8") as out:
+                    evaluate_condition(REPO / run, exp, cond, False, out)
+            return _bew_result(run, exp, cond)
+        for c in B["rampe"]:
+            ensure(top, c)
+        for art in ("gieren", "nicken"):
+            for c in B[art]:                                   # Dauer absteigend = härter; Abbruch bei < 20 %
+                r = ensure(top, c)
+                if r is None or r["erfolg_bewegt"] < 0.2:
+                    break
+        for run in ok:
+            ensure(run, B["transport"])
+    write_belastung()
+    cmd_done(a)
+
+
+def belastung_values(exp: dict) -> dict | None:
+    """Ergebnisse des Belastungstests eines Rezepts (None, wenn nicht getestet)."""
+    B = BEWEGUNG[greifart(exp)]
+    top, ok = _belastung_runs(exp)
+    if not top or _bew_result(top, exp, B["rampe"][0]) is None:
+        return None
+    rampe = [_bew_result(top, exp, c) for c in B["rampe"]]
+    dreh = {art: [(float(c["bewegung"].split(":")[1]), _bew_result(top, exp, c)) for c in B[art]] for art in ("gieren", "nicken")}
+    tr = [r["erfolg_bewegt"] for run in ok for r in [_bew_result(run, exp, B["transport"])] if r]
+    return {"top": Path(top).name.split("_")[-1], "rampe": rampe, "dreh": dreh,
+            "transport": float(np.mean(tr)) if tr else None, "transport_n": len(tr)}
+
+
+def write_belastung():
+    """experiments/belastung.md: Grenzbeschleunigung, Drehen und Transport je Rezept und Greifart."""
+    alle = trained_experiments()
+    L = ["# Belastungstest „Arm bewegt sich“", "",
+         "Automatisch erzeugt (`experiments.py belastung`). Die Hand bleibt fest, die Armbewegung wirkt als Scheinkraft auf "
+         "Objekt und Handglieder (`mdp.apply_arm_motion`; geprüft mit `tools/pruef_bewegung.py`: 1–3 % Abweichung, schnellste "
+         "Drehung 9 %). Erfolg = gehalten, Anforderung erfüllt **und** < 2 cm Rutschen relativ zur Hand ab Bewegungsbeginn "
+         "(GenDexGrasp/GAGrasp); Werte bedingt auf Episoden, die die Bewegung erreichen (ab 2,6 s).", "",
+         "- **Rampe** (Grasp to Act 2026, SoGraB): Beschleunigung in ±x, ±y, ±z linear 0 → 200 m/s² in 1,8 s; "
+         "**Grenze** = Beschleunigung beim ersten Rutschen > 2 cm, Median über Episoden (hält bis zum Ende → 200). Top-Seed.",
+         "- **Gieren / Nicken** (GRASPA): Hand dreht 45° (beide Richtungen) um den Ellbogen, senkrechte bzw. waagrechte Achse, "
+         f"Minimum-Jerk (Flash & Hogan 1985) in T = {' / '.join(str(T) for T in DREH_T)} s (härter nach rechts; Abbruch unter "
+         "20 %). Top-Seed.",
+         "- **Transport** (Dex-Net „transportieren“): 0,3 m Minimum-Jerk mit 5 m/s² in 6 Richtungen — realistisch für pib. "
+         "Mittel über alle erfolgreichen Seeds.",
+         "- Richtungen im Weltrahmen: x quer zur Handfläche, y längs des Unterarms (−y = zu den Fingern), z senkrecht. "
+         "Kraft auf das Objekt = −m·a (Hand beschleunigt in +z → Objekt wird nach unten gedrückt).", ""]
+    for art in GREIFARTEN:
+        rows = [(e, v) for _, e in alle if greifart(e) == art and e.get("protokoll") == PROTOKOLL
+                for v in [belastung_values(e)] if v]
+        if not rows:
+            continue
+        B = BEWEGUNG[art]
+        L += [f"## Greifart „{art}“", "",
+              "| Experiment | Top | " + " | ".join(f"Rampe {c['kurz'].rsplit(' ', 1)[0]}: Grenze [schwächste]" for c in B["rampe"])
+              + " | Gieren " + " / ".join(str(T) for T in DREH_T) + " s | Nicken " + " / ".join(str(T) for T in DREH_T)
+              + " s | Transport 5 m/s² |",
+              "|---|---|" + "---|" * len(B["rampe"]) + "---|---|---|"]
+        for e, v in rows:
+            def grenz(r):
+                if not r:
+                    return "–"
+                wr = {k: x["a_grenz_median"] for k, x in r["je_richtung"].items() if x["a_grenz_median"] is not None}
+                w = min(wr, key=wr.get) if wr else None
+                return f"{r['a_grenz_median']:.0f} m/s² [{w} {wr[w]:.0f}]" if w else f"{r['a_grenz_median']:.0f} m/s²"
+            dreh = lambda art_d: " / ".join("–" if r is None else f"{100 * r['erfolg_bewegt']:.0f} %" for _, r in v["dreh"][art_d])  # noqa: E731
+            L.append(f"| {e['id']} {'(Regel)' if e.get('regel') else ''} | {v['top']} | "
+                     + " | ".join(grenz(r) for r in v["rampe"])
+                     + f" | {dreh('gieren')} | {dreh('nicken')} | "
+                     + ("–" if v["transport"] is None else f"{100 * v['transport']:.0f} % ({v['transport_n']} Seeds)") + " |")
+        L.append("")
+    (EXP_DIR / "belastung.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    log("belastung.md aktualisiert")
+
+
 def cmd_umstellen(a):
     """Experiment auf das aktuelle Protokoll heben (ADR-021): protokoll = PROTOKOLL, das alte bleibt als
     protokoll_vorher (Leaderboard-Historie); danach `leaderboard --bewerten` (Benchmark + Testobjekte) und `eval`."""
@@ -1079,6 +1196,29 @@ STOERUNG = {"seitlich": {"name": "zylinder_seitlich_gestoert", "objekt_id": "zyl
 
 def stoerung(exp: dict) -> dict:
     return STOERUNG[greifart(exp)]
+
+
+# Belastungstest „Arm bewegt sich“ (2026-10-12; mdp.apply_arm_motion, Literatur im Plan bzw. experiments/belastung.md):
+# Scheinkräfte im Handrahmen statt bewegter Hand. Rampe bis zum Versagen (Grasp to Act 2026, SoGraB) am Haupt- und am
+# schwersten Objekt, Drehen ±45° wie GRASPA als Treppe über die Dauer, Transport 0,3 m mit 5 m/s² (realistisch für pib).
+# Nur Bewertung, nicht im Index (Leon). Erfolg zusätzlich: < 2 cm Rutschen relativ zur Hand (GenDexGrasp/GAGrasp).
+DREH_T = (0.8, 0.45, 0.25)
+
+
+def _bew(greif: str, name: str, objekt: str, kurz: str, bew: str, kipp) -> dict:
+    c = {"name": f"{name}_{bew.replace(':', '_')}", "objekt_id": objekt, "kurz": f"{kurz} {bew}", "bewegung": bew,
+         "anforderung": {"max_kipp_deg": kipp}}
+    return {**c, "greifart": "oben"} if greif == "oben" else c
+
+
+BEWEGUNG = {
+    g: {"rampe": [_bew(g, n, o, k, "rampe:200", kipp) for n, o, k in haupt + schwer],
+        "transport": _bew(g, *haupt[0], "transport:5", kipp),
+        "gieren": [_bew(g, *haupt[0], f"gieren:{T}", kipp) for T in DREH_T],
+        "nicken": [_bew(g, *haupt[0], f"nicken:{T}", kipp) for T in DREH_T]}
+    for g, haupt, schwer, kipp in (
+        ("seitlich", [("zylinder", "zylinder_d6", "Ø 6")], [("senf", "ycb_006_senf", "Senf (YCB, 603 g)")], 45),
+        ("oben", [("kugel_d7", "kugel_d7", "Kugel Ø 7")], [("suppe", "ycb_005_suppe", "Suppendose (YCB)")], None))}
 
 
 def greifart(exp: dict) -> str:
@@ -1465,6 +1605,15 @@ def v3_values(exp: dict, seed=None) -> dict | None:
             "servo_last": float(np.mean(last)) if last else None, "k": rec["k"], "n": rec["n"]}
 
 
+def bewegt_info(exp: dict) -> str:
+    """Info-Spalte „Bewegt“ (nicht im Index): Grenzbeschleunigung Hauptobjekt (Top-Seed) · Transport-Erfolg."""
+    v = belastung_values(exp)
+    if not v or not v["rampe"][0]:
+        return "–"
+    tr = "–" if v["transport"] is None else f"{100 * v['transport']:.0f} %"
+    return f"{v['rampe'][0]['a_grenz_median']:.0f} m/s² · {tr}"
+
+
 def leaderboard_v3(exps: list, art: str) -> list[str]:
     # von oben ohne Kippwinkel: die Bedingung hat keine Kippanforderung (Objekt hängt zwischen den Fingern)
     wunsch = [w for w in WUNSCH if not (art == "oben" and w[0] == "kipp_median_deg")]
@@ -1509,14 +1658,15 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
          "Sortiert nach dem **Index** = geometrisches Mittel der Wünschbarkeiten (0 = inakzeptabel, 1 = Ziel; Derringer & Suich "
          f"1980), je Größe nach unten auf {D_MIN} begrenzt (eine schlechte Größe drückt, nullt aber nicht). Alle Größen nur über die "
          "**erfolgreichen Seeds** (wie die Leistung); **Top** = Index des besten Seeds (Einsatz-Kandidat, der in den Videos). "
-         "Unterarm nur zur Info (zählt nicht, solange das Objekt aufrecht bleibt). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
+         "Unterarm nur zur Info (zählt nicht, solange das Objekt aufrecht bleibt). **Bewegt** (Info, nicht im Index): "
+         "Grenzbeschleunigung des Top-Seeds · Transport-Erfolg ([belastung.md](belastung.md)). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
          "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
          "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
          + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
                      for w in wunsch) + ". Zuverlässigkeit nur zur Info.", "",
          "| Rang | Experiment | Titel | Index | Top (Seed) | Pareto | " + " | ".join(w[1] for w in wunsch)
-         + " | Unterarm ° | Seeds | Aktionsweg |",
-         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|"]
+         + " | Unterarm ° | Bewegt | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|---|"]
     for i, (idx, dd, e, v, ds, incomplete, (tidx, tseed)) in enumerate(scored, 1):
         p = (e.get("training") or {})
         clip = (load_params(REPO / e["laeufe"][0]).get("agent") or {}).get("clip_actions") if e.get("laeufe") else None
@@ -1527,7 +1677,7 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
         L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
                  f"{tops} | {'★' if not incomplete and not dominated(scored[i - 1]) else ''} | "
                  + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch)
-                 + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {v['k']}/{v['n']} | {weg} |")
+                 + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {bewegt_info(e)} | {v['k']}/{v['n']} | {weg} |")
     return L
 
 
@@ -1650,13 +1800,16 @@ def main():
     md.add_argument("--verlauf", action="store_true")
     md.add_argument("--neu", action="store_true")
     md.add_argument("--beste", action="store_true", help="nur die langen Videos des besten Seeds (neu aufnehmen)")
+    bl = sub.add_parser("belastung")
+    bl.add_argument("ids", nargs="+", help="Experimente (Belastungstest „Arm bewegt sich“, nur Bewertung)")
     lb = sub.add_parser("leaderboard")
     lb.add_argument("--bewerten", action="store_true", help="fehlende Benchmark-Bewertungen nachholen")
     d = sub.add_parser("done")
-    for s in (r, e, bt, md, lb, d):
+    for s in (r, e, bt, md, bl, lb, d):
         s.add_argument("--kein-backup", action="store_true", help="nicht nach Hugging Face sichern")
     a = p.parse_args()
-    {"new": cmd_new, "bench": cmd_bench, "run": cmd_run, "eval": cmd_eval, "umstellen": cmd_umstellen, "bericht": cmd_bericht, "leaderboard": cmd_leaderboard, "medien": cmd_medien, "done": cmd_done}[a.cmd](a)
+    {"new": cmd_new, "bench": cmd_bench, "run": cmd_run, "eval": cmd_eval, "umstellen": cmd_umstellen, "bericht": cmd_bericht, "leaderboard": cmd_leaderboard, "medien": cmd_medien, "belastung": cmd_belastung,
+     "done": cmd_done}[a.cmd](a)
 
 
 if __name__ == "__main__":
