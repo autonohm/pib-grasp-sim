@@ -42,7 +42,9 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
                             ("HeavyMultiProgressClipFingers", "PibGraspEnvCfg_HeavyMultiProgressFingers", "PibGraspPPORunnerCfg_Clip"),
                             # Nachtlauf 2026-10-12: Aktionsraum wie Dexsuite (Skala 0,1 alle, bounds_loss statt Begrenzung)
                             ("HeavyMultiProgressDex", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Bounds"),
-                            ("HeavyMultiProgressDexGross", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_BoundsGross")):
+                            ("HeavyMultiProgressDexGross", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_BoundsGross"),
+                            # EXP-033: bounds_loss mit der alten Skala (0,03 Unterarm/Handgelenk) — Ursache Kippen in EXP-027?
+                            ("HeavyMultiProgressBounds", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg_Bounds")):
     gym.register(
         id=f"Pib-Grasp-Hand-Left-{_name}-v0",
         entry_point="isaaclab.envs:ManagerBasedRLEnv",

@@ -148,11 +148,15 @@ tensorboard --logdir logs/rsl_rl                                          # http
 ### Schnittstelle Policy ↔ echte Hand
 - **Aktion** (8, relative Gelenkposition in rad × Skala, Reihenfolge = `LEFT_HAND_SERVO_JOINTS`):
   `forearm_left, wrist_left, thumb_left_rotator, thumb_left_proximal, index_left_proximal,
-  middle_left_proximal, ring_left_proximal, pinky_left_proximal`; Skala 0,03 (Unterarm,
-  Handgelenk) bzw. 0,1 rad (übrige).
-- **Beobachtung** (je Schritt 21 Werte, 5 Schritte Verlauf = 105): 8 Gelenkwinkel [rad, gleiche
-  Reihenfolge], 5 FSR [N, 0–20] in der Reihenfolge **Daumen, Zeige, Mittel, Ring, klein**,
-  8 letzte Aktionen. Normalisierung steckt im exportierten Netz (rsl_rl).
+  middle_left_proximal, ring_left_proximal, pinky_left_proximal`; Skala bis EXP-026 0,03 (Unterarm,
+  Handgelenk) bzw. 0,1 rad (übrige), ab EXP-027 („Aktionsraum wie Dexsuite“) 0,1 rad für alle 8 —
+  die Skala des Laufs steht in `params/env.yaml` → `actions.servos.scale`. Begrenzung/Filter je nach
+  Rezept (EXP-020–026 ±1, EXP-024 Filter α 0,3, ab EXP-027 keins); die Firmware muss dasselbe tun.
+- **Beobachtung** (105 Werte, 5 Schritte Verlauf) **je Größe gebündelt**, nicht je Schritt: zuerst
+  5 × 8 Gelenkwinkel [rad, gleiche Reihenfolge], dann 5 × 5 FSR [N, 0–20] in der Reihenfolge
+  **Daumen, Zeige, Mittel, Ring, klein**, dann 5 × 8 letzte Aktionen; innerhalb jeder Größe der
+  älteste Schritt zuerst. Nach einem Reset steht der erste Wert in allen 5 Plätzen (Isaac Lab
+  `history_length`). Normalisierung steckt im exportierten Netz (rsl_rl).
 - Handgelenk: Vorzeichen-Ausnahme, −60° = gebeugt (siehe oben).
 
 ### ST Edge AI (Policy → STM32N657)
