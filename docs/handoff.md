@@ -8,7 +8,7 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ### Zuletzt gearbeitet an
 
-1. **Leaderboard v3** (`experiments.py` → `WUNSCH`, `leaderboard_v3`; Störbedingung in `eval_policy.py --stoerung`): seitlich EXP-024 Filter Index 0,53 ★ (87 %, Robust 72 %) vor Regel EXP-014 0,43; daraus Eltern EXP-027 = EXP-024.
+1. **Leaderboard v3** (`experiments.py` → `WUNSCH`, `leaderboard_v3`; Störbedingung in `eval_policy.py --stoerung`), am Nachmittag überarbeitet (Leon): alle Größen nur über erfolgreiche Seeds, Kippen inakzeptabel bei 45°, Objektweg 150 mm, Unterarm nur Info, Untergrenze 0,1, Spalte Top = bester Seed. Seitlich EXP-024 0,64 ★ (Top 0,79) vor Regel EXP-014 0,55, EXP-022 0,49, EXP-027 0,45 ★.
 2. **Aktionsraum wie Dexsuite** (`pib_grasp/rsl_rl_ext.py` bounds_loss über die entropy-Property, `RslRlPpoActorCriticBoundsCfg`, `dexsuite_action_space()`): EXP-027 80 %, 2/5, Kippen 44°, Unterarm 51°, Index 0,06; EXP-031 (Actor 512-256-128) 75 %, 3/5, gleiches Kippen; **EXP-033** (bounds_loss, Unterarm/Handgelenk wieder 0,03) 79 %, 4/5, Kippen 30°, Unterarm 34°, Index 0,17; **EXP-032** (großes Netz, 4096 Umg. × 600 It.) 85 %, 5/5, Kippen 30°, Unterarm 43°, aber Unruhe 3,85 (Leitplanke), Index 0,08.
 3. **Von oben** (`env_cfg_oben.py` auf gefundene Pose 20°/Rotator 75°/Höhe je Objekt, `analyse_reset --greifart oben` 2/256 ≤ 1 N): Regel EXP-028 **100 %, Robust 99 %, Index 0,92**; Spezialisten EXP-029 (Rezept 027) 99 % / EXP-030 (Rezept 022) 100 % — beide drehen den Unterarm auf 90°, Objekt gekippt (81–106°) und ~10 cm verschoben, Index (ohne Kippwinkel) 0,12/0,18.
 4. Ergebnis/Schluss als **Entwurf** in `EXP-027…033_experiment.yaml` (Urteile Leon); Kette umgestellt (`scratchpad/nacht2/kette3.sh`: 031 → 033 → 032), damit die Ursachenklärung früher vorlag.
@@ -20,6 +20,7 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 - Grundsatzfrage an Leon: Unterarm/Handgelenk aus dem Aktionsraum (Arm hält die Vorgreifpose, ADR-018) oder Kosten auf die Abweichung (`joint_deviation_l1`) — Entscheidung vom 2026-10-06 war „Unterarm bleibt“ (current-sprint 5h).
 - Videos von EXP-027/029/030 noch nicht von Leon gesichtet — „Objekt auf der Handfläche“ ist Vermutung.
 - Urteile in `EXP-027…033_experiment.yaml` sind Entwürfe (Feld `urteil` leer).
+- Index „oben“ misst die Objektlage nicht mehr (Kipp raus, Unterarm nur Info) — Spezialisten EXP-029/030 kommen auf 0,49/0,55, obwohl sie das Objekt 81–106° kippen. Klären: Lage-Kriterium je Objekt (Kugel egal, Dose/Schachtel nicht)?
 
 ### Nächste Schritte (in Reihenfolge)
 

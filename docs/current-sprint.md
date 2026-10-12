@@ -396,6 +396,10 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        Regularisierer gegen das Kippen; Leistung nirgends gesichert verschieden (ADR-022, Nachtrag). **Von oben**: Regel EXP-028
        100 %, Robust 99 %, Index 1,00; Spezialisten EXP-029/030 99/100 %, drehen aber den Unterarm auf 90° und kippen das
        Objekt (Belohnung ohne Orientierung) → mit guter Vorgreifpose genügt von oben eine Regel
+       **Index überarbeitet** (Leon, 2026-10-12 nachmittags): alle Größen nur über die erfolgreichen Seeds (vorher nur die
+       Leistung — ein gescheiterter Seed zog z. B. EXP-027 von 0,45 auf 0,06), Kippen inakzeptabel erst bei 45° (= Anforderung),
+       Objektweg bei 150 mm, Unterarm nur zur Info, Untergrenze je Größe 0,1 statt 0,01; neue Spalte **Top** = Index des besten
+       Seeds (Einsatz-Kandidat, der in den Videos). Seitlich: EXP-024 0,64 (Top 0,79) vor Regel 0,55, EXP-022 0,49, EXP-027 0,45
 5h. [ ] **Kippen seitlich über Kosten statt Skala** (Leon wählt, Eltern EXP-033): (1) `joint_deviation_l1` auf Unterarm/
        Handgelenk (Isaac Lab H1/G1), (2) Kippstrafe ab t = 0, (3) CaT (Chane-Sane et al. 2024); Gewicht per `reward_diag`.
        Grundsatzfrage: Unterarm/Handgelenk aus dem Aktionsraum (Arm hält die Vorgreifpose) — 2026-10-06 „Unterarm bleibt“

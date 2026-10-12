@@ -1179,7 +1179,7 @@ def recipe(exp: dict, conds: list[dict] | None = None) -> dict | None:
     k, n = int(ok.sum()), len(ok)
     return {"auswertung": AUSWERTUNG, "bedingungen": [c["name"] for c in conds],
             "kurz": [c.get("kurz", c["name"]) for c in conds], "seed_ids": res[0]["seed_ids"],
-            "je_seed": M.tolist(), "erfolgreich": ok.tolist(), "k": k, "n": n,
+            "je_seed": M.tolist(), "erfolgreich": ok.tolist(), "k": k, "n": n, "seed_ids": res[0]["seed_ids"],
             "zuverlaessigkeit_ki95": clopper_pearson(k, n),
             "leistung": pooled_iqm_lists([[s for s, o in zip(r["_erfolg_je_seed"], ok) if o] for r in res], rng) if k else None,
             "leistung_je_objekt": [float(np.median(M[i, ok])) if k else None for i in range(len(conds))],
@@ -1429,30 +1429,36 @@ WUNSCH = [  # (Schlüssel, Kurzname, inakzeptabel, Ziel, Format)
     ("robustheit", "Robust", 0.50, 0.90, "pct"),
     ("unruhe_wirksam", "Unruhe", 1.0, 0.1, "{:.2f}"),
     ("schwingen_mm_s", "Schwingen mm/s", None, None, "{:.0f}"),
-    ("objektweg_mm", "Objektweg mm", 100.0, 35.0, "{:.0f}"),
-    ("kipp_median_deg", "Kipp °", 35.0, 5.0, "{:.0f}"),
-    ("unterarm_median_deg", "Unterarm °", 45.0, 5.0, "{:.0f}"),
+    ("objektweg_mm", "Objektweg mm", 150.0, 35.0, "{:.0f}"),
+    ("kipp_median_deg", "Kipp °", 45.0, 5.0, "{:.0f}"),       # inakzeptabel = Anforderung der Bedingung
     ("servo_last", "Servo-Last", 1.0, 0.20, "pct"),
 ]
+# Unterarm nur zur Info, nicht im Index: egal, solange das Objekt aufrecht bleibt (Leon, 2026-10-12)
+D_MIN = 0.1     # weiche Untergrenze je Größe: eine Größe jenseits von „inakzeptabel“ drückt den Index, nullt ihn nicht
 
 
-def v3_values(exp: dict) -> dict | None:
-    """Kennzahlen eines Rezepts für das Leaderboard v3: Leistung aus dem Benchmark (Rezept), Robustheit = Erfolg in der
-    Störbedingung (Mittel der Seeds), übrige Größen aus der Hauptbedingung (Mittel der Seeds); Servo-Last = Stall je
-    Servo, gemittelt über die 7 Servos (ohne Handgelenk)."""
+def v3_values(exp: dict, seed=None) -> dict | None:
+    """Kennzahlen eines Rezepts für das Leaderboard v3, alle nur über die **erfolgreichen Seeds** (wie die Leistung;
+    Leon, 2026-10-12 — Zuverlässigkeit k/n steht daneben): Leistung aus dem Benchmark (IQM), Robustheit = Erfolg in der
+    Störbedingung, übrige Größen aus der Hauptbedingung (Mittel der Seeds); Servo-Last = Stall je Servo, gemittelt über
+    die 7 Servos (ohne Handgelenk). Mit `seed` nur dieser Seed (Top-Kandidat), Leistung = Mittel über die Objekte."""
     rec = recipe(exp)
     if not rec or not rec.get("leistung"):
         return None
+    use = {s for s, o in zip(rec["seed_ids"], rec["erfolgreich"]) if o} if seed is None else {seed}
     main = aggregate(exp, exp["bedingungen"][0])
     st = aggregate(exp, stoerung(exp))
-    seeds = main.get("je_seed") or []
+    seeds = [s for s, i in zip(main.get("je_seed") or [], main.get("seed_ids") or []) if i in use]
+    robust = [r for r, i in zip(st["aufgabenerfolg"]["je_seed"], st["seed_ids"]) if i in use] if st else []
 
     def mean_of(key):
         v = [s["leitplanken"].get(key) for s in seeds if s.get("leitplanken", {}).get(key) is not None]
         return float(np.mean(v)) if v else None
     last = [float(np.mean(s["stall_je_servo"]["anteil"])) for s in seeds
             if s.get("stall_je_servo") and None not in s["stall_je_servo"]["anteil"]]
-    return {"leistung": rec["leistung"]["iqm"], "robustheit": st["aufgabenerfolg"]["mittel"] if st else None,
+    leistung = (rec["leistung"]["iqm"] if seed is None else
+                float(np.mean([row[rec["seed_ids"].index(seed)] for row in rec["je_seed"]])))
+    return {"leistung": leistung, "robustheit": float(np.mean(robust)) if robust else None,
             "unruhe_wirksam": mean_of("unruhe_wirksam"),        # an den Servos (begrenzt, ggf. geglättet)
             "schwingen_mm_s": mean_of("schwingen_mm_s"), "objektweg_mm": mean_of("objektweg_mm"),
             "kipp_median_deg": mean_of("kipp_median_deg"), "unterarm_median_deg": mean_of("unterarm_median_deg"),
@@ -1475,12 +1481,23 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
         if x is None or bad is None or good is None or bad == good:
             return None
         return float(min(1.0, max(0.0, (x - bad) / (good - bad))))
-    scored = []
-    for dd, e, v in rows:
+    def index(v):
         ds = {w[0]: d(w[0], v[w[0]]) for w in wunsch}
         have = [x for x in ds.values() if x is not None]
-        idx = float(np.prod([max(x, 0.01) for x in have]) ** (1 / len(have))) if have else 0.0
-        scored.append((idx, dd, e, v, ds, len(have) < len(wunsch)))
+        return (float(np.prod([max(x, D_MIN) for x in have]) ** (1 / len(have))) if have else 0.0), ds, len(have) < len(wunsch)
+
+    def top(e, idx):
+        """Index des besten Seeds (Einsatz-Kandidat, wie in den Videos) — Regel: ein Lauf, gleich dem Rezept."""
+        if e.get("regel"):
+            return idx, None
+        bench = benchmark(e)
+        best, _ = best_seed({c["name"]: aggregate(e, c) for c in bench}, bench)
+        vt = v3_values(e, best) if best is not None else None
+        return (index(vt)[0], best) if vt else (None, None)
+    scored = []
+    for dd, e, v in rows:
+        idx, ds, incomplete = index(v)
+        scored.append((idx, dd, e, v, ds, incomplete, top(e, idx)))
     scored.sort(key=lambda r: -r[0])
     complete = [r for r in scored if not r[5]]
 
@@ -1490,22 +1507,27 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
     fmt = lambda f, x: "–" if x is None else (f"{100 * x:.0f} %" if f == "pct" else f.format(x))  # noqa: E731
     L = ["", f"## Leaderboard v3 — {PROTOKOLL}, Greifart „{art}“ (Wünschbarkeitsindex)", "",
          "Sortiert nach dem **Index** = geometrisches Mittel der Wünschbarkeiten (0 = inakzeptabel, 1 = Ziel; Derringer & Suich "
-         "1980). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
+         f"1980), je Größe nach unten auf {D_MIN} begrenzt (eine schlechte Größe drückt, nullt aber nicht). Alle Größen nur über die "
+         "**erfolgreichen Seeds** (wie die Leistung); **Top** = Index des besten Seeds (Einsatz-Kandidat, der in den Videos). "
+         "Unterarm nur zur Info (zählt nicht, solange das Objekt aufrecht bleibt). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
          "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
          "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
          + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
                      for w in wunsch) + ". Zuverlässigkeit nur zur Info.", "",
-         "| Rang | Experiment | Titel | Index | Pareto | " + " | ".join(w[1] for w in wunsch) + " | Seeds | Aktionsweg |",
-         "|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|"]
-    for i, (idx, dd, e, v, ds, incomplete) in enumerate(scored, 1):
+         "| Rang | Experiment | Titel | Index | Top (Seed) | Pareto | " + " | ".join(w[1] for w in wunsch)
+         + " | Unterarm ° | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|"]
+    for i, (idx, dd, e, v, ds, incomplete, (tidx, tseed)) in enumerate(scored, 1):
         p = (e.get("training") or {})
         clip = (load_params(REPO / e["laeufe"][0]).get("agent") or {}).get("clip_actions") if e.get("laeufe") else None
         weg = ("Regel" if e.get("regel") else
                "Filter" if "Filter" in (p.get("task") or "") else
                "Begrenzung ±1" if clip is not None else "frei")
+        tops = "–" if tidx is None else f"{tidx:.2f}" + (f" (s{tseed})" if tseed is not None else "")
         L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
-                 f"{'★' if not incomplete and not dominated((idx, dd, e, v, ds, incomplete)) else ''} | "
-                 + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch) + f" | {v['k']}/{v['n']} | {weg} |")
+                 f"{tops} | {'★' if not incomplete and not dominated(scored[i - 1]) else ''} | "
+                 + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch)
+                 + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {v['k']}/{v['n']} | {weg} |")
     return L
 
 

@@ -12,6 +12,8 @@
 
 **Urteilsvorschlag** (auswertung-v2): **schlechter, Leitplanke verletzt**
 
+**Beste Videos** (Seed 45, 3 Episoden): [Kugel Ø 7](beste_videos/EXP-029_kugel_d7_s45.mp4) · [Kugel Ø 5](beste_videos/EXP-029_kugel_d5_s45.mp4) · [Dose](beste_videos/EXP-029_dose_d68x10_s45.mp4) · [Schachtel](beste_videos/EXP-029_quader_9x6x4_s45.mp4)
+
 ![Ergebnis je Bedingung — Punkte = Seeds](diagramme/EXP-029_bedingungen.svg)
 
 <details>
