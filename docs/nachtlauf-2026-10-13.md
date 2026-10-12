@@ -1,6 +1,6 @@
 # Nachtlauf 2026-10-12/13 — Servo-Stall und Unruhe
 
-Stand 2026-10-12, 19:15 — **Plan steht, Vorbereitung noch offen, Start erst auf Leons Zeichen.**
+Stand 2026-10-12, 23:30 — **vorbereitet und gestartet** (Leon, 23:00). Abschnitt „Vorbereitung — Ergebnis“ unten.
 Ziel (Leon): die beiden Anforderungen angehen, die die echte Hardware betreffen —
 **Servo-Stall** (Überlastschutz des ST3215 nach ~2 s über 80 % Blockiermoment, Wärme) und **Unruhe** (Verschleiß,
 Leitplanke). Grundsatz: volle Servoleistung, Verhalten über das Lernen steuern, nicht über Filter oder kleine Skala →
@@ -78,6 +78,25 @@ Fällt ein Experiment im Kurztest durch (NaN, Fehler), läuft die Kette mit dem 
    (Hypothese, Änderung, Bedingungen wie EXP-027).
 5. Prüfen: CAPS-Term offline an einem Batch (Größe ≈ 10 % des PPO-Verlusts zu Beginn → Gewicht), `reward_diag` für die
    Lagrange-Strafe (λ-Verlauf plausibel, Kosten anfangs über d), Kurztraining je Task mit allen Codepfaden.
+
+## Vorbereitung — Ergebnis (2026-10-12 abends)
+
+- Code: `rsl_rl_ext.ActorCriticCaps` + Hook auf `PPO.update` (loggt `Loss/caps_temporal`, `caps_spatial`, `caps_grad_share`),
+  `mdp.StallLagrange` (loggt `Lagrange/lambda`, `J_c`, `integral`), `mdp.servo_load` + `env_cfg.add_servo_load_obs`,
+  Task-IDs `HeavyMultiProgressDex{Caps,Lagrange,CapsLagrange,LagrangeLoad}-v0`, `eval_policy --servo_last` (automatisch über
+  `experiments.clip_args`), Kennzahlen `servo_schutz` (Stall-Dauer, Schutz-Anteil, Servos ≥ 80 %), Leaderboard-Info-Spalte
+  „Schutz > 2 s“, `experiments.py eval --bedingung haupt` (neue Kennzahl nur für die Hauptbedingung nachholen).
+- CAPS: σ = Messrauschen der Störbedingung (Gelenkwinkel 0,01 rad, FSR 0,5 N, letzte Aktion 0). Abstände euklidisch, nicht
+  quadriert (wie im Paper). Kurztraining (40 It., CAPS + Lagrange): mit λ = 0,1 lag der CAPS-Anteil am Actor-Gradienten in den
+  ersten 20 Iterationen bei 20–25 % (L_T ≈ 0,1, L_S ≈ 0,013) → **λ_T = λ_S = 0,04** (≈ 10 %).
+- Lagrange im Kurztraining: J_c schon vor dem Greifen ≈ 0,2 (Zufallsaktionen drücken gegen Anschläge), steigt mit dem Greifen
+  auf 0,28; λ wächst ab Iteration 11 und liegt nach 40 Iterationen bei 2,1/s — noch klein gegen die Haltebelohnung, wächst
+  weiter, solange J_c > 0,2. Statt `reward_diag` (λ startet bei 0) diente der λ-Verlauf des Kurztrainings als Prüfung.
+- Prüfungen: Kurztraining CAPS + Lagrange (40 It.) und Servo-Last (15 It., Eingang 145) ohne Fehler; Bewertung eines
+  Servo-Last-Checkpoints mit `--servo_last` läuft; neue Kennzahl an EXP-027 s44 (128 Episoden): längster Stall-Lauf Median
+  4,4 s, Schutz-Anteil 100 %, Servos ≥ 80 % im Mittel 50 % — die Policy liegt praktisch die ganze Episode im Stall.
+- Die Nachbewertung der Hauptbedingung (EXP-014/022/024/027/033) rechnet diese Bedingung neu (gleicher Seed; GPU-PhysX nicht
+  bitgenau → Zahlen statistisch gleich, nicht identisch).
 
 ## Bewertung am Morgen
 

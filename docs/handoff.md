@@ -4,7 +4,7 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ---
 
-## Stand 2026-10-12, 19:15 (vor dem Nachtlauf 2026-10-12/13)
+## Stand 2026-10-12, 23:30 (Nachtlauf 2026-10-12/13 läuft)
 
 ### Zuletzt gearbeitet an
 
@@ -23,9 +23,9 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ### Offene Punkte
 
-- **Nachtlauf noch nicht vorbereitet und nicht gestartet** — Start erst, wenn Leon sich meldet. Vorbereitung (~2,5 h) laut
-  Plan: Kennzahlen Stall-Dauer/Schutz-Anteil, `ActorCriticCaps`, `StallLagrange`, `servo_load`, Task-IDs, YAMLs
-  (`experiments.py new`), Prüfungen (CAPS-Größe offline, `reward_diag`, Kurztraining je Task), Kette.
+- **Nachtlauf läuft seit ~23:30** (Kette `scratchpad/nacht3/kette.sh`, Log `nacht3/kette.log`, Ende ≈ 9–10 Uhr): EXP-034–037,
+  dann Hauptbedingung EXP-014/022/024/027/033 neu (neue Kennzahl), Belastung + beste Videos der neuen, `done` mit HF-Backup.
+  Vorbereitung und Prüfungen: `docs/nachtlauf-2026-10-13.md` → „Vorbereitung — Ergebnis“ (CAPS λ 0,04 gewählt).
 - Überlastschutz des echten Servos (STS3215-Datenblatt: > 80 % Blockiermoment für 2 s) — ob er bei 60-Hz-Neubefehlen greift
   und welche Werte eingestellt sind, ist ungeprüft (Leon kommt vorerst nicht an Hand/Motor-Kollegen).
 - Urteile EXP-027–033 sind Entwürfe (Feld `urteil` leer).
@@ -35,7 +35,7 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ### Nächste Schritte (in Reihenfolge)
 
-1. Auf Leons Zeichen: Vorbereitung laut `docs/nachtlauf-2026-10-13.md` → Kette starten (≈ 10 h).
+1. Kette prüfen (`grep -E 'START|ENDE|KETTE' nacht3/kette.log`); ggf. Fehlgeschlagenes nachholen.
 2. Am Morgen: Auswertung (Unruhe, Stall-Anteil/-Dauer/Schutz-Anteil, Transport ≥ EXP-024), Entwürfe in die YAMLs, Commit,
    Push, HF-Backup.
 3. Präsentation Do 2026-10-15.

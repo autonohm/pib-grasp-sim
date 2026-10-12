@@ -44,7 +44,12 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
                             ("HeavyMultiProgressDex", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Bounds"),
                             ("HeavyMultiProgressDexGross", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_BoundsGross"),
                             # EXP-033: bounds_loss mit der alten Skala (0,03 Unterarm/Handgelenk) — Ursache Kippen in EXP-027?
-                            ("HeavyMultiProgressBounds", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg_Bounds")):
+                            ("HeavyMultiProgressBounds", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg_Bounds"),
+                            # Nachtlauf 2026-10-13 (EXP-034–037): Unruhe (CAPS) und Servo-Stall (PID-Lagrange), Eltern EXP-027
+                            ("HeavyMultiProgressDexCaps", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Caps"),
+                            ("HeavyMultiProgressDexLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Bounds"),
+                            ("HeavyMultiProgressDexCapsLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Caps"),
+                            ("HeavyMultiProgressDexLagrangeLoad", "PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad", "PibGraspPPORunnerCfg_Bounds")):
     gym.register(
         id=f"Pib-Grasp-Hand-Left-{_name}-v0",
         entry_point="isaaclab.envs:ManagerBasedRLEnv",

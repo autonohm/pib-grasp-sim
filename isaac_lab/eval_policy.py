@@ -62,6 +62,8 @@ parser.add_argument("--action_filter", type=float, default=0.0,
                     help="Aktion wie im Training glätten (gleitender Mittelwert, α; EXP-024 ff.); 0 = aus")
 parser.add_argument("--action_scale", type=float, default=0.0,
                     help="einheitliche Aktionsskala aller Servos wie im Training (Aktionsraum wie Dexsuite, EXP-027 ff.); 0 = Standard")
+parser.add_argument("--servo_last", action="store_true",
+                    help="Policy sieht die Servo-Last wie im Training (EXP-037: env_cfg.add_servo_load_obs, Eingang 145)")
 parser.add_argument("--stoerung", action="store_true",
                     help="Störbedingung (Leaderboard v3, Robustheit): Objektlage stärker gestreut (ungenaue Vorgreifpose), "
                          "1 Policy-Schritt Verzögerung, Rauschen auf Gelenkwinkeln und FSR")
@@ -94,6 +96,10 @@ HOLD_START_S = GRASP_TIME_S + DROP_DEPTH / DROP_SPEED     # Tisch unten → Halt
 EARLY_S = 0.1                                              # Startfehler (Reset-Überlappung)
 FORCE_LIMIT_N = 15.0
 STALL_FRACTION = 0.9
+# Überlastschutz des STS3215 (Datenblatt): > 80 % Blockiermoment länger als 2 s (Nachtlauf 2026-10-13; Werte am echten Servo
+# ungeprüft) — Stall-Dauer = längster Lauf am Stück je Servo, Schutz-Anteil = Episoden mit einem Lauf > 2 s
+PROTECT_FRACTION = 0.8
+PROTECT_S = 2.0
 REQ_DEG = args_cli.max_kipp_deg if args_cli.max_kipp_deg >= 0 else None
 BEW_ART, BEW_PARAM = (args_cli.bewegung.split(":")[0], float(args_cli.bewegung.split(":")[1])) if args_cli.bewegung else (None, 0.0)
 RUTSCH_M = 0.02          # Rutschen = Objekt > 2 cm relativ zur Hand ab Bewegungsbeginn (GenDexGrasp/GAGrasp)
@@ -113,6 +119,9 @@ if args_cli.action_filter > 0:                                 # wie im Training
     cfg.actions.servos = filtered_servo_action(args_cli.action_filter)
 if args_cli.action_scale > 0:                                  # wie im Training (env.yaml: actions.servos.scale)
     cfg.actions.servos.scale = args_cli.action_scale
+if args_cli.servo_last:                                    # wie im Training (env.yaml: observations.policy.servo_load)
+    from pib_grasp.env_cfg import add_servo_load_obs
+    add_servo_load_obs(cfg)
 if args_cli.stoerung:
     # Robustheit (Leaderboard v3, Sim-to-Real-Lücken docs/pruefung-aktionsweg.md): ungenaue Vorgreifpose wie ein IK-Team sie
     # liefert (seitlich: Objekt bis 2 cm weiter weg / 1 cm näher, ±3 cm längs der Finger; von oben ±1,5 cm), Sensorrauschen
@@ -272,6 +281,8 @@ hold_steps, hold_force, hold_over, stall, act_rate, sink = zeros(), zeros(), zer
 act_rate_eff = zeros()      # Unruhe wirksam: Änderung der Aktion, die die Servos bekommen (auf ±1 begrenzt, ggf. geglättet)
 eff_prev = torch.zeros(N, len(SERVO_JOINTS), device=dev)
 stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # Stall-Anteil je Servo (beschreibend, seit 2026-10-11)
+prot_run = torch.zeros(N, len(stall_ids), device=dev)          # laufender Lauf ≥ 80 % je Servo [Schritte]
+prot_max, prot_frac = zeros(), zeros()                         # längster Lauf je Episode; Σ Anteil Servos ≥ 80 % (= Kosten c_t)
 xy_path, xy_path_max = zeros(), zeros()     # Objektweg in der Tischebene ggü. t = EARLY_S (abgesetzt, Größe eingeschwungen)
 xy0 = obj.data.root_pos_w[:, :2].clone()
 # Schwingen (Leaderboard v3): Objektbewegung in der Haltephase (Hand fest → jede Bewegung ist Wackeln/Rutschen) und
@@ -341,6 +352,8 @@ def finish(i, reason):
         "finger_kontakt": (hold_touch[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
         "finger_kraft_n": (hold_fobj[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
         "stall_je_servo": (stall_joint[i] / n).tolist(),
+        "stall_dauer_max_s": prot_max[i].item() * dt,
+        "stall80_servo_anteil": prot_frac[i].item() / n,
         "schwingen_mm_s": 1000 * (hold_v2[i] / hold_steps[i]).sqrt().item() if hold_steps[i] > 0 else None,
         "drehschwingen_deg_s": math.degrees((hold_w2[i] / hold_steps[i]).sqrt().item()) if hold_steps[i] > 0 else None,
         "aktion_frequenz_hz": action_frequency(i),
@@ -379,7 +392,8 @@ with torch.inference_mode():
                 finish(i, next((n for n in term_names if uenv.termination_manager.get_term(n)[i]), "?"))
         # neue Episoden zurücksetzen, laufende fortschreiben (Werte nach dem Schritt)
         for buf in (steps, max_tilt, early_tilt, max_forearm, hold_steps, hold_force, hold_over, stall, act_rate, act_rate_eff, sink,
-                    hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act):
+                    hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act, prot_run, prot_max,
+                    prot_frac):
             buf[done] = 0.0
         forearm0[done] = robot.data.joint_pos[done, forearm]
         rutsch_max[done], a_last[done] = 0.0, 0.0
@@ -403,6 +417,10 @@ with torch.inference_mode():
         at_limit = (robot.data.applied_torque[:, stall_ids].abs() >= STALL_FRACTION * stall_limit).float()
         stall[live] += at_limit[live].max(-1).values
         stall_joint[live] += at_limit[live]
+        prot = robot.data.applied_torque[:, stall_ids].abs() >= PROTECT_FRACTION * stall_limit
+        prot_run = torch.where(prot & live[:, None], prot_run + 1, torch.zeros_like(prot_run))
+        prot_max[live] = torch.maximum(prot_max[live], prot_run[live].max(-1).values)
+        prot_frac[live] += prot[live].float().mean(-1)
         am = uenv.action_manager
         act_rate[live] += ((am.action - am.prev_action) ** 2).sum(-1)[live]
         servo_term = am.get_term("servos")
@@ -476,6 +494,13 @@ summary = {
     # beschreibend: Anteil der Schritte je Servo (außer Handgelenk) mit ≥ 90 % des Stall-Moments, gehaltene Episoden
     "stall_je_servo": {"servo": [n for n in SERVO_JOINTS if n != WRIST_JOINT],
                        "anteil": [mean([e["stall_je_servo"][k] for e in held]) for k in range(len(stall_ids))]},
+    # Überlastschutz (Nachtlauf 2026-10-13), gehaltene Episoden: längster Lauf ≥ 80 % Stall am Stück (Median),
+    # Anteil der Episoden mit einem Lauf > 2 s, mittlerer Anteil der 7 Servos ≥ 80 % (= Kosten der Lagrange-Grenze)
+    "servo_schutz": {
+        "stall_dauer_median_s": median([e["stall_dauer_max_s"] for e in held]),
+        "schutz_anteil": sum(1 for e in held if e["stall_dauer_max_s"] > PROTECT_S) / max(len(held), 1) if held else None,
+        "stall80_servo_anteil": mean([e["stall80_servo_anteil"] for e in held]),
+    },
 }
 if BEW_ART:
     # Belastungstest: Episoden, die die Bewegung erreicht haben (kein Startfehler, nicht vorher gefallen)
@@ -544,6 +569,9 @@ lines = [
     f"  Finger mit Kontakt im Mittel: {num(summary['fingernutzung']['finger_mit_kontakt'], digits=2)}",
     "Stall je Servo (Anteil der Schritte ≥ 90 % des Stall-Moments): " + "  ".join(
         f"{n.replace('_left', '')} {pct(x)}" for n, x in zip(summary["stall_je_servo"]["servo"], summary["stall_je_servo"]["anteil"])),
+    f"Überlastschutz (≥ 80 % Stall): längster Lauf Median {num(summary['servo_schutz']['stall_dauer_median_s'], ' s', 2)}, "
+    f"Episoden mit Lauf > {PROTECT_S:.0f} s {pct(summary['servo_schutz']['schutz_anteil'])}, "
+    f"Servos ≥ 80 % im Mittel {pct(summary['servo_schutz']['stall80_servo_anteil'])}",
 ]
 if args_cli.video and getattr(env, "recording", False):
     env.stop_recording()                        # Video schreiben, auch wenn kürzer als --video

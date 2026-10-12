@@ -467,6 +467,70 @@ def servo_torque_l2(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.
     return torch.sum(torch.square(tau), dim=1)
 
 
+class StallLagrange(ManagerTermBase):
+    """Grenze auf den Servo-Stall per PID-Lagrange (Nachtlauf 2026-10-13, EXP-035 ff.; Ray, Achiam & Amodei 2019, Safety
+    Gym; Stooke, Achiam & Abbeel 2020, PID Lagrangian). Kosten c_t = Anteil der Servos in `joint_names` mit
+    |τ| ≥ `fraction` · Stall-Moment (dieselbe Größe wie applied_torque in eval_policy). Ziel J_c = Mittel von c_t ≤ `limit`.
+    Der Term liefert λ · c_t (Gewicht im RewTerm −1 → Strafe −λ · c_t je s); λ ≥ 0 regelt sich einmal je Rollout
+    (`steps_per_update` Aufrufe = num_steps_per_env) nach Stooke 2020, Algorithmus 2:
+        e = J_c − d,  I ← max(0, I + K_I·e),  λ = max(0, K_P·e + I + K_D·max(0, J_c − J_c,vorher))
+    J_c = Mittel von c_t über den Rollout (alle Umgebungen), für P- und D-Anteil zusätzlich geglättet (EMA α).
+    Vereinfachung ggü. Safety Gym: kein eigener Kosten-Critic, die Strafe steht in der Belohnung (wie Lagrange-PPO
+    mit gemeinsamem Vorteil). λ, J_c und I gehen über extras["log"] ins TensorBoard (Lagrange/…)."""
+
+    def __init__(self, cfg, env: ManagerBasedRLEnv):
+        super().__init__(cfg, env)
+        p = cfg.params
+        self.robot: Articulation = env.scene["robot"]
+        self.ids, _ = self.robot.find_joints(p["joint_names"], preserve_order=True)
+        self.lam = float(p.get("lambda_init", 0.0))
+        self.integral = self.lam
+        self.jc_ema = None
+        self.jc_prev = None
+        self.jc_last = 0.0
+        self.cost_sum = torch.zeros((), device=env.device)
+        self.calls = 0
+
+    def reset(self, env_ids=None):
+        log = self._env.extras.get("log")
+        if isinstance(log, dict):
+            log["Lagrange/lambda"] = self.lam
+            log["Lagrange/J_c"] = self.jc_last
+            log["Lagrange/integral"] = self.integral
+
+    def __call__(self, env: ManagerBasedRLEnv, joint_names: list, fraction: float = 0.8, limit: float = 0.2,
+                 k_p: float = 10.0, k_i: float = 1.0, k_d: float = 5.0, ema: float = 0.5, lambda_max: float = 100.0,
+                 steps_per_update: int = 32, lambda_init: float = 0.0) -> torch.Tensor:
+        tau = self.robot.data.applied_torque[:, self.ids].abs()
+        cost = (tau >= fraction * self.robot.data.joint_effort_limits[:, self.ids]).float().mean(dim=-1)
+        self.cost_sum = self.cost_sum + cost.mean()
+        self.calls += 1
+        if self.calls >= steps_per_update:
+            jc = float(self.cost_sum.item()) / self.calls
+            self.cost_sum, self.calls, self.jc_last = torch.zeros_like(self.cost_sum), 0, jc
+            self.jc_ema = jc if self.jc_ema is None else ema * jc + (1.0 - ema) * self.jc_ema
+            e = self.jc_ema - limit
+            self.integral = max(0.0, self.integral + k_i * (jc - limit))
+            deriv = 0.0 if self.jc_prev is None else max(0.0, self.jc_ema - self.jc_prev)
+            self.jc_prev = self.jc_ema
+            self.lam = min(lambda_max, max(0.0, k_p * e + self.integral + k_d * deriv))
+        return self.lam * cost
+
+
+_SERVO_LOAD_IDS: dict = {}
+
+
+def servo_load(env: ManagerBasedRLEnv, joint_names: list) -> torch.Tensor:
+    """Servo-Last wie der „Present Load“ des ST3215 (EXP-037): |τ| / Stall-Moment je Servo in `joint_names`
+    (Reihenfolge = Aktionsraum), auf [0; 1,5] begrenzt. Reale Größe — die Firmware müsste sie mitlesen."""
+    robot: Articulation = env.scene["robot"]
+    key = tuple(joint_names)
+    if key not in _SERVO_LOAD_IDS:
+        _SERVO_LOAD_IDS[key] = robot.find_joints(joint_names, preserve_order=True)[0]
+    ids = _SERVO_LOAD_IDS[key]
+    return (robot.data.applied_torque[:, ids].abs() / robot.data.joint_effort_limits[:, ids]).clamp(0.0, 1.5)
+
+
 def excess_fingertip_force(env: ManagerBasedRLEnv, limit: float) -> torch.Tensor:
     """Summe der Kraft über `limit` [N] an allen Fingerspitzen (gegen Zerquetschen und
     unrealistisch hohe Kräfte, ADR-011: lineare Kopplung überschätzt die Spitzenkraft)."""

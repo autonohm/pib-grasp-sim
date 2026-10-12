@@ -1,0 +1,96 @@
+# EXP-NNN_experiment.yaml — Vorlage (Ablauf und Metriken: experiments/README.md)
+id: EXP-035
+titel: 'Servo-Stall: PID-Lagrange auf den Stall-Anteil (Grenze 20 %)'
+datum: '2026-10-12'
+eltern: EXP-027
+status: geplant                 # geplant | läuft | ausgewertet | verworfen
+
+# --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
+hypothese: 'EXP-027 liegt fast immer im Stall (Daumen, Zeige- und kleiner Finger 82–98
+  % der Schritte ≥ 90 % Moment); die echten ST3215 schalten nach > 2 s über 80 % Blockiermoment
+  ab und werden heiß. Eine feste Moment-Strafe blieb wirkungslos (EXP-025, Gewicht
+  falsch); PID-Lagrange (Stooke et al. 2020, Safety Gym) stellt das Gewicht selbst
+  ein: Anteil der Servos ≥ 80 % sinkt auf ≈ 20 %, Stall-Dauer und Schutz-Anteil sinken
+  deutlich, Leistung gleich, Transport ≥ 97 % (EXP-024).'
+aenderung: 'Belohnungsterm mdp.StallLagrange: −λ·c_t mit c_t = Anteil der 7 Servos
+  (ohne Handgelenk) mit |τ| ≥ 80 % Stall, λ ≥ 0 per PID je Rollout auf J_c ≤ 0,2 (K_P
+  10, K_I 1, K_D 5, EMA 0,5, λ ≤ 100; env_cfg.STALL_LAGRANGE), λ und J_c im TensorBoard
+  (Lagrange/…). Agent wie EXP-027 (Task HeavyMultiProgressDexLagrange-v0).'
+bedingungen:
+- name: zylinder_seitlich
+  objekt: Zylinder Ø 6 cm (±10 %), 15 cm, 0,05–0,2 kg (Benchmark)
+  objekt_id: zylinder_d6
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: zylinder_d8_seitlich
+  objekt: Zylinder Ø 8 cm (±10 %), 15 cm, 0,05–0,2 kg (Benchmark)
+  objekt_id: zylinder_d8
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: quader_seitlich
+  objekt: Quader 7 × 7 × 20 cm (±10 %), Fläche zur Hand ±15°, 0,05–0,2 kg (Benchmark)
+  objekt_id: quader_7x7x20
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: flasche_seitlich
+  objekt: Flasche Ø 7 × 25 cm (±10 %), 0,05–0,2 kg (Testobjekt, nie trainiert — Höhe
+    außerhalb des Trainings)
+  objekt_id: flasche_d7x25
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: saftpackung_seitlich
+  objekt: Saftpackung 9 × 6 × 19 cm (±10 %), schmale Seite zur Hand ±15°, 0,05–0,2
+    kg (Testobjekt, nie trainiert)
+  objekt_id: saftpackung_9x6x19
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: ycb_cracker_seitlich
+  objekt: YCB 003 Cracker-Schachtel 16,4 × 7,2 × 21,3 cm, 411 g, schmale Seite zur
+    Hand ±15°, Ruhelage (Testobjekt, nie trainiert)
+  objekt_id: ycb_003_cracker
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: ycb_zucker_seitlich
+  objekt: YCB 004 Zuckerschachtel 9,3 × 4,5 × 17,6 cm, 514 g, schmale Seite zur Hand
+    ±15°, Ruhelage (Testobjekt, nie trainiert)
+  objekt_id: ycb_004_zucker
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+- name: ycb_senf_seitlich
+  objekt: YCB 006 Senfflasche 9,6 × 5,8 × 19,1 cm, 603 g, schmale Seite zur Hand ±15°
+    (Testobjekt, nie trainiert)
+  objekt_id: ycb_006_senf
+  startpose: seitlich, Daumen oben
+  anforderung:
+    max_kipp_deg: 45
+protokoll: eval-v2
+entscheidungsregel: standard    # README → „Statistik und Entscheidungsregel“
+
+# --- Training ---
+training:
+  task: Pib-Grasp-Hand-Left-HeavyMultiProgressDexLagrange-v0
+  iterationen: 300
+  umgebungen: 1024
+  seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  zusatz_args: []
+fenstertest: false
+# --- automatisch (experiments.py run) ---
+commit: null
+laeufe: []
+
+# --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
+ergebnis: ""                    # Kurzfassung der Zahlen
+urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
+schluss: ""                     # was folgt daraus, nächstes Experiment

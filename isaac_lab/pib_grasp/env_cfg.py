@@ -662,6 +662,47 @@ class PibGraspEnvCfg_HeavyMultiProgressDex(PibGraspEnvCfg_HeavyMultiProgress):
         dexsuite_action_space(self)
 
 
+# ── Nachtlauf 2026-10-13 (docs/nachtlauf-2026-10-13.md): Servo-Stall und Unruhe, Eltern EXP-027 ─────────────────────
+# PID-Lagrange (Stooke et al. 2020): Kosten c_t = Anteil der 7 Servos (ohne Handgelenk) mit |τ| ≥ 80 % Stall, Grenze
+# J_c ≤ 0,2 (Leon). λ in „je s“ (Isaac Lab × dt); Haltebelohnung ~10/s → λ soll in ~20 Iterationen diese Größenordnung
+# erreichen können (K_I · e je Rollout, e ≈ 0,3 bei EXP-027).
+STALL_LAGRANGE = {"fraction": 0.8, "limit": 0.2, "k_p": 10.0, "k_i": 1.0, "k_d": 5.0, "ema": 0.5, "lambda_max": 100.0,
+                  "steps_per_update": 32}
+SERVO_LOAD_NOISE = 0.05         # Rauschen der Servo-Last-Beobachtung („Present Load“, Anteil des Stall-Moments)
+
+
+@configclass
+class RewardsProgressLagrangeCfg(RewardsProgressCfg):
+    """EXP-035 ff.: wie EXP-027, plus Strafe −λ·c_t mit λ per PID-Lagrange (mdp.StallLagrange)."""
+    stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
+                             params={"joint_names": STALL_JOINTS, **STALL_LAGRANGE})
+
+
+@configclass
+class PibGraspEnvCfg_HeavyMultiProgressDexLagrange(PibGraspEnvCfg_HeavyMultiProgressDex):
+    """EXP-035 (Agent _Bounds) und EXP-036 (Agent _Caps): Stall-Grenze per PID-Lagrange."""
+    rewards: RewardsProgressLagrangeCfg = RewardsProgressLagrangeCfg()
+
+
+def add_servo_load_obs(cfg):
+    """Servo-Last als Beobachtung (EXP-037, auch eval_policy --servo_last): |τ|/Stall je Servo wie „Present Load“ des
+    ST3215, Verlauf 5 wie die übrigen Größen, als letzte Größe im Vektor (Eingang 105 → 145), Rauschen σ 0,05."""
+    from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
+    cfg.observations.policy.servo_load = ObsTerm(func=mdp.servo_load, params={"joint_names": SERVO_JOINTS},
+                                                 noise=Gnoise(mean=0.0, std=SERVO_LOAD_NOISE))
+    cfg.observations.policy.enable_corruption = True       # nur Terme mit noise (hier: servo_load) werden verrauscht
+    return cfg
+
+
+@configclass
+class PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad(PibGraspEnvCfg_HeavyMultiProgressDexLagrange):
+    """EXP-037: wie EXP-035, Policy sieht zusätzlich die Servo-Last."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        add_servo_load_obs(self)
+
+
 @configclass
 class PibGraspEnvCfg_HeavyMultiPriv(PibGraspEnvCfg_HeavyMulti):
     """EXP-021: wie EXP-018, Critic zusätzlich mit Objektgröße, Masse und Reibung (privilegiert, wie HORA/Dexsuite)."""

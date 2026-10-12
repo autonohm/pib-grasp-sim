@@ -77,3 +77,36 @@ class PibGraspPPORunnerCfg_BoundsGross(PibGraspPPORunnerCfg_Bounds):
     def __post_init__(self):
         super().__post_init__()
         self.policy.actor_hidden_dims = [512, 256, 128]
+
+
+# CAPS (Nachtlauf 2026-10-13, EXP-034/036): σ je Eingang = erwartetes Messrauschen wie die Störbedingung (eval_policy
+# --stoerung: Gelenkwinkel 0,01 rad, FSR 0,5 N); die letzte Aktion ist intern bekannt (σ 0). Abschnitte in der Reihenfolge
+# des Beobachtungsvektors (je Größe 5 Schritte Verlauf, conventions.md → Schnittstelle Policy ↔ echte Hand).
+CAPS_OBS_SIGMA = [(40, 0.01), (25, 0.5), (40, 0.0)]
+CAPS_LAMBDA_T = 0.04       # per Kurztraining gewählt (2026-10-12): mit 0,1 lag der CAPS-Anteil am Actor-Gradienten in den
+#                            ersten 20 Iterationen bei 20–25 % (L_T ≈ 0,1, L_S ≈ 0,013) → 0,04 für ≈ 10 % (Plan)
+CAPS_LAMBDA_S = 0.04
+
+
+@configclass
+class RslRlPpoActorCriticCapsCfg(RslRlPpoActorCriticBoundsCfg):
+    """Policy-Konfiguration für pib_grasp/rsl_rl_ext.ActorCriticCaps (bounds_loss + CAPS, Mysore et al. 2021)."""
+    class_name: str = "ActorCriticCaps"
+    caps_lambda_t: float = CAPS_LAMBDA_T
+    caps_lambda_s: float = CAPS_LAMBDA_S
+    caps_obs_sigma: list = CAPS_OBS_SIGMA
+    caps_pairs: int = 4096                # zufällige Zeitpaare je Mini-Batch (Mini-Batch: 32 × 1024 / 4 = 8192)
+
+
+@configclass
+class PibGraspPPORunnerCfg_Caps(PibGraspPPORunnerCfg_Bounds):
+    """EXP-034/036: wie _Bounds (EXP-027), zusätzlich CAPS-Verlust auf den Mittelwert der Policy (gegen Unruhe)."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        base = self.policy
+        self.policy = RslRlPpoActorCriticCapsCfg(
+            init_noise_std=base.init_noise_std, actor_obs_normalization=base.actor_obs_normalization,
+            critic_obs_normalization=base.critic_obs_normalization, actor_hidden_dims=base.actor_hidden_dims,
+            critic_hidden_dims=base.critic_hidden_dims, activation=base.activation,
+            entropy_coef=self.algorithm.entropy_coef)

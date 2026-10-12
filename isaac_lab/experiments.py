@@ -306,7 +306,7 @@ def require_current(exp: dict) -> bool:
     return False
 
 
-def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = False) -> bool:
+def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = False, only: list | None = None) -> bool:
     """Lauf unter allen Bedingungen bewerten. Vorhandene Bewertungen bleiben (neu=True: neu bewerten) —
     Experimente ohne Training teilen sich die Läufe mit ihrer Quelle, deren Zahlen sollen stehen bleiben."""
     if not require_current(exp):
@@ -316,6 +316,8 @@ def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = 
                                          [c["name"] for c in exp["bedingungen"]] else [])
     with open(log_file, "a", encoding="utf-8") as out:
         for cond in conds:
+            if only and cond["name"] not in only:          # eval --bedingung: nur diese (z. B. neue Kennzahl nachholen)
+                continue
             if neu or not (run_dir / f"{stem(exp, cond)}.json").exists():
                 evaluate_condition(run_dir, exp, cond, video, out)
             ok &= (run_dir / f"{stem(exp, cond)}.json").exists()
@@ -330,8 +332,10 @@ def clip_args(run_dir: Path) -> list[str]:
     servos = ((params.get("env") or {}).get("actions") or {}).get("servos") or {}
     alpha = servos.get("alpha")                                                                   # EXP-024 ff.
     scale = servos.get("scale")             # einheitliche Skala (Aktionsraum wie Dexsuite, EXP-027 ff.); sonst Dict
+    load = (((params.get("env") or {}).get("observations") or {}).get("policy") or {}).get("servo_load")     # EXP-037
     return ((["--action_clip", str(clip)] if clip else []) + (["--action_filter", str(alpha)] if alpha else [])
-            + (["--action_scale", str(scale)] if isinstance(scale, (int, float)) else []))
+            + (["--action_scale", str(scale)] if isinstance(scale, (int, float)) else [])
+            + (["--servo_last"] if load else []))
 
 
 def kipp_arg(cond: dict) -> str:
@@ -958,7 +962,8 @@ def cmd_eval(a):
         d, exp = load(exp_id)
         for r in exp.get("laeufe") or []:
             log(f"  Bewertung {exp_id}: {r}")
-            evaluate(REPO / r, exp, video=a.video, log_file=LOGS / f"{exp_id}_{Path(r).name}_eval.log", neu=a.neu)
+            evaluate(REPO / r, exp, video=a.video, log_file=LOGS / f"{exp_id}_{Path(r).name}_eval.log", neu=a.neu,
+                     only=[exp["bedingungen"][0]["name"] if b == "haupt" else b for b in a.bedingung] or None)
         report(exp_id)
     cmd_done(a)
 
@@ -1596,13 +1601,16 @@ def v3_values(exp: dict, seed=None) -> dict | None:
         return float(np.mean(v)) if v else None
     last = [float(np.mean(s["stall_je_servo"]["anteil"])) for s in seeds
             if s.get("stall_je_servo") and None not in s["stall_je_servo"]["anteil"]]
+    schutz = [s["servo_schutz"]["schutz_anteil"] for s in seeds
+              if (s.get("servo_schutz") or {}).get("schutz_anteil") is not None]      # seit 2026-10-13 (Überlastschutz)
     leistung = (rec["leistung"]["iqm"] if seed is None else
                 float(np.mean([row[rec["seed_ids"].index(seed)] for row in rec["je_seed"]])))
     return {"leistung": leistung, "robustheit": float(np.mean(robust)) if robust else None,
             "unruhe_wirksam": mean_of("unruhe_wirksam"),        # an den Servos (begrenzt, ggf. geglättet)
             "schwingen_mm_s": mean_of("schwingen_mm_s"), "objektweg_mm": mean_of("objektweg_mm"),
             "kipp_median_deg": mean_of("kipp_median_deg"), "unterarm_median_deg": mean_of("unterarm_median_deg"),
-            "servo_last": float(np.mean(last)) if last else None, "k": rec["k"], "n": rec["n"]}
+            "servo_last": float(np.mean(last)) if last else None, "schutz": float(np.mean(schutz)) if schutz else None,
+            "k": rec["k"], "n": rec["n"]}
 
 
 def bewegt_info(exp: dict) -> str:
@@ -1659,14 +1667,16 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
          f"1980), je Größe nach unten auf {D_MIN} begrenzt (eine schlechte Größe drückt, nullt aber nicht). Alle Größen nur über die "
          "**erfolgreichen Seeds** (wie die Leistung); **Top** = Index des besten Seeds (Einsatz-Kandidat, der in den Videos). "
          "Unterarm nur zur Info (zählt nicht, solange das Objekt aufrecht bleibt). **Bewegt** (Info, nicht im Index): "
-         "Grenzbeschleunigung des Top-Seeds · Transport-Erfolg ([belastung.md](belastung.md)). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
+         "Grenzbeschleunigung des Top-Seeds · Transport-Erfolg ([belastung.md](belastung.md)). **Schutz > 2 s** (Info, nicht im "
+         "Index): Anteil der gehaltenen Episoden, in denen ein Servo länger als 2 s am Stück ≥ 80 % Stall liegt (Überlastschutz "
+         "laut STS3215-Datenblatt; am echten Servo ungeprüft). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
          "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
          "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
          + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
                      for w in wunsch) + ". Zuverlässigkeit nur zur Info.", "",
          "| Rang | Experiment | Titel | Index | Top (Seed) | Pareto | " + " | ".join(w[1] for w in wunsch)
-         + " | Unterarm ° | Bewegt | Seeds | Aktionsweg |",
-         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|---|"]
+         + " | Unterarm ° | Bewegt | Schutz > 2 s | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|---|---|"]
     for i, (idx, dd, e, v, ds, incomplete, (tidx, tseed)) in enumerate(scored, 1):
         p = (e.get("training") or {})
         clip = (load_params(REPO / e["laeufe"][0]).get("agent") or {}).get("clip_actions") if e.get("laeufe") else None
@@ -1677,7 +1687,8 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
         L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
                  f"{tops} | {'★' if not incomplete and not dominated(scored[i - 1]) else ''} | "
                  + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch)
-                 + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {bewegt_info(e)} | {v['k']}/{v['n']} | {weg} |")
+                 + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {bewegt_info(e)} | {fmt('pct', v['schutz'])} | "
+                 f"{v['k']}/{v['n']} | {weg} |")
     return L
 
 
@@ -1790,6 +1801,7 @@ def main():
     e.add_argument("ids", nargs="+")
     e.add_argument("--video", action="store_true")
     e.add_argument("--neu", action="store_true", help="vorhandene Bewertungen neu rechnen (sonst nur fehlende)")
+    e.add_argument("--bedingung", nargs="*", default=[], help="nur diese Bedingungen („haupt“ = erste des Experiments)")
     um = sub.add_parser("umstellen", help="Experiment auf das aktuelle Protokoll heben (ADR-021)")
     um.add_argument("ids", nargs="+")
     bt = sub.add_parser("bericht")
