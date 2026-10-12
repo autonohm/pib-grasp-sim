@@ -1460,6 +1460,8 @@ def v3_values(exp: dict) -> dict | None:
 
 
 def leaderboard_v3(exps: list, art: str) -> list[str]:
+    # von oben ohne Kippwinkel: die Bedingung hat keine Kippanforderung (Objekt hängt zwischen den Fingern)
+    wunsch = [w for w in WUNSCH if not (art == "oben" and w[0] == "kipp_median_deg")]
     rows = [(d, e, v3_values(e)) for d, e in exps if e.get("protokoll") == PROTOKOLL]
     rows = [r for r in rows if r[2]]
     if not rows:
@@ -1469,16 +1471,16 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
     bounds = {"schwingen_mm_s": (max(sw) if sw else None, (min(sw_rule) if sw_rule else min(sw)) if sw else None)}
 
     def d(key, x):
-        bad, good = bounds.get(key, next((w[2], w[3]) for w in WUNSCH if w[0] == key))
+        bad, good = bounds.get(key, next((w[2], w[3]) for w in wunsch if w[0] == key))
         if x is None or bad is None or good is None or bad == good:
             return None
         return float(min(1.0, max(0.0, (x - bad) / (good - bad))))
     scored = []
     for dd, e, v in rows:
-        ds = {w[0]: d(w[0], v[w[0]]) for w in WUNSCH}
+        ds = {w[0]: d(w[0], v[w[0]]) for w in wunsch}
         have = [x for x in ds.values() if x is not None]
         idx = float(np.prod([max(x, 0.01) for x in have]) ** (1 / len(have))) if have else 0.0
-        scored.append((idx, dd, e, v, ds, len(have) < len(WUNSCH)))
+        scored.append((idx, dd, e, v, ds, len(have) < len(wunsch)))
     scored.sort(key=lambda r: -r[0])
     complete = [r for r in scored if not r[5]]
 
@@ -1492,17 +1494,18 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
          "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
          "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
          + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
-                     for w in WUNSCH) + ". Zuverlässigkeit nur zur Info.", "",
-         "| Rang | Experiment | Titel | Index | Pareto | " + " | ".join(w[1] for w in WUNSCH) + " | Seeds | Aktionsweg |",
-         "|---|---|---|---|---|" + "---|" * len(WUNSCH) + "---|---|"]
+                     for w in wunsch) + ". Zuverlässigkeit nur zur Info.", "",
+         "| Rang | Experiment | Titel | Index | Pareto | " + " | ".join(w[1] for w in wunsch) + " | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|"]
     for i, (idx, dd, e, v, ds, incomplete) in enumerate(scored, 1):
         p = (e.get("training") or {})
+        clip = (load_params(REPO / e["laeufe"][0]).get("agent") or {}).get("clip_actions") if e.get("laeufe") else None
         weg = ("Regel" if e.get("regel") else
                "Filter" if "Filter" in (p.get("task") or "") else
-               "Begrenzung ±1" if "Clip" in (p.get("task") or "") or "Clip" in str(p.get("zusatz_args")) else "frei")
+               "Begrenzung ±1" if clip is not None else "frei")
         L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
                  f"{'★' if not incomplete and not dominated((idx, dd, e, v, ds, incomplete)) else ''} | "
-                 + " | ".join(fmt(w[4], v[w[0]]) for w in WUNSCH) + f" | {v['k']}/{v['n']} | {weg} |")
+                 + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch) + f" | {v['k']}/{v['n']} | {weg} |")
     return L
 
 

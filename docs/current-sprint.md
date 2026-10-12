@@ -387,6 +387,18 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        gesichert). **Durchsatz**: 1024/2048/4096 Umgebungen → 19,9k/26,8k/56,4k Schritte/s (`experiments/_bench.json`).
        **Startpose von oben** (`docs/startpose-oben/ergebnis.md`): 20° gekippt, Rotator 75°, Höhe je Objekt → Regel 90–100 %
        auf allen Objekten inkl. Kugel Ø 5 und Schachtel (Plan, Abschnitt „Ergebnis der Suche“)
+5g. [x] **Nachtlauf 2026-10-12** (Plan `docs/nachtlauf-2026-10-12.md`; Berichte als Entwurf, Urteil Leon): **Leaderboard v3**
+       (Wünschbarkeitsindex über Leistung, Robust = Störbedingung, Unruhe, Schwingen, Objektweg, Kippen, Unterarm, Servo-Last;
+       „oben“ ohne Kippwinkel) → seitlich **EXP-024 Filter 0,53 ★** vor Regel EXP-014 0,43. **Aktionsraum wie Dexsuite**
+       (bounds_loss in rsl_rl, Skala 0,1 für alle): EXP-027 80 %, 2/5, Kippen 44°, Unterarm 51°; EXP-031 (Actor 512-256-128)
+       75 %, 3/5, gleiches Kippen; EXP-032 (großes Netz, 4096 × 600) 85 %, 5/5, Kippen 30°, aber Unruhe 3,85; EXP-033
+       (bounds_loss, Skala 0,03) 79 %, 4/5, Kippen 30°. → Die kleine Skala an Unterarm/Handgelenk (≤ 34 % Moment) wirkt als
+       Regularisierer gegen das Kippen; Leistung nirgends gesichert verschieden (ADR-022, Nachtrag). **Von oben**: Regel EXP-028
+       100 %, Robust 99 %, Index 1,00; Spezialisten EXP-029/030 99/100 %, drehen aber den Unterarm auf 90° und kippen das
+       Objekt (Belohnung ohne Orientierung) → mit guter Vorgreifpose genügt von oben eine Regel
+5h. [ ] **Kippen seitlich über Kosten statt Skala** (Leon wählt, Eltern EXP-033): (1) `joint_deviation_l1` auf Unterarm/
+       Handgelenk (Isaac Lab H1/G1), (2) Kippstrafe ab t = 0, (3) CaT (Chane-Sane et al. 2024); Gewicht per `reward_diag`.
+       Grundsatzfrage: Unterarm/Handgelenk aus dem Aktionsraum (Arm hält die Vorgreifpose) — 2026-10-06 „Unterarm bleibt“
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“

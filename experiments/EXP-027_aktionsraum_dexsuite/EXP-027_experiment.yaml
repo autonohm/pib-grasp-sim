@@ -3,8 +3,7 @@ id: EXP-027
 titel: 'Aktionsraum wie Dexsuite: Skala 0,1 für alle Servos, bounds_loss statt Begrenzung'
 datum: '2026-10-12'
 eltern: EXP-024
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Die bisherigen Rezepte beschneiden die Servos zur Laufzeit (Begrenzung
   ±1, Filter) bzw. künstlich (Skala 0,03 für Unterarm/Handgelenk ≈ 34 % Moment, docs/pruefung-aktionsweg.md).
@@ -88,10 +87,14 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: f063c65
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_00-36-20_EXP-027_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_01-01-44_EXP-027_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_01-22-51_EXP-027_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_01-43-46_EXP-027_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_02-04-26_EXP-027_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 80 % [77–84] (ggü. EXP-024 kein gesicherter Unterschied, P = 0,30), nur 2/5 Seeds (s43/45/46: hält, aber gekippt); Kippwinkel 44° (EXP-024: 13°), Unterarm 51° (11°), Robust 38 % (72 %), Unruhe an den Servos 0,66 (0,17), Griffkraft 96 N; Leaderboard v3 Index 0,06 (letzter Platz seitlich).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese nicht bestätigt. Mit voller Stellgröße an Unterarm und Handgelenk kehrt die Unterarm-Schummelei von EXP-000 zurück (Kippen 44°, Unterarm 51° wie bei EXP-000, wo das Video die Dose auf der Handfläche zeigte; Video von EXP-027 noch nicht geprüft) — das war der Grund für die Skala 0,03 in ADR-015. bounds_loss allein hält die Policy nicht davon ab; Dexsuite hat dieses Problem nicht, weil dort der Arm das Objekt zu einem Ziel tragen muss. Ursachenklärung: EXP-033 (bounds_loss mit Skala 0,03 an Unterarm/Handgelenk). Nicht als Basis.'

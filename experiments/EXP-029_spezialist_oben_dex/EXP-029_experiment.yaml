@@ -3,8 +3,7 @@ id: EXP-029
 titel: Spezialist von oben, Rezept EXP-027 (Aktionsraum wie Dexsuite)
 datum: '2026-10-12'
 eltern: EXP-028
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Ein RL-Spezialist von oben (17 Formen, gestreute Vorgreifpose) schlägt
   die Regel (EXP-028) in Leistung und vor allem in der Störbedingung.
@@ -64,12 +63,16 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: ab80989
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_02-51-14_EXP-029_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_03-12-05_EXP-029_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_03-30-05_EXP-029_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_03-48-12_EXP-029_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_04-07-21_EXP-029_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 99 % [98–99] (ggü. Regel EXP-028 gesichert schlechter, P = 0,25), 5/5 Seeds; Kugel Ø 5 96 % (Regel 90 %, +2,7 PP, nicht gesichert); Robust 92 % (Regel 99 %); alle Seeds drehen den Unterarm voll (90°), Objekt liegt danach gekippt (Dose 106°) und 10–13 cm verschoben in der Hand; Griffkraft 142 N, Stall 100 %, Servo-Last 70 %, Unruhe 0,20. Index oben 0,09.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese nicht bestätigt — Leistung praktisch gleich der Regel, Störbedingung schlechter, Leitplanken verletzt. Ähnliches Bild wie EXP-027: die Policy dreht den Unterarm bis an die Grenze, das Objekt endet gekippt und verschoben (Video noch nicht geprüft). EXP-030 (Rezept 022, Unterarm 0,03 + Begrenzung) dreht genauso → von oben liegt es an der Aufgabe, nicht am Aktionsraum.'
 laeufe_von: null
 greifart: oben

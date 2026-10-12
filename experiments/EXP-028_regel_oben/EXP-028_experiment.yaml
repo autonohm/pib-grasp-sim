@@ -3,8 +3,7 @@ id: EXP-028
 titel: 'Regel-Baseline von oben: alle Finger schließen (kein RL), gestreute Vorgreifpose'
 datum: '2026-10-12'
 eltern: EXP-014
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: bewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Wie gut greift eine einfache Regel von oben (Startpose aus der Suche)?
   Maßstab für den Spezialisten.
@@ -53,13 +52,13 @@ entscheidungsregel: standard    # README → „Statistik und Entscheidungsregel
 training: null
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: f063c65
+laeufe:
+- logs/regel/EXP-028
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Raster (Seed 2000): 96,4–98,5 %, gewählt schliessen=0.4, rotator_deg=90. Leistung 100 % (Kugel Ø 7 100, Kugel Ø 5 90, Dose 100, Schachtel 100 %, Suppendose YCB 100 %), Robust (Kugel Ø 7 gestört) 99 %, Unruhe 0,01, Unterarm 1°, Servo-Last 0 %, Objektweg 22 mm, 3,4 Finger. Leaderboard v3 oben Index 0,92.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Mit der gefundenen Vorgreifpose (20° gekippt, Rotator 75°, Höhe je Objekt) genügt von oben eine einfache Regel — die Startpose ist der eigentliche Hebel. Maßstab für die Spezialisten EXP-029/030; RL muss sich hier über Kugel Ø 5, Störungen oder Kraft beweisen.'
 laeufe_von: null
 greifart: oben
 regel:
@@ -69,3 +68,9 @@ regel:
   - schliessen=0.4,rotator_deg=75
   - schliessen=0.2,rotator_deg=90
   - schliessen=0.4,rotator_deg=90
+  param: schliessen=0.4,rotator_deg=90
+raster_ergebnis:
+  schliessen=0.2,rotator_deg=75: 0.964
+  schliessen=0.4,rotator_deg=75: 0.979
+  schliessen=0.2,rotator_deg=90: 0.976
+  schliessen=0.4,rotator_deg=90: 0.985

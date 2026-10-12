@@ -863,6 +863,19 @@ Vorbildern; die Korrekturen übernehmen jeweils das bewährte Gegenstück (DexPB
   Policy, die nichts verhindert: unsere Haltebelohnung misst nur z, Dexsuite den 3D-Abstand zum Ziel; die Literatur
   bestraft die Verschiebung ausdrücklich (Cross-Embodiment Dexterous Grasping: −0,3·‖xy − xy_Start‖; RobustDexGrasp:
   Objektgeschwindigkeit und Verschiebung). → EXP-023 (Strafe auf die Verschiebung in der Tischebene), Leitplanke Objektweg.
+- **Nachtrag 2026-10-12 — Aktionsraum als Regularisierer** (Nachtlauf, EXP-027–033; Entwurf, Urteil Leon): Den Aktionsraum
+  vollständig wie Dexsuite zu machen (bounds_loss über rsl_rl, Skala 0,1 für alle 8 Servos, keine Begrenzung/kein Filter;
+  EXP-027) ließ die Leistung gleich (80 %, nicht gesichert verschieden), aber die Dose kippt 44° statt 13° (EXP-024) und
+  der Unterarm dreht 51°. Ursachenklärung: EXP-031 (großes Netz) und EXP-032 (dazu 8× Budget) kippen weiter (41°/30°);
+  EXP-033 (bounds_loss mit alter Skala 0,03) 30°. Die alte Skala 0,03 an Unterarm/Handgelenk war kein Detail: Das Ziel liegt
+  ≤ 1,7° vor der Ist-Stellung, der Servo (Sättigung bei 5°, ADR-012) bringt dort ≤ 34 % Moment und ~100 °/s — das hält die
+  Policy vom Kippen ab, genauso Begrenzung ±1 und Filter. Kippen ist ein lokales Optimum (Belohnung bevorzugt aufrecht:
+  Haltephase aufrecht ≈ 12/s, 44° gekippt ≈ 5/s). bounds_loss ersetzt die Begrenzung nicht: er hält nur den Mittelwert,
+  das Rauschen geht ungekappt an die Servos. Folgen: (1) Der Aktionsraum ist Teil des Rezepts; Vergleiche innerhalb
+  EXP-004–026 bleiben gültig (gleicher Aktionsraum), EXP-027 änderte drei Dinge zugleich. (2) Die Skala ist Teil der
+  Schnittstelle Policy ↔ Firmware, und ihre Wirkung auf der echten Hand hängt an der nicht gemessenen Servo-Steifigkeit
+  (M3). (3) Leon will die volle Servo-Leistung behalten und das Verhalten über Kosten steuern → Kandidaten
+  `joint_deviation_l1`, Kippstrafe ab t = 0, CaT (current-sprint 5h).
 
 ---
 
