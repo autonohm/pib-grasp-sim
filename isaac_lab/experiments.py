@@ -1400,8 +1400,8 @@ def best_videos(d: Path, exp: dict) -> tuple[object, list[str]]:
     if best is None:
         return None, []
     links = []
-    for c in bench:
-        for sub in ("beste_videos", "videos"):
+    for c in bench + ycb_objekte(exp):
+        for sub in ("beste_videos", "videos") if c in bench else ("beste_videos",):
             f = exp_file(d, f"{c['objekt_id']}_s{best}.mp4", sub)
             if f.exists():
                 links.append(f"[{c['kurz']}]({sub}/{f.name})")
@@ -1438,8 +1438,8 @@ def cmd_medien(a):
     exps = [(d, e) for d, e in trained_experiments() if not a.ids or e["id"] in a.ids]
     tmp = LOGS / "_medien_tmp"
     for d, exp in exps:
-        if a.beste:                 # nur die langen Videos des besten Seeds (neu)
-            record_best_videos(d, exp, tmp, neu=True)
+        if a.beste or a.ycb:        # nur die langen Videos des besten Seeds (--beste: neu; --ycb: YCB dazu)
+            record_best_videos(d, exp, tmp, neu=a.beste, ycb=a.ycb)
             report(exp["id"])
             continue
         vdir = d / "videos"
@@ -1484,15 +1484,21 @@ def cmd_medien(a):
     cmd_done(a)
 
 
-def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False):
+def ycb_objekte(exp: dict) -> list[dict]:
+    """YCB-Testobjekte der Greifart (echte Masse, nie trainiert)."""
+    return [c for c in testobjekte(exp) if c["objekt_id"].startswith("ycb_")]
+
+
+def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bool = False):
     """Lange Videos (3 Episoden) des besten Seeds je Benchmark-Objekt → <experiment>/beste_videos/ (im Git);
-    Videos anderer Seeds dort werden entfernt."""
+    mit ycb=True zusätzlich je YCB-Testobjekt. Videos anderer Seeds dort werden entfernt."""
     bench = benchmark(exp)
     best, _ = best_seed({c["name"]: aggregate(exp, c) for c in bench}, bench)
     if exp.get("regel"):
         best = 0                                             # ein Lauf, Label s0
     out = d / "beste_videos"
-    keep = {exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos").name for c in bench} if best is not None else set()
+    keep = ({exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos").name for c in bench + ycb_objekte(exp)}
+            if best is not None else set())
     for old in out.glob("*.mp4") if out.exists() else []:
         if old.name not in keep:
             old.unlink()
@@ -1502,7 +1508,7 @@ def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False):
     if run is None:
         return
     out.mkdir(exist_ok=True)
-    for c in bench:
+    for c in bench + (ycb_objekte(exp) if ycb else []):
         target = exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos")
         if target.exists() and not neu:
             continue
@@ -1812,6 +1818,7 @@ def main():
     md.add_argument("--verlauf", action="store_true")
     md.add_argument("--neu", action="store_true")
     md.add_argument("--beste", action="store_true", help="nur die langen Videos des besten Seeds (neu aufnehmen)")
+    md.add_argument("--ycb", action="store_true", help="lange Videos des besten Seeds zusätzlich je YCB-Testobjekt")
     bl = sub.add_parser("belastung")
     bl.add_argument("ids", nargs="+", help="Experimente (Belastungstest „Arm bewegt sich“, nur Bewertung)")
     lb = sub.add_parser("leaderboard")

@@ -12,7 +12,7 @@
 
 **Urteilsvorschlag** (auswertung-v2): **kein Unterschied**
 
-**Beste Videos** (Seed 42, 3 Episoden): [Ø 6 cm](beste_videos/EXP-036_zylinder_d6_s42.mp4) · [Ø 8 cm](beste_videos/EXP-036_zylinder_d8_s42.mp4) · [Quader](beste_videos/EXP-036_quader_7x7x20_s42.mp4)
+**Beste Videos** (Seed 42, 3 Episoden): [Ø 6 cm](beste_videos/EXP-036_zylinder_d6_s42.mp4) · [Ø 8 cm](beste_videos/EXP-036_zylinder_d8_s42.mp4) · [Quader](beste_videos/EXP-036_quader_7x7x20_s42.mp4) · [Cracker (YCB)](beste_videos/EXP-036_ycb_003_cracker_s42.mp4) · [Zucker (YCB)](beste_videos/EXP-036_ycb_004_zucker_s42.mp4) · [Senf (YCB)](beste_videos/EXP-036_ycb_006_senf_s42.mp4)
 
 ![Ergebnis je Bedingung — Punkte = Seeds](diagramme/EXP-036_bedingungen.svg)
 
