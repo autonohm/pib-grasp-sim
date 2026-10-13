@@ -1,6 +1,6 @@
 # Nachtlauf 2026-10-12/13 — Servo-Stall und Unruhe
 
-Stand 2026-10-12, 23:30 — **vorbereitet und gestartet** (Leon, 23:00). Abschnitt „Vorbereitung — Ergebnis“ unten.
+Stand 2026-10-13 mittags — **gelaufen** (23:13–10:23, alle Schritte rc = 0, HF-Backup fertig). Ergebnis unten (Entwurf, Urteil Leon).
 Ziel (Leon): die beiden Anforderungen angehen, die die echte Hardware betreffen —
 **Servo-Stall** (Überlastschutz des ST3215 nach ~2 s über 80 % Blockiermoment, Wärme) und **Unruhe** (Verschleiß,
 Leitplanke). Grundsatz: volle Servoleistung, Verhalten über das Lernen steuern, nicht über Filter oder kleine Skala →
@@ -107,6 +107,35 @@ Fällt ein Experiment im Kurztest durch (NaN, Fehler), läuft die Kette mit dem 
 - Kurven: λ und Kostenanteil (EXP-035/036/037), CAPS-Verlust (EXP-034/036).
 - Risiken: EXP-027 hat nur 2/5 erfolgreiche Seeds (Vergleich wenig trennscharf); Lagrange kann anfangs schwingen
   (PID-D-Anteil dämpft, Stooke 2020); CAPS zu stark → Policy träge, greift schlechter.
+
+## Ergebnis (Entwurf, 2026-10-13; Urteil Leon)
+
+Nur erfolgreiche Seeds (wie Leistung und Index v3); Transport = Belastungstest 0,3 m mit 5 m/s², Mittel der erfolgreichen Seeds.
+
+| EXP | Index | Leistung | Unruhe | Servo-Last | Schutz > 2 s |
+|---|---|---|---|---|---|
+| 024 Filter (Referenz) | 0,64 | 87 %, 5/5 | 0,17 | 43 % | 100 % |
+| 027 Eltern | 0,45 | 80 %, 2/5 | 0,31 | 40 % | 100 % |
+| 034 CAPS | 0,39 | 78 %, 4/5 | 0,06 | 45 % | 100 % |
+| 035 Lagrange | 0,60 | 84 %, 2/5 | 0,16 | 13 % | 87 % |
+| **036 CAPS + Lagrange** | **0,66** | 83 %, 4/5 | 0,04 | 11 % | 85 % |
+| 037 + Servo-Last | 0,28 | 60 %, 1/5 | 0,20 | 16 % | 93 % |
+
+- **Leistung**: nirgends gesichert verschieden außer EXP-037 (gesichert schlechter, Leitplanken verletzt → verworfen).
+- **Unruhe (CAPS)**: Ziel erreicht — ohne Filter ruhiger als EXP-024 (0,06 bzw. 0,04 gegen 0,17). Der CAPS-Anteil am
+  Actor-Gradienten liegt anfangs bei 14–17 % und fällt bis zum Ende auf 2–7 %; das Explorationsrauschen σ bleibt bei CAPS
+  allein so hoch wie bei EXP-027 (≈ 0,8), CAPS glättet nur den Mittelwert.
+- **Stall (Lagrange)**: Die Grenze im Mittel hält (J_c im Training am Ende 0,16–0,18; λ Spitze 4–8 um It. 100–200, Ende 0–5),
+  Servo-Last 11–13 % statt 40 %, Griffkraft 57–63 N statt 97 N. Nebenwirkung: σ sinkt auf ≈ 0,4 (Rauschen drückt Servos in den
+  Stall). **Aber der Überlastschutz bleibt**: Die Policy sammelt die Last auf **einem** Servo (Zeigefinger 95–97 % oder Daumen
+  35–65 % der Zeit, die übrigen ≤ 5 %); Kosten = Anteil der Servos erlauben das (1/7 = 14 % < 20 %). Schutz > 2 s nur 85–87 %
+  statt 100 %, längster Stall-Lauf im Median weiter 3–4 s.
+- **Transport** (Kriterium ≥ 97 %): EXP-036 95 % (s42 99, s43 84, s44 99, s45 97) — knapp verfehlt durch einen Seed; der
+  Top-Seed s42 liegt mit 99 % über EXP-024s Top-Seed (94 %). EXP-034 88 %, EXP-035 95 %.
+- **Kippen**: EXP-036 28°, EXP-024 13° — die kleine Skala/der Filter regularisieren weiter stärker gegen das Kippen (ADR-022).
+- **Vorschlag**: EXP-036 als Kandidat neue Basis neben EXP-024 (Videos `EXP-036_*/beste_videos/`, Leon). Nächster Schritt
+  Überlastschutz: Grenze **je Servo** (7 Multiplikatoren, CMDP mit mehreren Nebenbedingungen) oder Kosten auf die Lauflänge
+  > 2 s statt auf den Anteil — vorher prüfen, wie die Literatur das macht.
 
 ## Quellen
 

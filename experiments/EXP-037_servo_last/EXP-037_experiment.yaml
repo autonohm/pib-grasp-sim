@@ -3,8 +3,7 @@ id: EXP-037
 titel: Servo-Last als Beobachtung (zu PID-Lagrange)
 datum: '2026-10-12'
 eltern: EXP-035
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Ohne Sicht auf die Last kann die Policy das Moment nur über Gelenkwinkel
   und FSR erraten. Der ST3215 meldet seine Last („Present Load“); sieht die Policy
@@ -83,10 +82,17 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: e6a3235
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_05-20-35_EXP-037_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_05-47-06_EXP-037_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_06-08-17_EXP-037_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_06-29-36_EXP-037_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_06-50-34_EXP-037_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 60 % [58–62] (ggü. EXP-035 gesichert schlechter, P = 0,00), 1/5 (vier Seeds halten, aber gekippt; Kippen
+  alle Seeds 57°). Leitplanken Kippen, Stall-Anteil, Unruhe verletzt. Erfolgreicher Seed s45: Servo-Last 16 %, Schutz > 2 s
+  93 %, Transport 60 %. λ-Verlauf wie EXP-035 (s42 erst ab It. ~100).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese nicht bestätigt — mit Servo-Last als Eingang greift die Policy schlechter und kippt; verworfen.
+  Ursache nicht geklärt (40 zusätzliche verrauschte Eingänge, Training sonst gleich).'

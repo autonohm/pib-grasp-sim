@@ -3,8 +3,7 @@ id: EXP-035
 titel: 'Servo-Stall: PID-Lagrange auf den Stall-Anteil (Grenze 20 %)'
 datum: '2026-10-12'
 eltern: EXP-027
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-027 liegt fast immer im Stall (Daumen, Zeige- und kleiner Finger 82–98
   % der Schritte ≥ 90 % Moment); die echten ST3215 schalten nach > 2 s über 80 % Blockiermoment
@@ -87,10 +86,20 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: e6a3235
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_01-18-30_EXP-035_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_01-43-26_EXP-035_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_02-04-14_EXP-035_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_02-24-06_EXP-035_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_02-44-34_EXP-035_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 84 % [81–86] (ggü. EXP-027 kein Unterschied, P = 0,67), nur 2/5 (s42/43/46 halten, aber gekippt; Kippen alle
+  Seeds 48°). Erfolgreiche Seeds: Servo-Last 13 % (EXP-027 40 %), Griffkraft 57 N (97), Unruhe 0,16, Kippen 28°, Schutz > 2 s
+  87 %, Transport 95 % (s44 98, s45 92). λ steigt bis It. 100–200 auf 5–8, fällt bis It. 300 auf 2–5; J_c im Training am Ende
+  0,16–0,18 (≤ 0,2). Rauschen σ sinkt auf 0,39–0,46 (EXP-027 0,71–0,87). Stall je Servo: die Last sammelt sich auf einem
+  Servo (Zeigefinger 95–97 % oder Daumen 35–55 % der Zeit), die übrigen ≤ 5 %.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Mittel-Grenze wirkt (J_c ≤ 0,2, Griffkraft −40 %), der Überlastschutz aber kaum: Kosten = Anteil der Servos
+  erlauben einen Servo im Dauer-Stall (1/7 = 14 % < 20 %). Für den Schutz braucht es eine Grenze je Servo (je ein λ) oder
+  Kosten auf die Lauflänge > 2 s. Zuverlässigkeit 2/5 nicht trennscharf (EXP-027 ebenfalls 2/5).'

@@ -85,6 +85,11 @@
      0.1257491822722748,
      0.9224224197773301
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.383333333333333,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5638597169040716
    }
   },
   {
@@ -154,6 +159,11 @@
      0.9314301196379787,
      0.6964281297368313
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.166666666666667,
+    "schutz_anteil": 0.9989059080962801,
+    "stall80_servo_anteil": 0.6642442269608532
    }
   },
   {
@@ -223,6 +233,11 @@
      0.03381377815552143,
      0.6857409865873163
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.35,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5488608233386892
    }
   },
   {
@@ -292,6 +307,11 @@
      0.7184844600079876,
      0.4671816874205043
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.416666666666667,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5823140271439309
    }
   },
   {
@@ -361,6 +381,11 @@
      0.8381600025725566,
      0.48394870522167627
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.0,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.46013718388660624
    }
   }
  ],
@@ -4188,6 +4213,11 @@
        0.1257491822722748,
        0.9224224197773301
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.383333333333333,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5638597169040716
      }
     },
     {
@@ -4257,6 +4287,11 @@
        0.9314301196379787,
        0.6964281297368313
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.166666666666667,
+      "schutz_anteil": 0.9989059080962801,
+      "stall80_servo_anteil": 0.6642442269608532
      }
     },
     {
@@ -4326,6 +4361,11 @@
        0.03381377815552143,
        0.6857409865873163
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.35,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5488608233386892
      }
     },
     {
@@ -4395,6 +4435,11 @@
        0.7184844600079876,
        0.4671816874205043
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.416666666666667,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5823140271439309
      }
     },
     {
@@ -4464,6 +4509,11 @@
        0.8381600025725566,
        0.48394870522167627
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.0,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.46013718388660624
      }
     }
    ],

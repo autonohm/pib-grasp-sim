@@ -3,8 +3,7 @@ id: EXP-034
 titel: 'Unruhe: CAPS-Verlust auf den Mittelwert der Policy (zeitlich + räumlich)'
 datum: '2026-10-12'
 eltern: EXP-027
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-027 ist unruhig (Unruhe an den Servos 0,66, EXP-024 mit Filter 0,17).
   Die Strafe action_rate_l2 wirkt auf die verrauschte Aktion und misst vor allem Exploration
@@ -89,10 +88,19 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: e6a3235
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_23-13-39_EXP-034_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-12_23-39-28_EXP-034_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_00-01-38_EXP-034_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_00-23-09_EXP-034_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_00-44-36_EXP-034_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 78 % [67–82] (ggü. EXP-027 kein Unterschied, P = 0,46), 4/5 (EXP-027 2/5). Erfolgreiche Seeds: Unruhe 0,06
+  (EXP-027 0,31, EXP-024 mit Filter 0,17), Kippen 32°, Servo-Last 45 %, Schutz > 2 s 100 %, Robust 52 % (EXP-027 58).
+  Transport 88 % (s42 97, s43 80, s45 92, s46 82) < Kriterium 97 %. Index 0,39 (Top s42 0,68). CAPS-Anteil am
+  Actor-Gradienten anfangs 14–17 %, am Ende 2–7 %; Rauschen σ bleibt bei 0,74–0,83 wie EXP-027 (CAPS wirkt nur auf den
+  Mittelwert).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese zur Unruhe bestätigt — ohne Filter ruhiger als EXP-024, Leistung gleich. Transport-Kriterium verfehlt,
+  Stall unverändert → allein keine Basis; CAPS bleibt Baustein (EXP-036).'

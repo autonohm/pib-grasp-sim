@@ -3,8 +3,7 @@ id: EXP-036
 titel: CAPS + PID-Lagrange auf den Stall-Anteil
 datum: '2026-10-12'
 eltern: EXP-034
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'CAPS (EXP-034) und Stall-Grenze (EXP-035) greifen an verschiedenen Stellen
   an (Verlust auf den Mittelwert vs. Kosten in der Belohnung) und vertragen sich:
@@ -82,10 +81,20 @@ training:
   zusatz_args: []
 fenstertest: false
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: e6a3235
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_03-17-52_EXP-036_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_03-42-52_EXP-036_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_04-04-16_EXP-036_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_04-24-46_EXP-036_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_04-46-09_EXP-036_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 83 % [80–86] (ggü. EXP-034 kein Unterschied, P = 0,67), 4/5 (s46 gekippt). Index 0,66 = Platz 1 seitlich
+  (EXP-024 0,64), Top s42 0,81. Erfolgreiche Seeds: Unruhe 0,04 (EXP-024 0,17), Servo-Last 11 % (43 %), Griffkraft 63 N,
+  Kippen 28° (EXP-024 13°), Robust 70 % (72), Schutz > 2 s 85 % (100). Transport 95 % (s42 99, s43 84, s44 99, s45 97)
+  knapp unter 97 % (EXP-024 Top s44 94 %); Drehen Top 99–100 %. λ wie EXP-035 (Spitze 4–7, Ende 0–3), CAPS-Anteil
+  am Ende 2–3 %. Stall wieder auf einem Servo gesammelt (Zeigefinger oder Daumen).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese weitgehend bestätigt — ruhig und im Mittel kühl zugleich, Leistung gleich; Kandidat neue Basis neben
+  EXP-024 (Videos: Leon). Offen: Transport-Mittel 2 PP unter dem Kriterium (ein Seed, s43), Kippen 28° statt 13°,
+  Überlastschutz wie EXP-035 nur im Mittel → nächster Schritt Grenze je Servo.'

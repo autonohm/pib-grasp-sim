@@ -36,7 +36,7 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 | Absinken [mm] | 0.00968 | | | | 0.0578 |
 | Unruhe | 0.356 | | | | 1.19 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.356 | | | | 0.562 |
-| Objektweg Tischebene Ende [mm] | 112 | | | | – |
+| Objektweg Tischebene Ende [mm] | 112 | | | | 124 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 10.0 %, instabil 0.0 %, anforderung_verletzt 1.4 %
 

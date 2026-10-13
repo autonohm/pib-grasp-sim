@@ -403,6 +403,12 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
 5h. [ ] **Kippen seitlich über Kosten statt Skala** (Leon wählt, Eltern EXP-033): (1) `joint_deviation_l1` auf Unterarm/
        Handgelenk (Isaac Lab H1/G1), (2) Kippstrafe ab t = 0, (3) CaT (Chane-Sane et al. 2024); Gewicht per `reward_diag`.
        Grundsatzfrage: Unterarm/Handgelenk aus dem Aktionsraum (Arm hält die Vorgreifpose) — 2026-10-06 „Unterarm bleibt“
+5i. [x] **Nachtlauf 2026-10-13** (Plan + Ergebnis `docs/nachtlauf-2026-10-13.md`; Eltern EXP-027, Entwürfe, Urteil Leon):
+       **EXP-034 CAPS** Unruhe 0,06 ohne Filter, Leistung gleich, Transport 88 %; **EXP-035 PID-Lagrange** auf Stall-Anteil ≤ 20 %:
+       Servo-Last 13 %, Griffkraft 57 N, aber Last auf einem Servo gesammelt (Schutz > 2 s 87 %), 2/5; **EXP-036 CAPS + Lagrange**
+       **Index 0,66 = Platz 1** seitlich (EXP-024 0,64), Unruhe 0,04, Servo-Last 11 %, 4/5, Transport 95 % (Kriterium 97 %
+       knapp verfehlt), Kippen 28° → Kandidat neue Basis neben EXP-024 (Videos: Leon); **EXP-037 Servo-Last als Beobachtung**
+       gesichert schlechter → verworfen. Nächster Schritt Überlastschutz: Grenze je Servo oder Kosten auf die Stall-Lauflänge
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“

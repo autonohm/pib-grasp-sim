@@ -4,45 +4,37 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ---
 
-## Stand 2026-10-12, 23:30 (Nachtlauf 2026-10-12/13 läuft)
+## Stand 2026-10-13 mittags (Nachtlauf 2026-10-12/13 ausgewertet)
 
 ### Zuletzt gearbeitet an
 
-1. **Nachtlauf 2026-10-11/12 ausgewertet** (EXP-027–033, Commit `4d7a099`): Aktionsraum wie Dexsuite kippt mehr; die kleine
-   Skala 0,03 an Unterarm/Handgelenk wirkte als Regularisierer (ADR-022, Nachtrag); von oben genügt die Regel.
-2. **Leaderboard v3 überarbeitet** (Leon, `c4378d6`): alle Größen nur über erfolgreiche Seeds, Kippen inakzeptabel bei 45°,
-   Objektweg 150 mm, Unterarm nur Info, Untergrenze 0,1, Spalte **Top** (Index des besten Seeds). Seitlich EXP-024 0,64
-   (Top 0,79) vor Regel 0,55, EXP-022 0,49, EXP-027 0,45. Fehlende beste Videos (EXP-029/031/032/033) ergänzt.
-3. **Belastungstest „Arm bewegt sich“** (`4c96023`, `experiments/belastung.md`): Armbewegung als Scheinkraft
-   (`mdp.apply_arm_motion`, geprüft mit `tools/pruef_bewegung.py`), `eval_policy --bewegung`, `experiments.py belastung`,
-   Info-Spalte „Bewegt“. Transport 5 m/s²: seitlich Regel 96 %, **EXP-024 97 %**, übrige RL 85–88 %; von oben Regel 99 %,
-   EXP-030 67 %. Rampe: leichte Objekte rutschen erst bei 9–15 g, Senf (603 g) bei 25–60 m/s² (schwächste Richtung 18–38).
-   Drehen: Tempo egal, die 45°-Neigung zählt; EXP-033 beim Nicken nur 37–53 %.
-4. **Nachtlauf-Plan** `docs/nachtlauf-2026-10-13.md` (Servo-Stall und Unruhe): EXP-034 CAPS, EXP-035 PID-Lagrange
-   (Stall-Anteil ≤ 20 %, Leon bestätigt), EXP-036 = 034 + Lagrange, EXP-037 = 035 + Servo-Last als Beobachtung; Eltern EXP-027.
+1. **Nachtlauf 2026-10-12/13** (23:13–10:23, alle Schritte rc = 0, HF-Backup fertig): EXP-034–037 trainiert, bewertet,
+   Belastungstest, beste Videos; Hauptbedingung EXP-014/022/024/027/033 mit neuer Kennzahl „Schutz > 2 s“ nachbewertet.
+2. **Auswertung** (`docs/nachtlauf-2026-10-13.md` → „Ergebnis“, Entwürfe in `ergebnis`/`schluss` der YAMLs, `urteil` leer):
+   **EXP-036 CAPS + Lagrange Index 0,66 = Platz 1** seitlich (EXP-024 0,64): Unruhe 0,04, Servo-Last 11 %, 4/5, Leistung 83 %,
+   Transport 95 % (Kriterium 97 % knapp verfehlt, ein Seed 84 %), Kippen 28°. EXP-034 CAPS: Unruhe 0,06, Transport 88 %.
+   EXP-035 Lagrange: Servo-Last 13 %, 2/5. EXP-037 Servo-Last als Beobachtung: gesichert schlechter → verworfen.
+3. **Befund Überlastschutz**: Lagrange auf den *Anteil* der Servos sammelt die Last auf einem Servo (Zeigefinger 95–97 % oder
+   Daumen 35–65 % der Zeit), 1/7 = 14 % < 20 % → Schutz > 2 s bleibt 85–87 %, längster Lauf 3–4 s.
 
 ### Offene Punkte
 
-- **Nachtlauf läuft seit ~23:30** (Kette `scratchpad/nacht3/kette.sh`, Log `nacht3/kette.log`, Ende ≈ 9–10 Uhr): EXP-034–037,
-  dann Hauptbedingung EXP-014/022/024/027/033 neu (neue Kennzahl), Belastung + beste Videos der neuen, `done` mit HF-Backup.
-  Vorbereitung und Prüfungen: `docs/nachtlauf-2026-10-13.md` → „Vorbereitung — Ergebnis“ (CAPS λ 0,04 gewählt).
-- Überlastschutz des echten Servos (STS3215-Datenblatt: > 80 % Blockiermoment für 2 s) — ob er bei 60-Hz-Neubefehlen greift
-  und welche Werte eingestellt sind, ist ungeprüft (Leon kommt vorerst nicht an Hand/Motor-Kollegen).
-- Urteile EXP-027–033 sind Entwürfe (Feld `urteil` leer).
-- Index „oben“ misst die Objektlage nicht (Kipp raus, Unterarm nur Info) — Lage-Anforderung je Objekt offen.
-- **Abgabe/Veröffentlichung** als Sprint-Abschnitt (`docs/current-sprint.md`): englisch, Leon nur als Autor; Empfänger,
-  Frist, Lizenz noch offen (eilt nicht).
+- **Entscheidung Leon**: EXP-036 als neue Basis? (Videos `experiments/EXP-036_caps_lagrange/beste_videos/`, Top-Seed s42)
+- Urteile EXP-027–037 sind Entwürfe (Feld `urteil` leer).
+- Überlastschutz: Grenze je Servo (7 Multiplikatoren) oder Kosten auf die Stall-Lauflänge > 2 s — Literatur vorher prüfen.
+  Werte des echten Servo-Schutzes ungeprüft (Leon kommt vorerst nicht an Hand/Motor-Kollegen).
+- Index „oben“ misst die Objektlage nicht — Lage-Anforderung je Objekt offen.
+- **Abgabe/Veröffentlichung** (`docs/current-sprint.md`): englisch, Leon nur als Autor; Empfänger, Frist, Lizenz offen.
 
 ### Nächste Schritte (in Reihenfolge)
 
-1. Kette prüfen (`grep -E 'START|ENDE|KETTE' nacht3/kette.log`); ggf. Fehlgeschlagenes nachholen.
-2. Am Morgen: Auswertung (Unruhe, Stall-Anteil/-Dauer/Schutz-Anteil, Transport ≥ EXP-024), Entwürfe in die YAMLs, Commit,
-   Push, HF-Backup.
-3. Präsentation Do 2026-10-15.
+1. Präsentation Do 2026-10-15 (Folien-Zahlen unten, EXP-036 als neuester Stand ergänzen).
+2. Nach Leons Urteil: Überlastschutz je Servo planen (Eltern EXP-036), danach Pause.
 
 ### Wichtige Kontextdetails
 
-- **Folien-Zahlen**: seitlich bestes Rezept EXP-024 (87 %, 5/5, Robust 72 %, Transport 97 %), Regel 69 % (Transport 96 %);
+- **Folien-Zahlen**: seitlich bestes Rezept EXP-024 (87 %, 5/5, Robust 72 %, Transport 97 %), neu EXP-036 (Index 0,66, 83 %, 4/5,
+  Unruhe 0,04, Servo-Last 11 %, Transport 95 %), Regel 69 % (Transport 96 %);
   von oben Regel 100 %/Robust 99 %/Transport 99 %; int8 EXP-023 s43: alle Schichten NPU, 71 kB, −1,4 PP.
 - Leons Grundsatz: volle Servoleistung, Verhalten über Lernen/Kosten steuern — kein Filter, keine ±1-Begrenzung, keine kleine
   Skala (darum Eltern EXP-027, nicht EXP-024/033).
@@ -53,4 +45,5 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 - Isaac Lab 2.3.2: externe Kräfte über `asset.permanent_wrench_composer.set_forces_and_torques(..., is_global=True)`
   (`set_external_force_and_torque` ist veraltet und warnt je Aufruf).
 - Während `experiments.py run` nichts unter `isaac_lab/` ändern; Prozesse nie per `pkill -f`; nur ein Isaac-Prozess.
-- TensorBoard-Werte lesen: `~/IsaacLab/isaaclab.sh -p <skript>` (Hilfsskripte `scratchpad/tb_rewards.py`, `tb_std.py`).
+- TensorBoard-Werte lesen: in `env_isaaclab` mit gesetztem PYTHONPATH (`python scratchpad/tbscan.py EXP-…`; mit `env -u PYTHONPATH`
+  fehlt numpy). λ/J_c unter `Lagrange/*`, CAPS unter `Loss/caps_*`.

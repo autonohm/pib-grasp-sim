@@ -37,7 +37,10 @@
     "unruhe": 0.2581429438483556,
     "unruhe_wirksam": 0.2581429438483556,
     "objektweg_mm": 141.61500206362874,
-    "objektweg_max_mm": 143.85651498166627
+    "objektweg_max_mm": 143.85651498166627,
+    "schwingen_mm_s": 52.10340853749005,
+    "drehschwingen_deg_s": 63.825635922515076,
+    "aktion_frequenz_hz": 9.535430322489828
    },
    "fingernutzung": {
     "finger": [
@@ -62,6 +65,31 @@
      0.0
     ],
     "finger_mit_kontakt": 2.964975334886052
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00010610121153649454,
+     0.8812491569779302,
+     0.8712206304419873,
+     0.8710123564955438,
+     0.8982371428851471,
+     0.21248535842838526,
+     0.11750119676135173
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.183333333333334,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5715129085110153
    }
   },
   {
@@ -83,7 +111,10 @@
     "unruhe": 0.1571528428648325,
     "unruhe_wirksam": 0.1571528428648325,
     "objektweg_mm": 140.23330964790748,
-    "objektweg_max_mm": 143.53386219094992
+    "objektweg_max_mm": 143.53386219094992,
+    "schwingen_mm_s": 60.89863045631062,
+    "drehschwingen_deg_s": 90.9760679582889,
+    "aktion_frequenz_hz": 6.760209071369598
    },
    "fingernutzung": {
     "finger": [
@@ -108,6 +139,31 @@
      11.754036023423842
     ],
     "finger_mit_kontakt": 3.03390131353602
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     2.375381519666876e-05,
+     0.37759856284666443,
+     0.6938449811503783,
+     0.8475836364352031,
+     0.8703635454622194,
+     0.6226152092614137,
+     0.25060274946717576
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.933333333333333,
+    "schutz_anteil": 0.9989350372736954,
+    "stall80_servo_anteil": 0.5639739693263345
    }
   },
   {
@@ -129,7 +185,10 @@
     "unruhe": 0.3633019548030658,
     "unruhe_wirksam": 0.3633019548030658,
     "objektweg_mm": 113.35290193912974,
-    "objektweg_max_mm": 114.20259399426028
+    "objektweg_max_mm": 114.20259399426028,
+    "schwingen_mm_s": 55.38610684938981,
+    "drehschwingen_deg_s": 75.22925958901412,
+    "aktion_frequenz_hz": 7.992779122691232
    },
    "fingernutzung": {
     "finger": [
@@ -154,6 +213,31 @@
      13.382779724886605
     ],
     "finger_mit_kontakt": 3.2968632379965097
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     2.3321656701873655e-05,
+     0.4879403651097189,
+     0.8243552668807722,
+     0.9047590101341082,
+     0.8605551432673276,
+     0.716026169321543,
+     0.4272714075679135
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.1,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.6368036171167972
    }
   },
   {
@@ -175,7 +259,10 @@
     "unruhe": 0.6299947857060585,
     "unruhe_wirksam": 0.6299947857060585,
     "objektweg_mm": 40.73142379370759,
-    "objektweg_max_mm": 42.665249678033064
+    "objektweg_max_mm": 42.665249678033064,
+    "schwingen_mm_s": 54.639890497825576,
+    "drehschwingen_deg_s": 97.17173472816192,
+    "aktion_frequenz_hz": 10.00843664665549
    },
    "fingernutzung": {
     "finger": [
@@ -200,6 +287,31 @@
      3.0347551615386243
     ],
     "finger_mit_kontakt": 2.9927997861288853
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     7.164293109405411e-05,
+     0.8485269346025153,
+     0.6970498970382183,
+     0.8154159604287078,
+     0.9208663949300187,
+     0.7976922953004771,
+     0.28999068219128926
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.2,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.6731288328672046
    }
   },
   {
@@ -221,7 +333,10 @@
     "unruhe": 0.3734621644161131,
     "unruhe_wirksam": 0.3734621644161131,
     "objektweg_mm": 122.9859723984926,
-    "objektweg_max_mm": 136.3062782057521
+    "objektweg_max_mm": 136.3062782057521,
+    "schwingen_mm_s": 72.2811641024413,
+    "drehschwingen_deg_s": 79.9165039568251,
+    "aktion_frequenz_hz": 7.311378331001403
    },
    "fingernutzung": {
     "finger": [
@@ -246,6 +361,31 @@
      24.582040023167973
     ],
     "finger_mit_kontakt": 3.78854401824937
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00031888022341893706,
+     0.7316958488364079,
+     0.7813320736953691,
+     0.8798366917999415,
+     0.49579161491784274,
+     0.7685349071755769,
+     0.7203588178087
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.05,
+    "schutz_anteil": 0.9853273137697517,
+    "stall80_servo_anteil": 0.6724603107752698
    }
   }
  ],
@@ -3130,7 +3270,10 @@
       "unruhe": 0.2581429438483556,
       "unruhe_wirksam": 0.2581429438483556,
       "objektweg_mm": 141.61500206362874,
-      "objektweg_max_mm": 143.85651498166627
+      "objektweg_max_mm": 143.85651498166627,
+      "schwingen_mm_s": 52.10340853749005,
+      "drehschwingen_deg_s": 63.825635922515076,
+      "aktion_frequenz_hz": 9.535430322489828
      },
      "fingernutzung": {
       "finger": [
@@ -3155,6 +3298,31 @@
        0.0
       ],
       "finger_mit_kontakt": 2.964975334886052
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00010610121153649454,
+       0.8812491569779302,
+       0.8712206304419873,
+       0.8710123564955438,
+       0.8982371428851471,
+       0.21248535842838526,
+       0.11750119676135173
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.183333333333334,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5715129085110153
      }
     },
     {
@@ -3176,7 +3344,10 @@
       "unruhe": 0.1571528428648325,
       "unruhe_wirksam": 0.1571528428648325,
       "objektweg_mm": 140.23330964790748,
-      "objektweg_max_mm": 143.53386219094992
+      "objektweg_max_mm": 143.53386219094992,
+      "schwingen_mm_s": 60.89863045631062,
+      "drehschwingen_deg_s": 90.9760679582889,
+      "aktion_frequenz_hz": 6.760209071369598
      },
      "fingernutzung": {
       "finger": [
@@ -3201,6 +3372,31 @@
        11.754036023423842
       ],
       "finger_mit_kontakt": 3.03390131353602
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       2.375381519666876e-05,
+       0.37759856284666443,
+       0.6938449811503783,
+       0.8475836364352031,
+       0.8703635454622194,
+       0.6226152092614137,
+       0.25060274946717576
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.933333333333333,
+      "schutz_anteil": 0.9989350372736954,
+      "stall80_servo_anteil": 0.5639739693263345
      }
     },
     {
@@ -3222,7 +3418,10 @@
       "unruhe": 0.3633019548030658,
       "unruhe_wirksam": 0.3633019548030658,
       "objektweg_mm": 113.35290193912974,
-      "objektweg_max_mm": 114.20259399426028
+      "objektweg_max_mm": 114.20259399426028,
+      "schwingen_mm_s": 55.38610684938981,
+      "drehschwingen_deg_s": 75.22925958901412,
+      "aktion_frequenz_hz": 7.992779122691232
      },
      "fingernutzung": {
       "finger": [
@@ -3247,6 +3446,31 @@
        13.382779724886605
       ],
       "finger_mit_kontakt": 3.2968632379965097
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       2.3321656701873655e-05,
+       0.4879403651097189,
+       0.8243552668807722,
+       0.9047590101341082,
+       0.8605551432673276,
+       0.716026169321543,
+       0.4272714075679135
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.1,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.6368036171167972
      }
     },
     {
@@ -3268,7 +3492,10 @@
       "unruhe": 0.6299947857060585,
       "unruhe_wirksam": 0.6299947857060585,
       "objektweg_mm": 40.73142379370759,
-      "objektweg_max_mm": 42.665249678033064
+      "objektweg_max_mm": 42.665249678033064,
+      "schwingen_mm_s": 54.639890497825576,
+      "drehschwingen_deg_s": 97.17173472816192,
+      "aktion_frequenz_hz": 10.00843664665549
      },
      "fingernutzung": {
       "finger": [
@@ -3293,6 +3520,31 @@
        3.0347551615386243
       ],
       "finger_mit_kontakt": 2.9927997861288853
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       7.164293109405411e-05,
+       0.8485269346025153,
+       0.6970498970382183,
+       0.8154159604287078,
+       0.9208663949300187,
+       0.7976922953004771,
+       0.28999068219128926
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.2,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.6731288328672046
      }
     },
     {
@@ -3314,7 +3566,10 @@
       "unruhe": 0.3734621644161131,
       "unruhe_wirksam": 0.3734621644161131,
       "objektweg_mm": 122.9859723984926,
-      "objektweg_max_mm": 136.3062782057521
+      "objektweg_max_mm": 136.3062782057521,
+      "schwingen_mm_s": 72.2811641024413,
+      "drehschwingen_deg_s": 79.9165039568251,
+      "aktion_frequenz_hz": 7.311378331001403
      },
      "fingernutzung": {
       "finger": [
@@ -3339,6 +3594,31 @@
        24.582040023167973
       ],
       "finger_mit_kontakt": 3.78854401824937
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00031888022341893706,
+       0.7316958488364079,
+       0.7813320736953691,
+       0.8798366917999415,
+       0.49579161491784274,
+       0.7685349071755769,
+       0.7203588178087
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.05,
+      "schutz_anteil": 0.9853273137697517,
+      "stall80_servo_anteil": 0.6724603107752698
      }
     }
    ],
