@@ -1609,6 +1609,10 @@ def v3_values(exp: dict, seed=None) -> dict | None:
             if s.get("stall_je_servo") and None not in s["stall_je_servo"]["anteil"]]
     schutz = [s["servo_schutz"]["schutz_anteil"] for s in seeds
               if (s.get("servo_schutz") or {}).get("schutz_anteil") is not None]      # seit 2026-10-13 (Überlastschutz)
+    # wie am echten Servo (seit 2026-10-14: Sehne zieht nur, Firmware-Grenzen, ≥ 80 %) — nur wenn alle Seeds sie haben
+    real = [s["servo_last_real"]["mittel"] for s in seeds if (s.get("servo_last_real") or {}).get("mittel") is not None]
+    schutz_real = [s["servo_schutz"]["schutz_anteil_real"] for s in seeds
+                   if (s.get("servo_schutz") or {}).get("schutz_anteil_real") is not None]
     leistung = (rec["leistung"]["iqm"] if seed is None else
                 float(np.mean([row[rec["seed_ids"].index(seed)] for row in rec["je_seed"]])))
     return {"leistung": leistung, "robustheit": float(np.mean(robust)) if robust else None,
@@ -1616,6 +1620,8 @@ def v3_values(exp: dict, seed=None) -> dict | None:
             "schwingen_mm_s": mean_of("schwingen_mm_s"), "objektweg_mm": mean_of("objektweg_mm"),
             "kipp_median_deg": mean_of("kipp_median_deg"), "unterarm_median_deg": mean_of("unterarm_median_deg"),
             "servo_last": float(np.mean(last)) if last else None, "schutz": float(np.mean(schutz)) if schutz else None,
+            "servo_last_real": float(np.mean(real)) if real and len(real) == len(seeds) else None,
+            "schutz_real": float(np.mean(schutz_real)) if schutz_real and len(schutz_real) == len(seeds) else None,
             "k": rec["k"], "n": rec["n"]}
 
 
@@ -1635,6 +1641,18 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
     rows = [r for r in rows if r[2]]
     if not rows:
         return []
+    # Servo-Last im Index wie am echten Servo (Leon, 2026-10-13), sobald alle Rezepte mit Servo-Last sie haben
+    # (Nachbewertung der Hauptbedingung); bis dahin wie bisher (≥ 90 %, alle Stall-Momente), die andere Größe zur Info
+    real = all(v["servo_last_real"] is not None for _, _, v in rows if v["servo_last"] is not None)
+
+    def as_real(v):
+        v["servo_last_bisher"] = v["servo_last"]
+        if real:
+            v["servo_last"], v["schutz"] = v["servo_last_real"], v["schutz_real"]
+        return v
+    for _, _, v in rows:
+        as_real(v)
+    wunsch = [(w[0], "Servo-Last real" if real else w[1], *w[2:]) if w[0] == "servo_last" else w for w in wunsch]
     sw = [v["schwingen_mm_s"] for _, _, v in rows if v["schwingen_mm_s"] is not None]
     sw_rule = [v["schwingen_mm_s"] for _, e, v in rows if e.get("regel") and v["schwingen_mm_s"] is not None]
     bounds = {"schwingen_mm_s": (max(sw) if sw else None, (min(sw_rule) if sw_rule else min(sw)) if sw else None)}
@@ -1655,7 +1673,7 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
             return idx, None
         bench = benchmark(e)
         best, _ = best_seed({c["name"]: aggregate(e, c) for c in bench}, bench)
-        vt = v3_values(e, best) if best is not None else None
+        vt = as_real(v3_values(e, best)) if best is not None and v3_values(e, best) else None
         return (index(vt)[0], best) if vt else (None, None)
     scored = []
     for dd, e, v in rows:
@@ -1675,14 +1693,18 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
          "Unterarm nur zur Info (zählt nicht, solange das Objekt aufrecht bleibt). **Bewegt** (Info, nicht im Index): "
          "Grenzbeschleunigung des Top-Seeds · Transport-Erfolg ([belastung.md](belastung.md)). **Schutz > 2 s** (Info, nicht im "
          "Index): Anteil der gehaltenen Episoden, in denen ein Servo länger als 2 s am Stück ≥ 80 % Stall liegt (Überlastschutz "
-         "laut STS3215-Datenblatt; am echten Servo ungeprüft). **Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
+         "laut STS3215-Datenblatt; am echten Servo ungeprüft). "
+         + ("**Servo-Last real** = Anteil der Schritte je Servo mit ≥ 80 % Stall-Moment, gemittelt über alle 8 Servos (Handgelenk "
+            "mit dem Stall-Moment über das Pleuel), ohne Drücken am Anschlag (die Firmware kappt an den Gelenkgrenzen); Schutz "
+            "> 2 s ebenso; **bisher** = 7 Servos ohne Handgelenk, ≥ 90 %, mit Anschlag (Info, Stand bis 2026-10-13). " if real else "")
+         + "**Robust** = Erfolg in der Störbedingung (" + stoerung({"greifart": art})["kurz"] + ": ungenaue Vorgreifpose, "
          "1 Schritt Verzögerung, Sensorrauschen). **Pareto** ★ = von keinem anderen vollständig bewerteten Rezept in allen "
          "Größen übertroffen. ⚠ = nicht alle Größen gemessen (Index aus den vorhandenen). Zielwerte: "
          + "; ".join(f"{w[1]} {('Regel → schlechtestes' if w[2] is None else fmt(w[4], w[3]) + ' → ' + fmt(w[4], w[2]))}"
                      for w in wunsch) + ". Zuverlässigkeit nur zur Info.", "",
          "| Rang | Experiment | Titel | Index | Top (Seed) | Pareto | " + " | ".join(w[1] for w in wunsch)
-         + " | Unterarm ° | Bewegt | Schutz > 2 s | Seeds | Aktionsweg |",
-         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + "---|---|---|---|---|"]
+         + (" | Servo-Last bisher" if real else "") + " | Unterarm ° | Bewegt | Schutz > 2 s | Seeds | Aktionsweg |",
+         "|---|---|---|---|---|---|" + "---|" * len(wunsch) + ("---|" if real else "") + "---|---|---|---|---|"]
     for i, (idx, dd, e, v, ds, incomplete, (tidx, tseed)) in enumerate(scored, 1):
         p = (e.get("training") or {})
         clip = (load_params(REPO / e["laeufe"][0]).get("agent") or {}).get("clip_actions") if e.get("laeufe") else None
@@ -1693,6 +1715,7 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
         L.append(f"| {i} | [{e['id']}]({dd.name}/{dd.name}.md) | {e.get('titel', '')} | **{idx:.2f}**{' ⚠' if incomplete else ''} | "
                  f"{tops} | {'★' if not incomplete and not dominated(scored[i - 1]) else ''} | "
                  + " | ".join(fmt(w[4], v[w[0]]) for w in wunsch)
+                 + (f" | {fmt('pct', v['servo_last_bisher'])}" if real else "")
                  + f" | {fmt('{:.0f}', v['unterarm_median_deg'])} | {bewegt_info(e)} | {fmt('pct', v['schutz'])} | "
                  f"{v['k']}/{v['n']} | {weg} |")
     return L

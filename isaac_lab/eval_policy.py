@@ -283,6 +283,16 @@ eff_prev = torch.zeros(N, len(SERVO_JOINTS), device=dev)
 stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # Stall-Anteil je Servo (beschreibend, seit 2026-10-11)
 prot_run = torch.zeros(N, len(stall_ids), device=dev)          # laufender Lauf ≥ 80 % je Servo [Schritte]
 prot_max, prot_frac = zeros(), zeros()                         # längster Lauf je Episode; Σ Anteil Servos ≥ 80 % (= Kosten c_t)
+# Servo-Last wie am echten Servo (Nachtlauf 2026-10-14): alle 8 Servos inkl. Handgelenk (Stall-Moment über das Pleuel),
+# kein Stall am Anschlag (Firmware kappt) — gleiche Funktion wie die Kosten im Training (mdp.servo_stall), Schwelle 80 %
+# wie der Überlastschutz
+real_names = list(SERVO_JOINTS)
+real_ids = [robot.joint_names.index(n) for n in real_names]
+s80_joint = torch.zeros(N, len(stall_ids), device=dev)         # ≥ 80 % je Servo (7, ohne Handgelenk), wie bisher gemessen
+s80r_joint = torch.zeros(N, len(real_ids), device=dev)         # ≥ 80 % je Servo (8), wie real
+s80r_hold = torch.zeros(N, len(real_ids), device=dev)          # … nur Haltephase
+prot_run_r = torch.zeros(N, len(real_ids), device=dev)
+prot_max_r = zeros()
 xy_path, xy_path_max = zeros(), zeros()     # Objektweg in der Tischebene ggü. t = EARLY_S (abgesetzt, Größe eingeschwungen)
 xy0 = obj.data.root_pos_w[:, :2].clone()
 # Schwingen (Leaderboard v3): Objektbewegung in der Haltephase (Hand fest → jede Bewegung ist Wackeln/Rutschen) und
@@ -354,6 +364,10 @@ def finish(i, reason):
         "stall_je_servo": (stall_joint[i] / n).tolist(),
         "stall_dauer_max_s": prot_max[i].item() * dt,
         "stall80_servo_anteil": prot_frac[i].item() / n,
+        "stall80_je_servo": (s80_joint[i] / n).tolist(),
+        "stall80_real_je_servo": (s80r_joint[i] / n).tolist(),
+        "stall80_real_halten_je_servo": (s80r_hold[i] / hold_steps[i]).tolist() if hold_steps[i] > 0 else None,
+        "stall_dauer_real_max_s": prot_max_r[i].item() * dt,
         "schwingen_mm_s": 1000 * (hold_v2[i] / hold_steps[i]).sqrt().item() if hold_steps[i] > 0 else None,
         "drehschwingen_deg_s": math.degrees((hold_w2[i] / hold_steps[i]).sqrt().item()) if hold_steps[i] > 0 else None,
         "aktion_frequenz_hz": action_frequency(i),
@@ -393,7 +407,7 @@ with torch.inference_mode():
         # neue Episoden zurücksetzen, laufende fortschreiben (Werte nach dem Schritt)
         for buf in (steps, max_tilt, early_tilt, max_forearm, hold_steps, hold_force, hold_over, stall, act_rate, act_rate_eff, sink,
                     hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act, prot_run, prot_max,
-                    prot_frac):
+                    prot_frac, s80_joint, s80r_joint, s80r_hold, prot_run_r, prot_max_r):
             buf[done] = 0.0
         forearm0[done] = robot.data.joint_pos[done, forearm]
         rutsch_max[done], a_last[done] = 0.0, 0.0
@@ -421,6 +435,12 @@ with torch.inference_mode():
         prot_run = torch.where(prot & live[:, None], prot_run + 1, torch.zeros_like(prot_run))
         prot_max[live] = torch.maximum(prot_max[live], prot_run[live].max(-1).values)
         prot_frac[live] += prot[live].float().mean(-1)
+        s80r = mdp.servo_stall(robot, real_ids, PROTECT_FRACTION, firmware_limits=True)
+        s80_joint[live] += prot[live].float()
+        s80r_joint[live] += s80r[live].float()
+        s80r_hold[in_hold] += s80r[in_hold].float()
+        prot_run_r = torch.where(s80r & live[:, None], prot_run_r + 1, torch.zeros_like(prot_run_r))
+        prot_max_r[live] = torch.maximum(prot_max_r[live], prot_run_r[live].max(-1).values)
         am = uenv.action_manager
         act_rate[live] += ((am.action - am.prev_action) ** 2).sum(-1)[live]
         servo_term = am.get_term("servos")
@@ -500,6 +520,23 @@ summary = {
         "stall_dauer_median_s": median([e["stall_dauer_max_s"] for e in held]),
         "schutz_anteil": sum(1 for e in held if e["stall_dauer_max_s"] > PROTECT_S) / max(len(held), 1) if held else None,
         "stall80_servo_anteil": mean([e["stall80_servo_anteil"] for e in held]),
+        # wie am echten Servo (Sehne zieht nur, Firmware-Grenzen; Nachtlauf 2026-10-14)
+        "stall_dauer_real_median_s": median([e["stall_dauer_real_max_s"] for e in held]),
+        "schutz_anteil_real": sum(1 for e in held if e["stall_dauer_real_max_s"] > PROTECT_S) / max(len(held), 1) if held else None,
+    },
+    # Servo-Last wie am echten Servo (Nachtlauf 2026-10-14), gehaltene Episoden: Anteil der Schritte je Servo mit ≥ 80 %
+    # Stall-Moment, alle 8 Servos (Handgelenk über das Pleuel), ohne Drücken am Anschlag; „mittel“ = Mittel über die 8
+    # (Leaderboard v3: Servo-Last real); „bisher_80“ = 7 Servos ohne Handgelenk, mit Anschlag (wie die Lagrange-Kosten bis EXP-037)
+    "servo_last_real": {
+        "servo": real_names,
+        "anteil": [mean([e["stall80_real_je_servo"][k] for e in held]) for k in range(len(real_ids))],
+        "anteil_halten": [mean([e["stall80_real_halten_je_servo"][k] for e in held if e["stall80_real_halten_je_servo"]])
+                          for k in range(len(real_ids))],
+        "mittel": mean([sum(e["stall80_real_je_servo"]) / len(real_ids) for e in held]),
+        "mittel_halten": mean([sum(e["stall80_real_halten_je_servo"]) / len(real_ids) for e in held
+                               if e["stall80_real_halten_je_servo"]]),
+        "servo_bisher_80": [n for n in SERVO_JOINTS if n != WRIST_JOINT],
+        "anteil_bisher_80": [mean([e["stall80_je_servo"][k] for e in held]) for k in range(len(stall_ids))],
     },
 }
 if BEW_ART:
@@ -572,6 +609,10 @@ lines = [
     f"Überlastschutz (≥ 80 % Stall): längster Lauf Median {num(summary['servo_schutz']['stall_dauer_median_s'], ' s', 2)}, "
     f"Episoden mit Lauf > {PROTECT_S:.0f} s {pct(summary['servo_schutz']['schutz_anteil'])}, "
     f"Servos ≥ 80 % im Mittel {pct(summary['servo_schutz']['stall80_servo_anteil'])}",
+    f"Servo-Last real (≥ 80 %, 8 Servos inkl. Handgelenk, ohne Anschlag): Mittel {pct(summary['servo_last_real']['mittel'])}, "
+    f"Haltephase {pct(summary['servo_last_real']['mittel_halten'])}, Schutz > {PROTECT_S:.0f} s "
+    f"{pct(summary['servo_schutz']['schutz_anteil_real'])}; je Servo " + "  ".join(
+        f"{n.replace('_left', '')} {pct(x)}" for n, x in zip(summary["servo_last_real"]["servo"], summary["servo_last_real"]["anteil"])),
 ]
 if args_cli.video and getattr(env, "recording", False):
     env.stop_recording()                        # Video schreiben, auch wenn kürzer als --video

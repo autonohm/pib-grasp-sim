@@ -49,7 +49,12 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
                             ("HeavyMultiProgressDexCaps", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Caps"),
                             ("HeavyMultiProgressDexLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Bounds"),
                             ("HeavyMultiProgressDexCapsLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Caps"),
-                            ("HeavyMultiProgressDexLagrangeLoad", "PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad", "PibGraspPPORunnerCfg_Bounds")):
+                            ("HeavyMultiProgressDexLagrangeLoad", "PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad", "PibGraspPPORunnerCfg_Bounds"),
+                            # Nachtlauf 2026-10-14 (EXP-038–041): Stall wie am echten Servo, Grenze je Servo, Fingerzahl; Eltern EXP-036
+                            ("HeavyMultiProgressDexCapsLagrangeReal", "PibGraspEnvCfg_LagrangeReal", "PibGraspPPORunnerCfg_Caps"),
+                            ("HeavyMultiProgressDexCapsLagrangeJeServo", "PibGraspEnvCfg_LagrangeJeServo", "PibGraspPPORunnerCfg_Caps"),
+                            ("HeavyMultiProgressDexCapsLagrangeJeServoFinger", "PibGraspEnvCfg_LagrangeJeServoFinger", "PibGraspPPORunnerCfg_Caps"),
+                            ("HeavyMultiProgressDexCapsLagrangeRealFinger", "PibGraspEnvCfg_LagrangeRealFinger", "PibGraspPPORunnerCfg_Caps")):
     gym.register(
         id=f"Pib-Grasp-Hand-Left-{_name}-v0",
         entry_point="isaaclab.envs:ManagerBasedRLEnv",

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import math
+
 import torch
 
 from isaaclab.assets import Articulation, RigidObject
@@ -467,6 +469,43 @@ def servo_torque_l2(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.
     return torch.sum(torch.square(tau), dim=1)
 
 
+def servo_effort_limit(robot: Articulation, ids: list) -> torch.Tensor:
+    """Stall-Moment je Gelenk in `ids` (N, len(ids)) am Gelenk. Gestängegetriebene Gelenke (Handgelenk-Pleuel,
+    RemotizedPDActuator, ADR-014): winkelabhängig 2,94 Nm × Übersetzung n(θ) aus der Tabelle des Aktuators — dort steht
+    joint_effort_limits auf Isaac Labs Standard 1e9 (explizite Aktuatoren), |τ|/Grenze wäre immer ≈ 0. So ist |τ|/Grenze
+    für alle Servos dieselbe Größe: Moment am Servo / Stall-Moment."""
+    lim = robot.data.joint_effort_limits[:, ids].clone()
+    for act in robot.actuators.values():
+        if not hasattr(act, "_torque_limit"):
+            continue
+        jids = act.joint_indices if not isinstance(act.joint_indices, slice) else list(range(robot.num_joints))
+        jids = [int(j) for j in (jids.tolist() if torch.is_tensor(jids) else jids)]
+        for col, jid in enumerate(ids):
+            if jid in jids:
+                lim[:, col] = act._torque_limit.compute(robot.data.joint_pos[:, [jid]])[:, 0]
+    return lim
+
+
+def servo_stall(robot: Articulation, ids: list, fraction: float, tendon: torch.Tensor | None = None,
+                firmware_limits: bool = False, limit_tol_deg: float = 1.0) -> torch.Tensor:
+    """Stall je Servo (N, len(ids)) als bool: |τ| ≥ fraction · Stall-Moment (PD-Schätzung applied_torque, Grenze aus
+    servo_effort_limit). Wie am echten Servo (Nachtlauf 2026-10-14): `firmware_limits` = kein Stall ≤ limit_tol_deg vor
+    der Gelenkgrenze in Momentrichtung (die Firmware kappt das Ziel, der Servo drückt nicht gegen den Anschlag).
+    `tendon` (bool je Servo, optional) = nur τ > 0 zählt (Sehne zieht nur) — im Training bewusst nicht genutzt: die Sim
+    kann Finger aktiv öffnen, real nur die Feder; ohne Kosten würde die Policy diese Kraft frei nutzen.
+    Gemeinsam für StallLagrange (Training) und eval_policy (Kennzahl „Servo-Last real“)."""
+    tau = robot.data.applied_torque[:, ids]
+    stall = tau.abs() >= fraction * servo_effort_limit(robot, ids)
+    if tendon is not None:
+        stall = torch.where(tendon[None, :], stall & (tau > 0), stall)
+    if firmware_limits:
+        q = robot.data.joint_pos[:, ids]
+        lim = robot.data.joint_pos_limits[:, ids]
+        tol = math.radians(limit_tol_deg)
+        stall = stall & ~torch.where(tau > 0, q >= lim[..., 1] - tol, q <= lim[..., 0] + tol)
+    return stall
+
+
 class StallLagrange(ManagerTermBase):
     """Grenze auf den Servo-Stall per PID-Lagrange (Nachtlauf 2026-10-13, EXP-035 ff.; Ray, Achiam & Amodei 2019, Safety
     Gym; Stooke, Achiam & Abbeel 2020, PID Lagrangian). Kosten c_t = Anteil der Servos in `joint_names` mit
@@ -476,45 +515,68 @@ class StallLagrange(ManagerTermBase):
         e = J_c − d,  I ← max(0, I + K_I·e),  λ = max(0, K_P·e + I + K_D·max(0, J_c − J_c,vorher))
     J_c = Mittel von c_t über den Rollout (alle Umgebungen), für P- und D-Anteil zusätzlich geglättet (EMA α).
     Vereinfachung ggü. Safety Gym: kein eigener Kosten-Critic, die Strafe steht in der Belohnung (wie Lagrange-PPO
-    mit gemeinsamem Vorteil). λ, J_c und I gehen über extras["log"] ins TensorBoard (Lagrange/…)."""
+    mit gemeinsamem Vorteil). λ, J_c und I gehen über extras["log"] ins TensorBoard (Lagrange/…).
+
+    Nachtlauf 2026-10-14 (EXP-038 ff., docs/nachtlauf-2026-10-14.md), Stall wie am echten Servo (servo_stall):
+    - Handgelenk mit winkelabhängigem Stall-Moment (Pleuel) — `joint_names` dann alle 8 Servos.
+    - `firmware_limits`: kein Stall ≤ `limit_tol_deg` vor der Gelenkgrenze in Momentrichtung (die Firmware kappt das Ziel
+      auf die Grenze, der Servo drückt nicht gegen den Anschlag).
+    - `tendon_joints` (optional): nur Zug zählt — siehe servo_stall, warum nicht genutzt.
+    - `per_joint`: ein λ je Servo (CaT, Chane-Sane et al. 2024: Grenze je Gelenk), jeder Servo J_c,i ≤ `limit`;
+      Strafe (1/n)·Σ λ_i·c_i (gleiche Größenordnung wie mit einem λ)."""
 
     def __init__(self, cfg, env: ManagerBasedRLEnv):
         super().__init__(cfg, env)
         p = cfg.params
         self.robot: Articulation = env.scene["robot"]
-        self.ids, _ = self.robot.find_joints(p["joint_names"], preserve_order=True)
-        self.lam = float(p.get("lambda_init", 0.0))
-        self.integral = self.lam
+        self.names = list(p["joint_names"])
+        self.ids, _ = self.robot.find_joints(self.names, preserve_order=True)
+        tendon = set(p.get("tendon_joints") or [])
+        self.tendon = torch.tensor([n in tendon for n in self.names], dtype=torch.bool, device=env.device)
+        n = len(self.ids) if p.get("per_joint", False) else 1
+        # Reglerzustand auf der CPU (Logging in reset() ohne GPU-Synchronisierung), λ zusätzlich auf dem Gerät
+        self.lam = torch.full((n,), float(p.get("lambda_init", 0.0)))
+        self.lam_dev = self.lam.to(env.device)
+        self.integral = self.lam.clone()
         self.jc_ema = None
         self.jc_prev = None
-        self.jc_last = 0.0
-        self.cost_sum = torch.zeros((), device=env.device)
+        self.jc_last = torch.zeros(n)
+        self.cost_sum = torch.zeros(n, device=env.device)
         self.calls = 0
 
     def reset(self, env_ids=None):
         log = self._env.extras.get("log")
         if isinstance(log, dict):
-            log["Lagrange/lambda"] = self.lam
-            log["Lagrange/J_c"] = self.jc_last
-            log["Lagrange/integral"] = self.integral
+            log["Lagrange/lambda"] = float(self.lam.mean())
+            log["Lagrange/J_c"] = float(self.jc_last.mean())
+            log["Lagrange/integral"] = float(self.integral.mean())
+            if self.lam.numel() > 1:
+                log["Lagrange/lambda_max"] = float(self.lam.max())
+                log["Lagrange/J_c_max"] = float(self.jc_last.max())
+                for k, name in enumerate(self.names):
+                    short = name.replace("_left", "").replace("_proximal", "")
+                    log[f"Lagrange/lambda_{short}"] = float(self.lam[k])
+                    log[f"Lagrange/J_c_{short}"] = float(self.jc_last[k])
 
     def __call__(self, env: ManagerBasedRLEnv, joint_names: list, fraction: float = 0.8, limit: float = 0.2,
                  k_p: float = 10.0, k_i: float = 1.0, k_d: float = 5.0, ema: float = 0.5, lambda_max: float = 100.0,
-                 steps_per_update: int = 32, lambda_init: float = 0.0) -> torch.Tensor:
-        tau = self.robot.data.applied_torque[:, self.ids].abs()
-        cost = (tau >= fraction * self.robot.data.joint_effort_limits[:, self.ids]).float().mean(dim=-1)
-        self.cost_sum = self.cost_sum + cost.mean()
+                 steps_per_update: int = 32, lambda_init: float = 0.0, tendon_joints: list | None = None,
+                 firmware_limits: bool = False, limit_tol_deg: float = 1.0, per_joint: bool = False) -> torch.Tensor:
+        c = servo_stall(self.robot, self.ids, fraction, self.tendon, firmware_limits, limit_tol_deg).float()  # (N, n)
+        cost = c if per_joint else c.mean(dim=-1, keepdim=True)                    # (N, n_λ)
+        self.cost_sum = self.cost_sum + cost.mean(dim=0)
         self.calls += 1
         if self.calls >= steps_per_update:
-            jc = float(self.cost_sum.item()) / self.calls
+            jc = (self.cost_sum / self.calls).cpu()
             self.cost_sum, self.calls, self.jc_last = torch.zeros_like(self.cost_sum), 0, jc
             self.jc_ema = jc if self.jc_ema is None else ema * jc + (1.0 - ema) * self.jc_ema
             e = self.jc_ema - limit
-            self.integral = max(0.0, self.integral + k_i * (jc - limit))
-            deriv = 0.0 if self.jc_prev is None else max(0.0, self.jc_ema - self.jc_prev)
+            self.integral = (self.integral + k_i * (jc - limit)).clamp(min=0.0)
+            deriv = torch.zeros_like(jc) if self.jc_prev is None else (self.jc_ema - self.jc_prev).clamp(min=0.0)
             self.jc_prev = self.jc_ema
-            self.lam = min(lambda_max, max(0.0, k_p * e + self.integral + k_d * deriv))
-        return self.lam * cost
+            self.lam = (k_p * e + self.integral + k_d * deriv).clamp(0.0, lambda_max)
+            self.lam_dev = self.lam.to(self.cost_sum.device)
+        return (self.lam_dev[None, :] * cost).mean(dim=-1)
 
 
 _SERVO_LOAD_IDS: dict = {}

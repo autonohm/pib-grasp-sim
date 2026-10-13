@@ -703,6 +703,60 @@ class PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad(PibGraspEnvCfg_HeavyMulti
         add_servo_load_obs(self)
 
 
+# ── Nachtlauf 2026-10-14 (docs/nachtlauf-2026-10-14.md): Stall wie am echten Servo, Grenze je Servo, Fingerzahl ─────
+# Eltern EXP-036 (Agent _Caps). Stall wie am echten Servo (mdp.servo_stall): alle 8 Servos inkl. Handgelenk (Stall-Moment
+# über das Pleuel winkelabhängig; bisher fehlte es, weil seine Grenze in der Sim 1e9 ist), kein Stall am Anschlag (die
+# Firmware kappt das Ziel). Öffnen gegen etwas zählt weiter: real öffnet nur die Feder, die Sim kann aktiv drücken.
+STALL_JOINTS_REAL = list(SERVO_JOINTS)
+STALL_REAL = {"firmware_limits": True, "limit_tol_deg": 1.0}
+
+
+@configclass
+class RewardsLagrangeRealCfg(RewardsProgressLagrangeCfg):
+    """EXP-038: Stall-Kosten wie am echten Servo (8 Servos inkl. Handgelenk, kein Drücken am Anschlag)."""
+    stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
+                             params={"joint_names": STALL_JOINTS_REAL, **STALL_LAGRANGE, **STALL_REAL})
+
+
+@configclass
+class RewardsLagrangeJeServoCfg(RewardsProgressLagrangeCfg):
+    """EXP-039: wie EXP-038, ein λ je Servo (8; CaT: Grenze je Gelenk), jeder Servo ≤ 20 %."""
+    stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
+                             params={"joint_names": STALL_JOINTS_REAL, **STALL_LAGRANGE, **STALL_REAL, "per_joint": True})
+
+
+@configclass
+class RewardsLagrangeJeServoFingerCfg(RewardsLagrangeJeServoCfg):
+    """EXP-040: wie EXP-039, plus Belohnung nach Fingerzahl (Term aus EXP-005/026)."""
+    finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
+
+
+@configclass
+class RewardsLagrangeRealFingerCfg(RewardsLagrangeRealCfg):
+    """EXP-041: wie EXP-038, plus Belohnung nach Fingerzahl (Kontrolle zu EXP-040 ohne Grenze je Servo)."""
+    finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
+
+
+@configclass
+class PibGraspEnvCfg_LagrangeReal(PibGraspEnvCfg_HeavyMultiProgressDex):
+    rewards: RewardsLagrangeRealCfg = RewardsLagrangeRealCfg()
+
+
+@configclass
+class PibGraspEnvCfg_LagrangeJeServo(PibGraspEnvCfg_HeavyMultiProgressDex):
+    rewards: RewardsLagrangeJeServoCfg = RewardsLagrangeJeServoCfg()
+
+
+@configclass
+class PibGraspEnvCfg_LagrangeJeServoFinger(PibGraspEnvCfg_HeavyMultiProgressDex):
+    rewards: RewardsLagrangeJeServoFingerCfg = RewardsLagrangeJeServoFingerCfg()
+
+
+@configclass
+class PibGraspEnvCfg_LagrangeRealFinger(PibGraspEnvCfg_HeavyMultiProgressDex):
+    rewards: RewardsLagrangeRealFingerCfg = RewardsLagrangeRealFingerCfg()
+
+
 @configclass
 class PibGraspEnvCfg_HeavyMultiPriv(PibGraspEnvCfg_HeavyMulti):
     """EXP-021: wie EXP-018, Critic zusätzlich mit Objektgröße, Masse und Reibung (privilegiert, wie HORA/Dexsuite)."""
