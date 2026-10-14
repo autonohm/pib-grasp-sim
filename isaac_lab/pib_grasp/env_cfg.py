@@ -1,19 +1,19 @@
 """
-env_cfg.py — Greifaufgabe der realen linken pib-v5-Hand (Proof of Concept).
+env_cfg.py — grasping task of the real left pib v5 hand (proof of concept).
 
-Vorlage: Isaac Lab Dexsuite (manipulation/dexsuite, Kuka-Allegro-Lift) — Aufbau,
-Belohnungsgewichte, Clip der Kontaktkraft (20 N), Aktionsart (relative Gelenkposition)
-und Randomisierung von dort übernommen, aufs Nötige reduziert.
+Template: Isaac Lab Dexsuite (manipulation/dexsuite, Kuka-Allegro lift) — structure,
+reward weights, contact-force clip (20 N), action type (relative joint position)
+and randomisation taken from there, reduced to what is needed.
 
-Ablauf einer Episode (4,5 s, Policy 60 Hz):
-  0,0–2,0 s  Dose steht auf dem Tisch vor der Handfläche, die Policy greift
-  2,0–2,5 s  Tisch senkt sich um 10 cm (≙ der Arm hebt die Hand an)
-  2,5–4,5 s  Dose muss in der Hand bleiben
-Hand fest (Unterarm-Basis), seitlich: Handfläche zur Dose, Daumen oben.
+Course of an episode (4.5 s, policy 60 Hz):
+  0.0–2.0 s  can stands on the table in front of the palm, the policy grasps
+  2.0–2.5 s  table lowers by 10 cm (≙ the arm lifts the hand)
+  2.5–4.5 s  can must stay in the hand
+Hand fixed (forearm base), side grasp: palm towards the can, thumb up.
 
-Asymmetric Actor-Critic: Die Policy sieht nur, was die echte Hand misst (8 Servo-
-Gelenkwinkel, 5 FSR, letzte Aktion; 5 Schritte Verlauf). Der Critic sieht zusätzlich
-Objektlage/-orientierung/-geschwindigkeit, Folgegelenke, Objekt-Kontaktkräfte und die Phase.
+Asymmetric actor-critic: the policy only sees what the real hand measures (8 servo
+joint angles, 5 FSR, last action; 5 steps of history). The critic additionally sees
+object position/orientation/velocity, follower joints, object contact forces and the phase.
 """
 import math
 from pathlib import Path
@@ -42,25 +42,25 @@ from isaaclab_tasks.manager_based.manipulation.dexsuite.mdp import curriculums a
 
 from . import mdp
 
-# ── Geometrie (Hand-Root-Frame aus isaac_lab/tools/probe_geometry.py, 2026-10-04) ───
-# Ohne Drehung zeigen die Finger nach −y, die Handfläche nach −z, der Daumen liegt auf
-# −x. Drehung +90° um y: Handfläche → −x, Daumen → +z, Finger bleiben bei −y.
+# ── Geometry (hand root frame from isaac_lab/tools/probe_geometry.py, 2026-10-04) ───
+# Without rotation the fingers point to −y, the palm to −z, the thumb lies on
+# −x. Rotation +90° about y: palm → −x, thumb → +z, fingers stay at −y.
 HAND_POS = (0.0, 0.0, 0.5)
 HAND_ROT = (math.cos(math.pi / 4), 0.0, math.sin(math.pi / 4), 0.0)   # (w, x, y, z)
 
 OBJECT_RADIUS = 0.03          # Dose Ø 6 cm
 OBJECT_HEIGHT = 0.15
-PALM_GAP = 0.035              # Handfläche ↔ Objektoberfläche (Vorgreifpose, für alle Objekte gleich)
-# Tischplatte 8,5 cm unter dem Hand-Root: die Spitze des kleinen Fingers liegt bei
-# −6,3 cm (tools/debug_scene.py), bei −6 cm stieß sie an den Tisch
+PALM_GAP = 0.035              # palm ↔ object surface (pre-grasp pose, the same for all objects)
+# Table top 8.5 cm below the hand root: the tip of the little finger is at
+# −6.3 cm (tools/debug_scene.py); at −6 cm it hit the table
 TABLE_TOP_Z = HAND_POS[2] - 0.085
-# Dosenmitte: 6,5 cm vor der Handfläche (−x), auf Höhe der Grundglieder zwischen MCP
-# (y ≈ −0,31) und PIP (y ≈ −0,35), steht auf dem Tisch. Bis 2026-10-04 y = −0,32: die
-# Finger zogen die Dose Richtung Handgelenk, bis sie hinten vom Tisch rutschte.
+# Can centre: 6.5 cm in front of the palm (−x), at the height of the proximal phalanges between MCP
+# (y ≈ −0.31) and PIP (y ≈ −0.35), standing on the table. Until 2026-10-04 y = −0.32: the
+# fingers pulled the can towards the wrist until it slid off the back of the table.
 OBJECT_POS = (HAND_POS[0] - PALM_GAP - OBJECT_RADIUS, HAND_POS[1] - 0.34, TABLE_TOP_Z + OBJECT_HEIGHT / 2)
 OBJECT_POS_RANGE = {"x": (-0.01, 0.01), "y": (-0.02, 0.02)}
-# Tisch: endet 4 cm vor dem Hand-Root (x), damit die Hand ihn nie berührt; in y von
-# 16 cm vor bis 29 cm hinter der Dose, damit eine verrutschte Dose nicht sofort fällt
+# Table: ends 4 cm in front of the hand root (x) so the hand never touches it; in y from
+# 16 cm in front of to 29 cm behind the can, so a shifted can does not fall immediately
 TABLE_SIZE = (0.20, 0.45, 0.04)
 TABLE_POS = (HAND_POS[0] - 0.04 - TABLE_SIZE[0] / 2, OBJECT_POS[1] + 0.065, TABLE_TOP_Z - TABLE_SIZE[2] / 2)
 
@@ -70,67 +70,67 @@ DROP_DEPTH = 0.10             # m
 EPISODE_S = 4.5
 
 FSR_CLIP_N = 20.0             # Dexsuite: "contact force in finger tips is under 20N normally"
-# Dose soll aufrecht bleiben (Probelauf 2026-10-04: Unterarm kippte sie auf die Handfläche).
-# Seit EXP-003 nur über die Belohnung (Dexsuite: Orientierung belohnt, nicht abgebrochen);
-# rot_std 0,5 rad wie Dexsuites success_reward. EXP-001/002: Abbruch bei 20° → Policy griff
-# gar nicht mehr zu (experiments/).
+# The can should stay upright (test run 2026-10-04: the forearm tipped it onto the palm).
+# Since EXP-003 only via the reward (Dexsuite: orientation rewarded, not terminated);
+# rot_std 0.5 rad like Dexsuite's success_reward. EXP-001/002: termination at 20° → the policy
+# stopped grasping at all (experiments/).
 UPRIGHT_ROT_STD = 0.5
-HOLD_STD_M = 0.02            # Absinken [m] für 1 − tanh(s/std)
+HOLD_STD_M = 0.02            # sinking [m] for 1 − tanh(s/std)
 CONTACT_N = 1.0              # Kontaktschwelle Gegengriff (Dexsuite: threshold 1.0)
 
 
-# ── Objektkatalog (Bedingungen, experiments/README.md) ───────────────────────────────────
-# Seitlich greifen braucht ≥ ~15 cm Höhe: die Fingerspitzen liegen 2,5–16,5 cm über der
-# Tischplatte (kleiner Finger … Daumen, tools/debug_scene.py, 2026-10-07); tiefer geht die Hand
-# nicht, sonst stößt der kleine Finger an den Tisch.
-# form, Maße [m] (Zylinder: Radius, Höhe; Quader: x, y, z), Drehung beim Reset [rad]
+# ── Object catalogue (conditions, experiments/README.md) ─────────────────────────────────
+# A side grasp needs ≥ ~15 cm of height: the fingertips lie 2.5–16.5 cm above the
+# table top (little finger … thumb, tools/debug_scene.py, 2026-10-07); the hand cannot go lower,
+# otherwise the little finger hits the table.
+# shape, dimensions [m] (cylinder: radius, height; box: x, y, z), rotation on reset [rad]
 OBJECTS = {
     "zylinder_d6": {"form": "zylinder", "masse": (0.03, 0.15), "gier": (-math.pi, math.pi)},      # Dose (Training)
     "zylinder_d8": {"form": "zylinder", "masse": (0.04, 0.15), "gier": (-math.pi, math.pi)},      # dicke Dose/Becher
-    # Milchpackung: eine Fläche zur Hand ±15° (so würde ein Greifplaner anfahren)
+    # Milk carton: one face towards the hand ±15° (as a grasp planner would approach)
     "quader_7x7x20": {"form": "quader", "masse": (0.07, 0.07, 0.20), "gier": (-math.radians(15), math.radians(15))},
-    # Testobjekte (nie im Training, EXP-013 ff.): Flasche — Ø wie im Training, aber 25 cm hoch; Saftpackung —
-    # schmale Seite (6 cm) zur Hand, im Training liegt immer die breite oder eine quadratische Seite vorn
+    # Test objects (never in training, EXP-013 ff.): bottle — Ø as in training but 25 cm tall; juice carton —
+    # narrow side (6 cm) towards the hand; in training the wide or a square side always faces the hand
     "flasche_d7x25": {"form": "zylinder", "masse": (0.035, 0.25), "gier": (-math.pi, math.pi)},
     "saftpackung_9x6x19": {"form": "quader", "masse": (0.09, 0.06, 0.19), "gier": (-math.radians(15), math.radians(15))},
-    # YCB-Testobjekte (Isaac Sim 5.1 Props/YCB/Axis_Aligned_Physics, tools/inspect_ycb.py, 2026-10-09): echte Masse und
-    # Größe aus dem Asset (Zufallsmasse/-größe aus); die Assets liegen (Höhe entlang y) → aufrecht über eine Wrapper-USD,
-    # die nur das Mesh dreht (drehung = rotateXYZ [°]), der Starrkörper bleibt z-oben wie bei allen Objekten (Kippwinkel,
-    # Gier). masse = Bounding Box aufrecht (Tiefe zur Hand, Breite, Höhe); Reibung wie alle Objekte (Zufall 0,5–1,0).
-    # Oberseite des Assets zeigt nach −y → −90° um x (+90° stellte sie auf den Kopf, Fenstertest 2026-10-09).
-    # ruhelage = gemessene Ruhelage auf dem Tisch (tools/ruhelage_objekt.py, typische von 64 Umgebungen): Höhe des
-    # Ursprungs über der Tischplatte [m], Neigung (Körperrahmen, w x y z) — die gescannten Unterseiten sind uneben,
-    # die Collider ragen unter die sichtbare Box; so steht das Objekt bei t = 0 still, statt zu fallen/kippen.
+    # YCB test objects (Isaac Sim 5.1 Props/YCB/Axis_Aligned_Physics, tools/inspect_ycb.py, 2026-10-09): real mass and
+    # size from the asset (random mass/scale off); the assets lie down (height along y) → upright via a wrapper USD
+    # that only rotates the mesh (drehung = rotateXYZ [°]); the rigid body stays z-up like all objects (tilt angle,
+    # yaw). masse = bounding box upright (depth towards the hand, width, height); friction like all objects (random 0.5–1.0).
+    # The top of the asset points to −y → −90° about x (+90° put it upside down, window test 2026-10-09).
+    # ruhelage = measured rest pose on the table (tools/ruhelage_objekt.py, typical of 64 environments): height of the
+    # origin above the table top [m], tilt (body frame, w x y z) — the scanned bottoms are uneven,
+    # the colliders reach below the visible box; this way the object stands still at t = 0 instead of falling/tipping.
     "ycb_003_cracker": {"form": "usd", "ycb": "003_cracker_box", "drehung": (-90, 0, 0),          # 411 g, schmale
-                        "masse": (0.164, 0.072, 0.213), "gier": (-math.radians(15), math.radians(15)),   # Seite zur Hand
+                        "masse": (0.164, 0.072, 0.213), "gier": (-math.radians(15), math.radians(15)),   # face towards the hand
                         "ruhelage": {"hoehe": 0.10635, "quat": (0.99965, 0.02641, -0.00166, 0.00023)}},  # 3,1°
     "ycb_004_zucker": {"form": "usd", "ycb": "004_sugar_box", "drehung": (-90, 0, 0),             # 514 g, schmale
-                       "masse": (0.093, 0.045, 0.176), "gier": (-math.radians(15), math.radians(15)),    # Seite zur Hand
+                       "masse": (0.093, 0.045, 0.176), "gier": (-math.radians(15), math.radians(15)),    # face towards the hand
                        "ruhelage": {"hoehe": 0.08735, "quat": (0.99979, 0.01307, -0.01552, 0.00069)}},   # 2,3°
     "ycb_006_senf": {"form": "usd", "ycb": "006_mustard_bottle", "drehung": (-90, 0, 0),           # 603 g, schmale
-                     "masse": (0.096, 0.058, 0.191), "gier": (-math.radians(15), math.radians(15)),      # Seite zur Hand
-                     "ruhelage": {"hoehe": 0.09736, "quat": (1.0, 0.0, 0.0, 0.0)}},                      # (Leon), gerade
+                     "masse": (0.096, 0.058, 0.191), "gier": (-math.radians(15), math.radians(15)),      # face towards the hand
+                     "ruhelage": {"hoehe": 0.09736, "quat": (1.0, 0.0, 0.0, 0.0)}},                      # upright
 }
-# Startstellung der Hand beim Reset fast offen (seit 2026-10-09 Standard, eval-v2): Fingerbeugung 0–15° und Handgelenk
-# −10–0° (bis eval-v1) ließen die Hand beim Reset im Objekt stecken (tools/analyse_reset.py: Zylinder Ø6 34 %, Ø8 44 %,
-# Quader 81 %, YCB-Cracker 63 % der Starts, v. a. Mittelglieder/Spitzen und Handgelenkbeugung); so 0 %. Daumen unkritisch,
-# behält 0–90° Rotator / 0–15° Beugung. Die Hand kommt wie in der Vorgreifpose fast offen an.
+# Start pose of the hand on reset almost open (default since 2026-10-09, eval-v2): finger flexion 0–15° and wrist
+# −10–0° (up to eval-v1) left the hand inside the object at reset (tools/analyse_reset.py: cylinder Ø6 34 %, Ø8 44 %,
+# box 81 %, YCB cracker 63 % of starts, mainly middle phalanges/tips and wrist flexion); now 0 %. Thumb uncritical,
+# keeps 0–90° rotator / 0–15° flexion. The hand arrives almost open, as in the pre-grasp pose.
 FINGER_START_MAX_DEG = 4.0
 WRIST_START_MAX_DEG = 1.0
 
 
-# Collider der gescannten YCB-Meshes (Konvex-Zerlegung) ragen bis ~2 mm unter die sichtbare Bounding Box → bündig
-# gespawnt startet das Objekt im Tisch und wird herausgestoßen (Senf: +2 mm, bis 1 cm seitlich, tools/check_objekt.py);
-# 3 mm höher fällt es stattdessen kurz auf den Tisch.
+# Colliders of the scanned YCB meshes (convex decomposition) reach up to ~2 mm below the visible bounding box → spawned
+# flush, the object starts inside the table and is pushed out (mustard: +2 mm, up to 1 cm sideways, tools/check_objekt.py);
+# 3 mm higher it drops briefly onto the table instead.
 YCB_SPAWN_LIFT = 0.003
 YCB_WRAPPER_DIR = Path(__file__).resolve().parents[2] / "logs" / "ycb_aufrecht"     # erzeugt, gitignored
 
 
 def ycb_upright_usd(name: str, rot_deg: tuple[float, float, float]) -> str:
-    """Wrapper-USD für ein YCB-Asset: referenziert es und dreht nur das Mesh-Kind (rotateXYZ, Skalierung bleibt);
-    Starrkörper, Masse und Collider kommen unverändert aus dem Asset."""
+    """Wrapper USD for a YCB asset: references it and only rotates the mesh child (rotateXYZ, scale unchanged);
+    rigid body, mass and colliders come unchanged from the asset."""
     src = f"{ISAAC_NUCLEUS_DIR}/Props/YCB/Axis_Aligned_Physics/{name}.usd"
-    child = "_" + name[1:]                                     # 003_cracker_box → _03_cracker_box (Prim im Asset)
+    child = "_" + name[1:]                                     # 003_cracker_box → _03_cracker_box (prim in the asset)
     YCB_WRAPPER_DIR.mkdir(parents=True, exist_ok=True)
     path = YCB_WRAPPER_DIR / f"{name}_aufrecht.usda"
     path.write_text(f"""#usda 1.0
@@ -190,9 +190,9 @@ class SceneCfg(InteractiveSceneCfg):
         init_state=RigidObjectCfg.InitialStateCfg(pos=TABLE_POS),
     )
 
-    # Ein Sensor je Fingerspitze (= je FSR), wie Dexsuite: der Objekt-Filter (privilegierte
-    # Kraft) funktioniert in Isaac Lab nur, wenn ein Sensor genau einen Prim abdeckt.
-    # Link-Namen: mdp.FINGERTIP_LINKS (Daumen, Zeige, Mittel, Ring, klein).
+    # One sensor per fingertip (= per FSR), like Dexsuite: the object filter (privileged
+    # force) only works in Isaac Lab if a sensor covers exactly one prim.
+    # Link names: mdp.FINGERTIP_LINKS (thumb, index, middle, ring, little).
     fsr_thumb = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/urdf_thumb_tip",
                                  filter_prim_paths_expr=["{ENV_REGEX_NS}/Object"])
     fsr_index = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/urdf_finger_tip",
@@ -204,8 +204,8 @@ class SceneCfg(InteractiveSceneCfg):
     fsr_pinky = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/urdf_finger_tip_4",
                                  filter_prim_paths_expr=["{ENV_REGEX_NS}/Object"])
 
-    # Nur Optik (Leon, 2026-10-08): Kuppel schwach als Aufhelllicht und unsichtbar (schwarzer Hintergrund),
-    # gerichtetes Hauptlicht schräg von oben auf der Kameraseite → Schatten und Kontrast an Fingern/Objekt
+    # Visuals only (2026-10-08): dome light weak as fill light and invisible (black background),
+    # directional key light obliquely from above on the camera side → shadows and contrast on fingers/object
     light = AssetBaseCfg(prim_path="/World/light",
                          spawn=sim_utils.DomeLightCfg(intensity=350.0, visible_in_primary_ray=False))
     sun = AssetBaseCfg(prim_path="/World/sun", spawn=sim_utils.DistantLightCfg(intensity=1600.0, angle=1.0),
@@ -214,9 +214,9 @@ class SceneCfg(InteractiveSceneCfg):
 
 @configclass
 class ActionsCfg:
-    # Dexsuite: relative Gelenkposition, scale 0,1 rad je Schritt. Handgelenk/Unterarm
-    # kleiner (Ursprungs-Prompt: kein "Peitschen" des Arms). 0,1 rad ≈ 5,7° ≥ Servo-
-    # Sättigungsfehler (5°) — volles Stall-Moment ist erreichbar.
+    # Dexsuite: relative joint position, scale 0.1 rad per step. Wrist/forearm
+    # smaller (original prompt: no "whipping" of the arm). 0.1 rad ≈ 5.7° ≥ servo
+    # saturation error (5°) — full stall torque is reachable.
     servos = base_mdp.RelativeJointPositionActionCfg(
         asset_name="robot",
         joint_names=SERVO_JOINTS,
@@ -229,7 +229,7 @@ class ActionsCfg:
 class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
-        """Nur, was die echte Hand misst — Reihenfolge = Schnittstelle zur Firmware."""
+        """Only what the real hand measures — order = interface to the firmware."""
         joint_pos = ObsTerm(
             func=base_mdp.joint_pos,
             params={"asset_cfg": SceneEntityCfg("robot", joint_names=SERVO_JOINTS, preserve_order=True)},
@@ -244,7 +244,7 @@ class ObservationsCfg:
 
     @configclass
     class CriticCfg(ObsGroup):
-        """Privilegiert (nur Simulation)."""
+        """Privileged (simulation only)."""
         all_joint_pos = ObsTerm(func=base_mdp.joint_pos)
         all_joint_vel = ObsTerm(func=base_mdp.joint_vel)
         object_pos = ObsTerm(func=mdp.object_pos_in_root)
@@ -263,7 +263,7 @@ class ObservationsCfg:
 
 @configclass
 class EventCfg:
-    # -- startup (Dexsuite-Muster, Bereiche für den PoC enger)
+    # -- startup (Dexsuite pattern, narrower ranges for the PoC)
     object_scale = EventTerm(
         func=base_mdp.randomize_rigid_body_scale,
         mode="prestartup",
@@ -296,9 +296,9 @@ class EventCfg:
         mode="startup",
         params={"asset_cfg": SceneEntityCfg("object"), "mass_distribution_params": (0.05, 0.2), "operation": "abs"},
     )
-    # Startlage je Umgebung aus der Bounding Box des gespawnten Objekts inkl. Zufallsgröße (seit 2026-10-09 Standard,
-    # eval-v2; bis eval-v1 nur EXP-013 ff.): Oberfläche PALM_GAP vor der Handfläche, Boden auf der Tischplatte (+ lift).
-    # Vorher aus der Nenngröße → bei ±10 % fiel das Objekt bis 7,5 mm oder startete im Tisch (tools/analyse_reset.py).
+    # Start pose per environment from the bounding box of the spawned object incl. random scale (default since 2026-10-09,
+    # eval-v2; up to eval-v1 only EXP-013 ff.): surface PALM_GAP in front of the palm, bottom on the table top (+ lift).
+    # Before that from the nominal size → with ±10 % the object fell up to 7.5 mm or started inside the table (tools/analyse_reset.py).
     place_objects = EventTerm(
         func=mdp.place_objects_by_size, mode="startup",
         params={"hand_x": HAND_POS[0], "palm_gap": PALM_GAP, "table_top_z": TABLE_TOP_Z, "lift": 0.0,
@@ -317,9 +317,9 @@ class EventCfg:
     # -- reset
     reset_robot = EventTerm(func=base_mdp.reset_scene_to_default, mode="reset",
                             params={"reset_joint_targets": True})
-    # Zufällige Startstellung der Servo-Gelenke (Dexsuite: reset_joints_by_offset ±0,5 rad;
-    # hier enger, Gelenke nur 0–90°). Rotator über den ganzen Bereich, damit die Policy auch
-    # Starts mit Daumen in Opposition erlebt (Machbarkeitstest: Rotator 90° → 14–15/16 gehalten).
+    # Random start position of the servo joints (Dexsuite: reset_joints_by_offset ±0.5 rad;
+    # narrower here, joints only 0–90°). Rotator over the full range so the policy also
+    # experiences starts with the thumb in opposition (feasibility test: rotator 90° → 14–15/16 held).
     reset_hand = EventTerm(
         func=mdp.reset_hand_joints,
         mode="reset",
@@ -334,7 +334,7 @@ class EventCfg:
         }},
     )
     reset_object = EventTerm(
-        func=mdp.reset_object_gap_aware,            # Abstand zur Handfläche nach der Gierdrehung (eval-v2)
+        func=mdp.reset_object_gap_aware,            # distance to the palm after the yaw rotation (eval-v2)
         mode="reset",
         params={
             "pose_range": {**OBJECT_POS_RANGE, "yaw": (-math.pi, math.pi)},
@@ -343,7 +343,7 @@ class EventCfg:
         },
     )
 
-    # -- jeder Schritt: Tisch absenken
+    # -- every step: lower the table
     lower_table = EventTerm(
         func=mdp.lower_table,
         mode="interval",
@@ -354,21 +354,21 @@ class EventCfg:
 
 @configclass
 class RewardsCfg:
-    """Belohnungssatz wie Isaac Lab Dexsuite (dexsuite_env_cfg.RewardsCfg + KukaAllegroReorientRewardCfg),
-    Zielpose ersetzt durch „nach dem Absenken auf Starthöhe gehalten, aufrecht“ (EXP-004).
-    Alle Terme begrenzt; Beitrag je Sekunde = Gewicht × Term (Isaac Lab multipliziert mit dt)."""
-    # Aktion: Dexsuite-Funktionen direkt (gekappt bei 1000 als Schutz gegen Ausreißer)
+    """Reward set like Isaac Lab Dexsuite (dexsuite_env_cfg.RewardsCfg + KukaAllegroReorientRewardCfg),
+    goal pose replaced by "held at the start height after the lowering, upright" (EXP-004).
+    All terms bounded; contribution per second = weight × term (Isaac Lab multiplies by dt)."""
+    # Action: Dexsuite functions directly (clipped at 1000 as protection against outliers)
     action_l2 = RewTerm(func=dexsuite_rewards.action_l2_clamped, weight=-0.005)
     action_rate_l2 = RewTerm(func=dexsuite_rewards.action_rate_l2_clamped, weight=-0.005)
-    # Annäherung (Dexsuite object_ee_distance, std 0,4) und Gegengriff (Dexsuite contacts, 0,5)
+    # Approach (Dexsuite object_ee_distance, std 0.4) and opposition (Dexsuite contacts, 0.5)
     fingertips_to_object = RewTerm(func=mdp.fingertips_to_object, weight=1.0, params={"std": 0.4})
     good_contact = RewTerm(func=mdp.thumb_opposition_contact, weight=0.5, params={"threshold": CONTACT_N})
-    # Dicht, ab dem Absenken, nur bei Gegengriff (Dexsuite position/orientation_command_error_tanh)
+    # Dense, from the lowering on, only with opposition (Dexsuite position/orientation_command_error_tanh)
     held = RewTerm(func=mdp.held_in_grasp, weight=2.0,
                    params={"drop_start_s": GRASP_TIME_S, "std": HOLD_STD_M, "threshold": CONTACT_N})
     upright = RewTerm(func=mdp.upright_in_grasp, weight=4.0,
                       params={"drop_start_s": GRASP_TIME_S, "rot_std": 1.5, "threshold": CONTACT_N})
-    # Scharf: Halten × aufrecht (Dexsuite success_reward, pos_std/rot_std → Absinken/Kippwinkel)
+    # Sharp: held × upright (Dexsuite success_reward, pos_std/rot_std → sinking/tilt)
     success = RewTerm(func=mdp.object_held_upright, weight=10.0,
                       params={"drop_start_s": GRASP_TIME_S, "std": HOLD_STD_M, "rot_std": UPRIGHT_ROT_STD})
     early_termination = RewTerm(func=base_mdp.is_terminated_term, weight=-1.0,
@@ -392,23 +392,23 @@ class PibGraspEnvCfg(ManagerBasedRLEnvCfg):
     terminations: TerminationsCfg = TerminationsCfg()
 
     def __post_init__(self):
-        self.decimation = 2               # Physik 120 Hz, Policy 60 Hz (wie Dexsuite)
+        self.decimation = 2               # physics 120 Hz, policy 60 Hz (like Dexsuite)
         self.episode_length_s = EPISODE_S
         self.is_finite_horizon = True
         self.sim.dt = 1 / 120
         self.sim.render_interval = self.decimation
         self.sim.physx.bounce_threshold_velocity = 0.01
-        # Schräg von Handrücken/Fingerspitzen, ~28° von oben, 2,8 m (Leon, 2026-10-08): alle 16 Hände
-        # und die Finger am Objekt sichtbar
+        # Oblique from the back of the hand/fingertips, ~28° from above, 2.8 m (2026-10-08): all 16 hands
+        # and the fingers on the object visible
         self.viewer.eye = (1.9, -2.25, 1.76)
         self.viewer.lookat = (0.15, -0.5, 0.45)
 
 
-# ── Varianten für Experimente (eigene Task-IDs, gleiche Bewertungsumgebung) ───────────────
+# ── Variants for experiments (own task IDs, same evaluation environment) ─────────────────
 
 @configclass
 class RewardsFingerCountCfg(RewardsCfg):
-    # EXP-005: Belohnung steigt mit der Zahl der Finger an der Dose (EXP-004: nur Daumen + 1 Finger)
+    # EXP-005: reward increases with the number of fingers on the can (EXP-004: only thumb + 1 finger)
     finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
 
 
@@ -419,7 +419,7 @@ class PibGraspEnvCfg_FingerCount(PibGraspEnvCfg):
 
 @configclass
 class PibGraspEnvCfg_Heavy(PibGraspEnvCfg):
-    """EXP-006: Objektmasse wie Dexsuite (0,2 kg × 0,2–2 = 0,04–0,4 kg) statt 0,05–0,2 kg."""
+    """EXP-006: object mass like Dexsuite (0.2 kg × 0.2–2 = 0.04–0.4 kg) instead of 0.05–0.2 kg."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -427,10 +427,10 @@ class PibGraspEnvCfg_Heavy(PibGraspEnvCfg):
 
 
 def apply_object(cfg: PibGraspEnvCfg, key: str) -> PibGraspEnvCfg:
-    """Objekt aus OBJECTS einsetzen: Form/Maße, Startlage (Oberfläche PALM_GAP vor der Handfläche,
-    steht auf dem Tisch) und Drehung beim Reset. Physik, Masse, Material bleiben wie konfiguriert — außer bei
-    YCB (form usd): echte Masse und Größe aus dem Asset, keine Zufallsmasse/-größe. Die Startlage setzt danach
-    das Startup-Event place_objects aus der tatsächlichen Bounding Box (init_state ist nur der Ausgangswert)."""
+    """Insert an object from OBJECTS: shape/dimensions, start pose (surface PALM_GAP in front of the palm,
+    standing on the table) and rotation on reset. Physics, mass, material stay as configured — except for
+    YCB (form usd): real mass and size from the asset, no random mass/scale. The start pose is then set by
+    the startup event place_objects from the actual bounding box (init_state is only the initial value)."""
     spec = OBJECTS[key]
     old = cfg.scene.object.spawn
     common = {k: getattr(old, k) for k in ("rigid_props", "collision_props", "mass_props", "physics_material",
@@ -439,12 +439,12 @@ def apply_object(cfg: PibGraspEnvCfg, key: str) -> PibGraspEnvCfg:
         radius, height = spec["masse"]
         cfg.scene.object.spawn = sim_utils.CylinderCfg(radius=radius, height=height, **common)
         depth = radius
-    elif spec["form"] == "usd":                 # YCB: Masse/Größe echt aus dem Asset, Aussehen aus dem Asset
+    elif spec["form"] == "usd":                 # YCB: real mass/size from the asset, appearance from the asset
         cfg.scene.object.spawn = sim_utils.UsdFileCfg(usd_path=ycb_upright_usd(spec["ycb"], spec["drehung"]),
                                                       rigid_props=old.rigid_props, collision_props=old.collision_props)
         cfg.events.object_mass = None
         cfg.events.object_scale = None
-        if "ruhelage" in spec:                  # gemessene Ruhelage: steht bei t = 0 so, wie es von selbst steht
+        if "ruhelage" in spec:                  # measured rest pose: stands at t = 0 the way it stands by itself
             cfg.events.place_objects.params["root_height"] = spec["ruhelage"]["hoehe"]
             cfg.scene.object.init_state.rot = spec["ruhelage"]["quat"]
         else:
@@ -459,24 +459,24 @@ def apply_object(cfg: PibGraspEnvCfg, key: str) -> PibGraspEnvCfg:
     return cfg
 
 
-# ── Objektvielfalt (EXP-013): prozedurale Formen wie Dexsuite (16 Grundformen, MultiAssetSpawnerCfg), aber nur
-# innerhalb der Kategorie „seitlich greifen“ (aufrecht, ≥ 15 cm hoch). Maße [m]: Zylinder (Radius, Höhe),
-# Quader (Tiefe zur Hand, Breite, Höhe). Startlage je Umgebung aus der Bounding Box (mdp.place_objects_by_size).
+# ── Object variety (EXP-013): procedural shapes like Dexsuite (16 basic shapes, MultiAssetSpawnerCfg), but only
+# within the category "side grasp" (upright, ≥ 15 cm tall). Dimensions [m]: cylinder (radius, height),
+# box (depth towards the hand, width, height). Start pose per environment from the bounding box (mdp.place_objects_by_size).
 TRAIN_CYLINDERS = [(r, h) for r in (0.025, 0.03, 0.035, 0.04, 0.045) for h in (0.15, 0.20)]
 TRAIN_CUBOIDS = [(x, y, z) for x, y in ((0.06, 0.06), (0.07, 0.07), (0.08, 0.08), (0.06, 0.09)) for z in (0.16, 0.20)]
 
 
 @configclass
 class PibGraspEnvCfg_HeavyMulti(PibGraspEnvCfg_Heavy):
-    """EXP-013: wie EXP-006 (Masse 0,04–0,4 kg), aber je Umgebung eine von 18 Formen der Kategorie (10 Zylinder
-    Ø 5–9 cm × 15/20 cm, 8 Quader 6–8 cm × 16/20 cm) statt immer des Ø-6-cm-Zylinders; Drehung beim Reset
-    ±15° für alle (bei Zylindern ohne Wirkung). Bewertung unverändert je Objekt (eval_policy, Basisaufgabe)."""
+    """EXP-013: like EXP-006 (mass 0.04–0.4 kg), but per environment one of 18 shapes of the category (10 cylinders
+    Ø 5–9 cm × 15/20 cm, 8 boxes 6–8 cm × 16/20 cm) instead of always the Ø 6 cm cylinder; rotation on reset
+    ±15° for all (no effect on cylinders). Evaluation unchanged per object (eval_policy, base task)."""
 
     def __post_init__(self):
         super().__post_init__()
         old = self.scene.object.spawn
         common = {k: getattr(old, k) for k in ("rigid_props", "collision_props", "mass_props")}
-        mat = {k: getattr(old, k) for k in ("physics_material", "visual_material")}    # je Form, wie Dexsuite
+        mat = {k: getattr(old, k) for k in ("physics_material", "visual_material")}    # per shape, like Dexsuite
         shapes = [sim_utils.CylinderCfg(radius=r, height=h, **mat) for r, h in TRAIN_CYLINDERS] + \
                  [sim_utils.CuboidCfg(size=s, **mat) for s in TRAIN_CUBOIDS]
         self.scene.object.spawn = sim_utils.MultiAssetSpawnerCfg(assets_cfg=shapes, random_choice=False, **common)
@@ -486,9 +486,9 @@ class PibGraspEnvCfg_HeavyMulti(PibGraspEnvCfg_Heavy):
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiRand(PibGraspEnvCfg_HeavyMulti):
-    """EXP-016: wie EXP-013, Randomisierung der Hand wie Dexsuite: Servo-Gains 0,5–2 (statt 0,8–1,25) und
-    Gelenkreibung × 0–5 (neu, dexsuite_env_cfg.EventCfg.joint_friction). Größe bleibt ±10 % (Dexsuite 0,75–1,5
-    würde Objekte unter 15 cm Höhe erzeugen — außerhalb der Kategorie seitlich)."""
+    """EXP-016: like EXP-013, randomisation of the hand like Dexsuite: servo gains 0.5–2 (instead of 0.8–1.25) and
+    joint friction × 0–5 (new, dexsuite_env_cfg.EventCfg.joint_friction). Scale stays ±10 % (Dexsuite 0.75–1.5
+    would create objects below 15 cm height — outside the side-grasp category)."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -502,9 +502,9 @@ class PibGraspEnvCfg_HeavyMultiRand(PibGraspEnvCfg_HeavyMulti):
 
 @configclass
 class CurriculumADRCfg:
-    """Wie Dexsuite (adr_curriculum.CurriculumCfg): Schwierigkeit 0–10 je Umgebung nach Erfolg; Schwerkraft
-    0 → 9,81 m/s² und Rauschen der Gelenkwinkel-Beobachtung 0 → ±0,1 rad (Dexsuite-Endwerte). FSR ohne
-    Rauschen (Dexsuite hat keine Kraftsensoren)."""
+    """Like Dexsuite (adr_curriculum.CurriculumCfg): difficulty 0–10 per environment by success; gravity
+    0 → 9.81 m/s² and noise of the joint-angle observation 0 → ±0.1 rad (Dexsuite final values). FSR without
+    noise (Dexsuite has no force sensors)."""
     adr = CurrTerm(func=mdp.GraspDifficultyScheduler,
                    params={"max_kipp_deg": 45.0, "init_difficulty": 0, "min_difficulty": 0, "max_difficulty": 10})
     gravity_adr = CurrTerm(func=base_mdp.modify_term_cfg, params={
@@ -524,8 +524,8 @@ class CurriculumADRCfg:
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiADR(PibGraspEnvCfg_HeavyMulti):
-    """EXP-017: wie EXP-013, plus Curriculum wie Dexsuite (Schwerkraft und Beobachtungsrauschen wachsen mit dem
-    Erfolg). Dexsuite: 'deliberate trick … starting with no gravity (easy) … the agent learns more smoothly'."""
+    """EXP-017: like EXP-013, plus a curriculum like Dexsuite (gravity and observation noise grow with
+    success). Dexsuite: 'deliberate trick … starting with no gravity (easy) … the agent learns more smoothly'."""
     curriculum: CurriculumADRCfg = CurriculumADRCfg()
 
     def __post_init__(self):
@@ -535,18 +535,18 @@ class PibGraspEnvCfg_HeavyMultiADR(PibGraspEnvCfg_HeavyMulti):
                                                          "operation": "abs"})
         self.observations.policy.joint_pos.noise = Unoise(n_min=0.0, n_max=0.0)
         self.observations.policy.enable_corruption = True
-START_REF_S = 0.1     # Startposition = Objektlage bei 0,1 s (abgesetzt, Größe eingeschwungen)
+START_REF_S = 0.1     # start position = object pose at 0.1 s (settled, scale settled)
 
 
 @configclass
 class RewardsDexsuiteCfg(RewardsCfg):
-    """EXP-012: Eigenbau, der nicht durch die Aufgabe nötig ist, zurück auf Dexsuite
-    (dexsuite_env_cfg.RewardsCfg, Kuka-Allegro-Konfiguration):
-    - Annäherung: Dexsuite object_ee_distance über Handfläche + Fingerspitzen (statt nur Spitzen)
-    - Positionsverfolgung (held): 3D-Abstand zur Zielposition, std 0,2 (statt Absinken in z, einseitig, 0,02)
-    - Erfolg: 3D-Abstand pos_std 0,1 × Kippwinkel rot_std 0,5 (statt Absinken 0,02 × Kipp 0,5)
-    Ziel = Startposition des Objekts (Dexsuite: kommandierte Pose). Bleibt bewusst eigen: Gegengriff mit
-    kleinem Finger, Orientierung als Kippwinkel, Halten/Aufrecht/Erfolg erst ab dem Absenken (ADR-017)."""
+    """EXP-012: custom parts not required by the task, back to Dexsuite
+    (dexsuite_env_cfg.RewardsCfg, Kuka-Allegro configuration):
+    - approach: Dexsuite object_ee_distance over palm + fingertips (instead of tips only)
+    - position tracking (held): 3D distance to the target position, std 0.2 (instead of one-sided z sinking, 0.02)
+    - success: 3D distance pos_std 0.1 × tilt rot_std 0.5 (instead of sinking 0.02 × tilt 0.5)
+    Target = start position of the object (Dexsuite: commanded pose). Deliberately kept custom: opposition with
+    the little finger, orientation as tilt angle, held/upright/success only from the lowering on (ADR-017)."""
     fingertips_to_object = RewTerm(func=dexsuite_rewards.object_ee_distance, weight=1.0, params={
         "std": 0.4, "asset_cfg": SceneEntityCfg("robot", body_names=["urdf_palm_left", *mdp.FINGERTIP_LINKS])})
     held = RewTerm(func=mdp.position_tracking_start, weight=2.0, params={
@@ -557,17 +557,17 @@ class RewardsDexsuiteCfg(RewardsCfg):
 
 @configclass
 class PibGraspEnvCfg_HeavyDexsuite(PibGraspEnvCfg_Heavy):
-    """EXP-012: wie EXP-006 (Masse 0,04–0,4 kg), Belohnung so nah an Dexsuite wie die Aufgabe erlaubt."""
+    """EXP-012: like EXP-006 (mass 0.04–0.4 kg), reward as close to Dexsuite as the task allows."""
     rewards: RewardsDexsuiteCfg = RewardsDexsuiteCfg()
 
 
-# ── ADR-022 (2026-10-09): Annäherung je Fingerspitze, Critic kennt das Objekt — je eine Änderung ggü. HeavyMulti ──
-PROGRESS_WEIGHT = 500.0     # Σ Fortschritt [m] je Schritt × dt × Gewicht; Größenordnung per tools/reward_diag.py
+# ── ADR-022 (2026-10-09): approach per fingertip, critic knows the object — one change each vs. HeavyMulti ──
+PROGRESS_WEIGHT = 500.0     # Σ progress [m] per step × dt × weight; magnitude via tools/reward_diag.py
 
 
 @configclass
 class RewardsProgressCfg(RewardsCfg):
-    """EXP-019: Annäherung wie NVIDIA AllegroKuka/DexPBT (mdp.FingertipProgress) statt fingertips_to_object."""
+    """EXP-019: approach like NVIDIA AllegroKuka/DexPBT (mdp.FingertipProgress) instead of fingertips_to_object."""
     fingertips_to_object = None
     fingertip_progress = RewTerm(func=mdp.FingertipProgress, weight=PROGRESS_WEIGHT,
                                  params={"drop_start_s": GRASP_TIME_S, "max_delta": 0.05})
@@ -575,35 +575,35 @@ class RewardsProgressCfg(RewardsCfg):
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgress(PibGraspEnvCfg_HeavyMulti):
-    """EXP-019 (und EXP-022 mit begrenzten Aktionen): wie EXP-018, Annäherung je Fingerspitze nur als Fortschritt."""
+    """EXP-019 (and EXP-022 with clipped actions): like EXP-018, approach per fingertip as progress only."""
     rewards: RewardsProgressCfg = RewardsProgressCfg()
 
 
-# EXP-023: 13 cm Ziehen (Befund 2026-10-10) kostet so viel wie der Gegengriff bringt (0,5/s): 0,5 / 0,13 ≈ 4
+# EXP-023: pulling 13 cm (finding 2026-10-10) costs as much as the opposition earns (0.5/s): 0.5 / 0.13 ≈ 4
 XY_PENALTY_WEIGHT = -4.0
 
 
 @configclass
 class RewardsProgressXYCfg(RewardsProgressCfg):
-    """EXP-023: wie EXP-022, plus Strafe auf die Verschiebung des Objekts in der Tischebene (mdp.object_xy_displacement)."""
+    """EXP-023: like EXP-022, plus a penalty on the object's displacement in the table plane (mdp.object_xy_displacement)."""
     object_xy = RewTerm(func=mdp.object_xy_displacement, weight=XY_PENALTY_WEIGHT,
                         params={"ref_s": START_REF_S, "max_dist": 0.2})
 
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgressXY(PibGraspEnvCfg_HeavyMulti):
-    """EXP-023: wie EXP-022 (mit Agent PibGraspPPORunnerCfg_Clip), Objekt soll in der Tischebene bleiben."""
+    """EXP-023: like EXP-022 (with agent PibGraspPPORunnerCfg_Clip), the object should stay in place in the table plane."""
     rewards: RewardsProgressXYCfg = RewardsProgressXYCfg()
 
 
-# ── Nachtlauf 2026-10-11: je eine Änderung ggü. EXP-022 (HeavyMultiProgress + Aktionen auf ±1) ──────────────────────
+# ── Night run 2026-10-11: one change each vs. EXP-022 (HeavyMultiProgress + actions clipped to ±1) ──────────────────
 ACTION_FILTER_ALPHA = 0.3       # Isaac Lab ShadowHand-OpenAI act_moving_average (DeXtreme-Linie)
-TORQUE_PENALTY_WEIGHT = -0.1    # Σ(τ/τ_Stall)² der 7 Servos außer Handgelenk; Größenordnung per tools/reward_diag.py
-STALL_JOINTS = [j for j in SERVO_JOINTS if j != "wrist_left"]     # wie die Leitplanke Stall-Anteil (eval_policy)
+TORQUE_PENALTY_WEIGHT = -0.1    # Σ(τ/τ_stall)² of the 7 servos except the wrist; magnitude via tools/reward_diag.py
+STALL_JOINTS = [j for j in SERVO_JOINTS if j != "wrist_left"]     # like the stall-share guardrail (eval_policy)
 
 
 def filtered_servo_action(alpha: float = ACTION_FILTER_ALPHA) -> mdp.FilteredRelativeJointPositionActionCfg:
-    """Servo-Aktion wie ActionsCfg.servos, mit gleitendem Mittelwert (auch für eval_policy --action_filter)."""
+    """Servo action like ActionsCfg.servos, with a moving average (also for eval_policy --action_filter)."""
     base = ActionsCfg().servos
     return mdp.FilteredRelativeJointPositionActionCfg(asset_name=base.asset_name, joint_names=base.joint_names,
                                                       preserve_order=base.preserve_order, scale=base.scale, alpha=alpha)
@@ -611,7 +611,7 @@ def filtered_servo_action(alpha: float = ACTION_FILTER_ALPHA) -> mdp.FilteredRel
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgressFilter(PibGraspEnvCfg_HeavyMultiProgress):
-    """EXP-024 (gegen Unruhe): wie EXP-022, Aktion vor den Servos geglättet (gleitender Mittelwert, α = 0,3)."""
+    """EXP-024 (against jitter): like EXP-022, action smoothed before the servos (moving average, α = 0.3)."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -620,7 +620,7 @@ class PibGraspEnvCfg_HeavyMultiProgressFilter(PibGraspEnvCfg_HeavyMultiProgress)
 
 @configclass
 class RewardsProgressTorqueCfg(RewardsProgressCfg):
-    """EXP-025 (gegen Servo-Stall): Strafe auf das normierte Servo-Moment wie HORA (Moment-Strafe)."""
+    """EXP-025 (against servo stall): penalty on the normalised servo torque like HORA (torque penalty)."""
     servo_torque = RewTerm(func=mdp.servo_torque_l2, weight=TORQUE_PENALTY_WEIGHT,
                            params={"asset_cfg": SceneEntityCfg("robot", joint_names=STALL_JOINTS, preserve_order=True)})
 
@@ -632,7 +632,7 @@ class PibGraspEnvCfg_HeavyMultiProgressTorque(PibGraspEnvCfg_HeavyMulti):
 
 @configclass
 class RewardsProgressFingersCfg(RewardsProgressCfg):
-    """EXP-026 (mehr Finger): Belohnung nach Zahl der Finger am Objekt bei Daumenkontakt (Term aus EXP-005)."""
+    """EXP-026 (more fingers): reward by the number of fingers on the object with thumb contact (term from EXP-005)."""
     finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
 
 
@@ -641,99 +641,99 @@ class PibGraspEnvCfg_HeavyMultiProgressFingers(PibGraspEnvCfg_HeavyMulti):
     rewards: RewardsProgressFingersCfg = RewardsProgressFingersCfg()
 
 
-# ── Aktionsraum wie Dexsuite (EXP-027 ff., docs/pruefung-aktionsweg.md): Skala 0,1 rad für ALLE Servos (Dexsuite:
-# RelativeJointPositionActionCfg(scale=0.1) für alle Gelenke inkl. Arm) — vorher Unterarm/Handgelenk 0,03 rad (≈ 34 %
-# Moment, ~63/47 °/s statt 270/135 °/s). Begrenzung zur Laufzeit entfällt (Agent PibGraspPPORunnerCfg_Bounds: bounds_loss).
+# ── Action space like Dexsuite (EXP-027 ff., docs/protokoll/pruefung-aktionsweg.md): scale 0.1 rad for ALL servos (Dexsuite:
+# RelativeJointPositionActionCfg(scale=0.1) for all joints incl. the arm) — before, forearm/wrist 0.03 rad (≈ 34 %
+# torque, ~63/47 °/s instead of 270/135 °/s). No clipping at runtime (agent PibGraspPPORunnerCfg_Bounds: bounds_loss).
 DEXSUITE_ACTION_SCALE = 0.1
 
 
 def dexsuite_action_space(cfg):
-    """Gleiche Skala für alle 8 Servos (Dexsuite). Bewertung: eval_policy --action_scale 0.1 (experiments.clip_args)."""
+    """Same scale for all 8 servos (Dexsuite). Evaluation: eval_policy --action_scale 0.1 (experiments.clip_args)."""
     cfg.actions.servos.scale = DEXSUITE_ACTION_SCALE
     return cfg
 
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgressDex(PibGraspEnvCfg_HeavyMultiProgress):
-    """EXP-027: Grundrezept (EXP-019/022: Fortschritt je Fingerspitze) mit Aktionsraum wie Dexsuite."""
+    """EXP-027: base recipe (EXP-019/022: progress per fingertip) with an action space like Dexsuite."""
 
     def __post_init__(self):
         super().__post_init__()
         dexsuite_action_space(self)
 
 
-# ── Nachtlauf 2026-10-13 (docs/nachtlauf-2026-10-13.md): Servo-Stall und Unruhe, Eltern EXP-027 ─────────────────────
-# PID-Lagrange (Stooke et al. 2020): Kosten c_t = Anteil der 7 Servos (ohne Handgelenk) mit |τ| ≥ 80 % Stall, Grenze
-# J_c ≤ 0,2 (Leon). λ in „je s“ (Isaac Lab × dt); Haltebelohnung ~10/s → λ soll in ~20 Iterationen diese Größenordnung
-# erreichen können (K_I · e je Rollout, e ≈ 0,3 bei EXP-027).
+# ── Night run 2026-10-13 (docs/protokoll/nachtlauf-2026-10-13.md): servo stall and jitter, parent EXP-027 ─────────────────────
+# PID Lagrangian (Stooke et al. 2020): cost c_t = fraction of the 7 servos (without wrist) with |τ| ≥ 80 % stall, limit
+# J_c ≤ 0.2. λ in "per s" (Isaac Lab × dt); hold reward ~10/s → λ should be able to reach this magnitude within
+# ~20 iterations (K_I · e per rollout, e ≈ 0.3 for EXP-027).
 STALL_LAGRANGE = {"fraction": 0.8, "limit": 0.2, "k_p": 10.0, "k_i": 1.0, "k_d": 5.0, "ema": 0.5, "lambda_max": 100.0,
                   "steps_per_update": 32}
-SERVO_LOAD_NOISE = 0.05         # Rauschen der Servo-Last-Beobachtung („Present Load“, Anteil des Stall-Moments)
+SERVO_LOAD_NOISE = 0.05         # noise of the servo-load observation ("Present Load", fraction of the stall torque)
 
 
 @configclass
 class RewardsProgressLagrangeCfg(RewardsProgressCfg):
-    """EXP-035 ff.: wie EXP-027, plus Strafe −λ·c_t mit λ per PID-Lagrange (mdp.StallLagrange)."""
+    """EXP-035 ff.: like EXP-027, plus a penalty −λ·c_t with λ via PID Lagrangian (mdp.StallLagrange)."""
     stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
                              params={"joint_names": STALL_JOINTS, **STALL_LAGRANGE})
 
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgressDexLagrange(PibGraspEnvCfg_HeavyMultiProgressDex):
-    """EXP-035 (Agent _Bounds) und EXP-036 (Agent _Caps): Stall-Grenze per PID-Lagrange."""
+    """EXP-035 (agent _Bounds) and EXP-036 (agent _Caps): stall limit via PID Lagrangian."""
     rewards: RewardsProgressLagrangeCfg = RewardsProgressLagrangeCfg()
 
 
 def add_servo_load_obs(cfg):
-    """Servo-Last als Beobachtung (EXP-037, auch eval_policy --servo_last): |τ|/Stall je Servo wie „Present Load“ des
-    ST3215, Verlauf 5 wie die übrigen Größen, als letzte Größe im Vektor (Eingang 105 → 145), Rauschen σ 0,05."""
+    """Servo load as an observation (EXP-037, also eval_policy --servo_last): |τ|/stall per servo like the "Present Load" of
+    the ST3215, history 5 like the other quantities, as the last quantity in the vector (input 105 → 145), noise σ 0.05."""
     from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
     cfg.observations.policy.servo_load = ObsTerm(func=mdp.servo_load, params={"joint_names": SERVO_JOINTS},
                                                  noise=Gnoise(mean=0.0, std=SERVO_LOAD_NOISE))
-    cfg.observations.policy.enable_corruption = True       # nur Terme mit noise (hier: servo_load) werden verrauscht
+    cfg.observations.policy.enable_corruption = True       # only terms with noise (here: servo_load) are corrupted
     return cfg
 
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad(PibGraspEnvCfg_HeavyMultiProgressDexLagrange):
-    """EXP-037: wie EXP-035, Policy sieht zusätzlich die Servo-Last."""
+    """EXP-037: like EXP-035, the policy additionally sees the servo load."""
 
     def __post_init__(self):
         super().__post_init__()
         add_servo_load_obs(self)
 
 
-# ── Nachtlauf 2026-10-14 (docs/nachtlauf-2026-10-14.md): Stall wie am echten Servo, Grenze je Servo, Fingerzahl ─────
-# Eltern EXP-036 (Agent _Caps). Stall wie am echten Servo (mdp.servo_stall): alle 8 Servos inkl. Handgelenk (Stall-Moment
-# über das Pleuel winkelabhängig; bisher fehlte es, weil seine Grenze in der Sim 1e9 ist), kein Stall am Anschlag (die
-# Firmware kappt das Ziel). Öffnen gegen etwas zählt weiter: real öffnet nur die Feder, die Sim kann aktiv drücken.
+# ── Night run 2026-10-14 (docs/protokoll/nachtlauf-2026-10-14.md): stall as on the real servo, limit per servo, finger count ─────
+# Parent EXP-036 (agent _Caps). Stall as on the real servo (mdp.servo_stall): all 8 servos incl. the wrist (stall torque
+# angle-dependent via the linkage; it was missing before because its limit in the sim is 1e9), no stall at the joint stop
+# (the firmware clips the target). Opening against something still counts: in reality only the spring opens, the sim can push actively.
 STALL_JOINTS_REAL = list(SERVO_JOINTS)
 STALL_REAL = {"firmware_limits": True, "limit_tol_deg": 1.0}
 
 
 @configclass
 class RewardsLagrangeRealCfg(RewardsProgressLagrangeCfg):
-    """EXP-038: Stall-Kosten wie am echten Servo (8 Servos inkl. Handgelenk, kein Drücken am Anschlag)."""
+    """EXP-038: stall cost as on the real servo (8 servos incl. wrist, no pushing against the stop)."""
     stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
                              params={"joint_names": STALL_JOINTS_REAL, **STALL_LAGRANGE, **STALL_REAL})
 
 
 @configclass
 class RewardsLagrangeJeServoCfg(RewardsProgressLagrangeCfg):
-    """EXP-039: wie EXP-038, ein λ je Servo (8; CaT: Grenze je Gelenk), jeder Servo ≤ 20 %."""
+    """EXP-039: like EXP-038, one λ per servo (8; CaT: limit per joint), every servo ≤ 20 %."""
     stall_lagrange = RewTerm(func=mdp.StallLagrange, weight=-1.0,
                              params={"joint_names": STALL_JOINTS_REAL, **STALL_LAGRANGE, **STALL_REAL, "per_joint": True})
 
 
 @configclass
 class RewardsLagrangeJeServoFingerCfg(RewardsLagrangeJeServoCfg):
-    """EXP-040: wie EXP-039, plus Belohnung nach Fingerzahl (Term aus EXP-005/026)."""
+    """EXP-040: like EXP-039, plus a reward by finger count (term from EXP-005/026)."""
     finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
 
 
 @configclass
 class RewardsLagrangeRealFingerCfg(RewardsLagrangeRealCfg):
-    """EXP-041: wie EXP-038, plus Belohnung nach Fingerzahl (Kontrolle zu EXP-040 ohne Grenze je Servo)."""
+    """EXP-041: like EXP-038, plus a reward by finger count (control for EXP-040 without the per-servo limit)."""
     finger_count = RewTerm(func=mdp.fingers_in_contact, weight=1.0, params={"threshold": CONTACT_N})
 
 
@@ -759,7 +759,7 @@ class PibGraspEnvCfg_LagrangeRealFinger(PibGraspEnvCfg_HeavyMultiProgressDex):
 
 @configclass
 class PibGraspEnvCfg_HeavyMultiPriv(PibGraspEnvCfg_HeavyMulti):
-    """EXP-021: wie EXP-018, Critic zusätzlich mit Objektgröße, Masse und Reibung (privilegiert, wie HORA/Dexsuite)."""
+    """EXP-021: like EXP-018, critic additionally with object size, mass and friction (privileged, like HORA/Dexsuite)."""
 
     def __post_init__(self):
         super().__post_init__()

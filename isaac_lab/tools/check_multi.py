@@ -1,10 +1,10 @@
 """
-check_multi.py — Szenenprüfung Objektvielfalt (EXP-013) statt Fenstertest (Leon remote, 2026-10-08).
+check_multi.py — scene check for object variety (EXP-013) instead of a window test (remote, 2026-10-08).
 
-Baut Pib-Grasp-Hand-Left-HeavyMulti-v0, lässt eine Policy laufen und prüft je Form: Startlage aus der
-Bounding Box (Abstand zur Handfläche, Boden auf dem Tisch), Bewegung in den ersten 0,1 s (Startfehler =
-Überlappung/Fall), gehalten nach dem Absenken. Speichert Einzelbilder nach isaac_sim/tools/_check_multi_*.png
-und den Bericht nach isaac_sim/tools/_check_multi.txt.
+Builds Pib-Grasp-Hand-Left-HeavyMulti-v0, runs a policy and checks per shape: start pose from the
+bounding box (distance to the palm, bottom on the table), motion in the first 0.1 s (start failure =
+overlap/fall), held after the lowering. Saves single images to isaac_sim/tools/_check_multi_*.png
+and the report to isaac_sim/tools/_check_multi.txt.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/check_multi.py --headless --enable_cameras --policy <run>/exported/policy.pt
 """
@@ -83,7 +83,7 @@ lines = [f"== {TASK} | {'Aktionen 0' if args.null else args.policy} | {u.num_env
 bad = 0
 for i in range(u.num_envs):
     kind, size = info[i]
-    gap = 100 * (HAND_POS[0] - (d[i, 0].item() + size[0] / 200))       # Handfläche bei x = HAND_POS[0]
+    gap = 100 * (HAND_POS[0] - (d[i, 0].item() + size[0] / 200))       # palm at x = HAND_POS[0]
     bottom = 1000 * (d[i, 2].item() - size[2] / 200 - TABLE_TOP_Z)
     mv = 1000 * moved[i].item()
     bad += mv > 5

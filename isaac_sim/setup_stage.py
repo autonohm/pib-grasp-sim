@@ -1,16 +1,16 @@
 """
-setup_stage.py — Stage-Setup für pib in Isaac Sim.
+setup_stage.py — stage setup for pib in Isaac Sim.
 
-Im Script Editor ausführen um:
-  1. Physics Scene, Boden und Licht einzurichten
-  2. Joint-Drives zu konfigurieren — v5: Servo-Aktuatormodell aus Datenblättern
-     (ADR-012), passive Mimic-Folgegelenke (ADR-011); v4: Referenzwerte von 0fdbc62
-  3. Mimic Joints (v5), Gelenk-Limits und Initialpose (T-Pose, alle Targets 0°) zu setzen
+Run in the Script Editor to:
+  1. set up the physics scene, ground and light
+  2. configure the joint drives — v5: servo actuator model from datasheets
+     (ADR-012), passive mimic followers (ADR-011); v4: reference values of 0fdbc62
+  3. set mimic joints (v5), joint limits and the initial pose (T pose, all targets 0°)
 
-Danach Stage speichern (Ctrl+S), dann Play drücken.
+Then save the stage (Ctrl+S) and press Play.
 
-Importierbar von start.py — _SKIP_AUTO_SETUP = True (vor exec_module
-setzen) verhindert automatische Ausführung beim Import.
+Importable from start.py — _SKIP_AUTO_SETUP = True (set before exec_module)
+prevents automatic execution on import.
 """
 import os
 import importlib.util
@@ -41,13 +41,13 @@ _spec.loader.exec_module(_cfg)
 ROBOT_PRIM_PATH = _cfg.ROBOT_PRIM_PATH
 
 
-# ── v4: Referenz-Drives (unverändert seit 0fdbc62) ────────────────────────────
-# v4 bleibt der verifizierte Referenzstand: diese Gains, maxForce=inf, keine Armature/
-# Geschwindigkeitsgrenze. Das Servo-Aktuatormodell (unten) gilt nur für v5 — v4-Namen
-# haben das Präfix "dof_".
+# ── v4: reference drives (unchanged since 0fdbc62) ────────────────────────────
+# v4 stays the verified reference: these gains, maxForce=inf, no armature/
+# velocity limit. The servo actuator model (below) only applies to v5 — v4 names
+# have the prefix "dof_".
 
 def _v4_gains(name: str) -> tuple:
-    """(stiffness Nm/°, damping Nm·s/°) für v4-Gelenke."""
+    """(stiffness Nm/°, damping Nm·s/°) for v4 joints."""
     n = name.lower()
     if "head" in n:
         return 3000.0, 150.0
@@ -62,10 +62,10 @@ def _v4_gains(name: str) -> tuple:
     return 1000.0, 50.0                                 # Fallback
 
 
-# ── v5: Servo-Aktuatormodell (ADR-012) ────────────────────────────────────────
-# Datenblattwerte, Gelenkgruppen und Rezept stehen in config/pib_hand_config_v5.py
-# (SERVOS, V5_ACTUATORS, servo_actuator) — eine Quelle für Isaac Sim und Isaac Lab.
-# Hier werden nur die Prim-Einheiten (Nm/°, Nm·s/°, °/s) verwendet.
+# ── v5: servo actuator model (ADR-012) ────────────────────────────────────────
+# Datasheet values, joint groups and recipe live in config/pib_hand_config_v5.py
+# (SERVOS, V5_ACTUATORS, servo_actuator) — one source for Isaac Sim and Isaac Lab.
+# Only the prim units (Nm/°, Nm·s/°, °/s) are used here.
 _spec5 = importlib.util.spec_from_file_location("pib_hand_config_v5", f"{_root}/config/pib_hand_config_v5.py")
 _cfg5  = importlib.util.module_from_spec(_spec5)
 _spec5.loader.exec_module(_cfg5)
@@ -75,8 +75,8 @@ FOLLOWER_MAX_VELOCITY_DEG_S = _cfg5.FOLLOWER_MAX_VELOCITY_DEG_S
 
 def _v5_actuator(name: str):
     """
-    Parameter eines servo-getriebenen v5-Gelenks in Prim-Einheiten als dict (servo,
-    stiffness, damping, max_force, armature, max_velocity), sonst None.
+    Parameters of a servo-driven v5 joint in prim units as a dict (servo,
+    stiffness, damping, max_force, armature, max_velocity), otherwise None.
     """
     act = _cfg5.servo_actuator(name)
     if act is None:
@@ -86,14 +86,14 @@ def _v5_actuator(name: str):
             "armature": act["armature"], "max_velocity": act["max_velocity_deg"]}
 
 
-# ── Mimic Joints (Stufe 1: linear, nur v5) ────────────────────────────────────
-# Folgegelenk -> (Referenzgelenk, gearing, offset). PhysX-Formel (aus
-# generatedSchema.usda): q_folge + gearing * q_referenz + offset = 0.
-# gearing=-1, offset=0  =>  theta_folge = theta_referenz. Exakt bei 0° und 90°,
-# in der Mitte weicht die reale Viergelenk-Kopplung bis ~10° (PIP) / ~22° (DIP)
-# ab (tendondrive/finger_analytisch.py). Einziger Ort für Gearing/Offset —
-# eine spätere adaptive Stufe 2 ändert nur diese Werte.
-# v4-Gelenke (dof_-Präfix) sind bewusst nicht enthalten.
+# ── Mimic joints (stage 1: linear, v5 only) ───────────────────────────────────
+# follower -> (reference joint, gearing, offset). PhysX formula (from
+# generatedSchema.usda): q_follower + gearing * q_reference + offset = 0.
+# gearing=-1, offset=0  =>  theta_follower = theta_reference. Exact at 0° and 90°;
+# in the middle the real four-bar coupling deviates by up to ~10° (PIP) / ~22° (DIP)
+# (tendondrive/finger_analytisch.py). The only place for gearing/offset —
+# a later adaptive stage 2 only changes these values.
+# v4 joints (dof_ prefix) are deliberately not included.
 MIMIC_GEARING = -1.0
 MIMIC_OFFSET = 0.0
 
@@ -110,7 +110,7 @@ def _build_mimic_joints() -> dict:
 
 MIMIC_JOINTS = _build_mimic_joints()
 
-# Mimic-Instanzname je physics:axis des Gelenk-Prims (Mehrfach-Apply-Schema)
+# mimic instance name per physics:axis of the joint prim (multiple-apply schema)
 _MIMIC_AXIS = {"X": "rotX", "Y": "rotY", "Z": "rotZ"}
 
 
@@ -164,16 +164,16 @@ def configure_lights(stg) -> None:
 
 def configure_drives(stg) -> int:
     """
-    Setzt die Antriebe aller PhysicsRevoluteJoint-Prims:
-      v4 (Präfix "dof_")       → _v4_gains, maxForce=inf (Referenzstand, unverändert)
-      v5 Mimic-Folgegelenke    → passiv: Stiffness/Damping 0, Armature/Geschwindigkeit
-                                 aus FOLLOWER_* (ADR-011)
-      v5 Servo-Gelenke         → Servo-Aktuatormodell aus V5_ACTUATORS (ADR-012)
+    Sets the drives of all PhysicsRevoluteJoint prims:
+      v4 (prefix "dof_")       → _v4_gains, maxForce=inf (reference, unchanged)
+      v5 mimic followers       → passive: stiffness/damping 0, armature/velocity
+                                 from FOLLOWER_* (ADR-011)
+      v5 servo joints          → servo actuator model from V5_ACTUATORS (ADR-012)
 
-    Returns: Anzahl konfigurierter Joints
+    Returns: number of configured joints
     """
     count = 0
-    groups = {}            # Ausgabe: (servo, stiffness, damping) -> Gelenkanzahl
+    groups = {}            # output: (servo, stiffness, damping) -> number of joints
     unknown = []
     for prim in stg.Traverse():
         is_revolute = (prim.GetTypeName() == "PhysicsRevoluteJoint" or
@@ -197,7 +197,7 @@ def configure_drives(stg) -> int:
 
         joint_api = PhysxSchema.PhysxJointAPI.Apply(prim)
         if name in MIMIC_JOINTS:
-            # Passiv — ein aktiver Antrieb würde gegen die Zwangsbedingung arbeiten.
+            # Passive — an active drive would work against the constraint.
             drive.GetStiffnessAttr().Set(0.0)
             drive.GetDampingAttr().Set(0.0)
             drive.GetMaxForceAttr().Set(float("inf"))
@@ -230,15 +230,15 @@ def configure_drives(stg) -> int:
 
 def configure_mimic_joints(stg) -> int:
     """
-    Legt PhysxMimicJointAPI an allen Folgegelenken aus MIMIC_JOINTS an
-    (PIP<-MCP, DIP<-PIP, Daumen-IP<-MCP, beide Seiten = 18 Gelenke). Idempotent.
-    Auf einer Stage ohne diese Gelenke (v4) passiert nichts.
+    Applies PhysxMimicJointAPI to all followers from MIMIC_JOINTS
+    (PIP<-MCP, DIP<-PIP, thumb IP<-MCP, both sides = 18 joints). Idempotent.
+    On a stage without these joints (v4) nothing happens.
 
-    Instanzname = Achse des Folgegelenks (aus physics:axis gelesen, nicht
-    angenommen). Antriebe der Folgegelenke setzt configure_drives auf 0 —
-    vorher aufrufen, danach Stop -> Play, damit PhysX die Zwangsbedingung lädt.
+    Instance name = axis of the follower (read from physics:axis, not
+    assumed). configure_drives sets the followers' drives to 0 —
+    call it first, then Stop -> Play so PhysX loads the constraint.
 
-    Returns: Anzahl konfigurierter Mimic-Gelenke
+    Returns: number of configured mimic joints
     """
     joints = {}
     for prim in stg.Traverse():
@@ -275,39 +275,39 @@ def configure_mimic_joints(stg) -> int:
     return count
 
 
-# ── Gelenk-Limits ─────────────────────────────────────────────────────────────
-# Seit isaac_sim/tools/flip_joint_sign.py (einmalig in der USD ausgeführt)
-# stimmen Onshape- und Isaac-Konvention überein — keine Spiegelung mehr nötig,
-# das sind direkt die Onshape-Limits (positiv = Flexion/Heben/Vorne).
+# ── Joint limits ──────────────────────────────────────────────────────────────
+# Since isaac_sim/tools/flip_joint_sign.py (run once on the USD) the Onshape
+# and Isaac conventions agree — no mirroring needed any more,
+# these are directly the Onshape limits (positive = flexion/raise/forward).
 #
-# dof_upper_arm_left/dof_shoulder_horizontal_right korrigiert gegenüber dem
-# alten (gespiegelten) Stand: die vorherige Tabelle hatte hier symmetrisch
-# [-90°,90°] geschätzt, die echte Onshape-Quelle ist einseitig [0°,90°]
-# (verifiziert gegen ros2_ws/src/pib_description_v4/urdf/pib_upperbody.urdf).
-# Das galt ausdrücklich nur für v4 -- siehe v5-Block unten, dort weicht
-# upper_arm_left wieder ab (v5 IST dort symmetrisch).
+# dof_upper_arm_left/dof_shoulder_horizontal_right corrected compared with the
+# old (mirrored) state: the previous table had guessed a symmetric
+# [-90°,90°] here, the real Onshape source is one-sided [0°,90°]
+# (verified against ros2_ws/src/pib_description_v4/urdf/pib_upperbody.urdf).
+# This applied explicitly to v4 only -- see the v5 block below, where
+# upper_arm_left differs again (v5 IS symmetric there).
 #
-# v5-Einträge (kein "dof_"-Präfix, siehe config/pib_hand_config_v5.py für die
-# Herleitung) seit dieser Session ergänzt: _BODY_LIMITS wurde zuvor nur mit den
-# v4-Werten befüllt, aber für v4 UND v5 gemeinsam verwendet (set_joint_limits()
-# arbeitet namensbasiert über stg.Traverse(), keine Versionsunterscheidung). Dadurch
-# bekam v5 fälschlich v4-Limits aufgezwungen, wo die echte v5-URDF abweicht:
-# upper_arm_left war fälschlich auf [0°,90°] eingeschränkt (echtes v5-Limit:
-# [-90°,90°], symmetrisch zu upper_arm_right), wrist_left/wrist_right standen auf
-# [0°,90°] statt dem echten v5-Limit [-90°,30°] (beide Seiten gleichermaßen
-# betroffen, kein Links/Rechts-Unterschied). shoulder_horizontal_right [0°,90°] ist
-# dagegen in BEIDEN Versionen (v4 UND v5 URDF) identisch und keine Abweichung --
-# keine Korrektur nötig, siehe config/pib_hand_config_v5.py.
+# v5 entries (no "dof_" prefix, see config/pib_hand_config_v5.py for the
+# derivation) added in that session: _BODY_LIMITS used to contain only the
+# v4 values but was shared by v4 AND v5 (set_joint_limits()
+# works by name via stg.Traverse(), without distinguishing versions). As a result
+# v5 was wrongly forced onto v4 limits where the real v5 URDF differs:
+# upper_arm_left was wrongly restricted to [0°,90°] (real v5 limit:
+# [-90°,90°], symmetric to upper_arm_right), wrist_left/wrist_right were at
+# [0°,90°] instead of the real v5 limit [-90°,30°] (both sides affected
+# equally, no left/right difference). shoulder_horizontal_right [0°,90°], on the
+# other hand, is identical in BOTH versions (v4 AND v5 URDF) and not a deviation --
+# no correction needed, see config/pib_hand_config_v5.py.
 #
-# wrist_left/wrist_right v5 (2026-10-04): [-60°, 0°], in Onshape korrigiert. Das
-# Handgelenk wird über ein Pleuel angetrieben, das mechanisch nur 60° Schwenk zulässt
-# (config/pib_hand_config_v5.py → WRIST_LINKAGE). Vorzeichen-Ausnahme: -60° = voll
-# nach innen gebeugt, 0° = gestreckt (docs/conventions.md).
+# wrist_left/wrist_right v5 (2026-10-04): [-60°, 0°], corrected in Onshape. The
+# wrist is driven via a connecting rod that mechanically only allows a 60° swing
+# (config/pib_hand_config_v5.py → WRIST_LINKAGE). Sign exception: -60° = fully
+# flexed inwards, 0° = straight (docs/conventions.md).
 
 _HAND_KEYWORDS = ("proximal", "distal", "tip", "rotator")
 
 _BODY_LIMITS = {
-    # v4 (dof_-Präfix, Quelle: pib_description_v4/urdf/pib_upperbody.urdf)
+    # v4 (dof_ prefix, source: pib_description_v4/urdf/pib_upperbody.urdf)
     "dof_head_horizontal":           (-90.0,  90.0),
     "dof_head_vertical":             (-45.0,  70.0),
     "dof_shoulder_vertical_left":    (-90.0,  90.0),
@@ -322,7 +322,7 @@ _BODY_LIMITS = {
     "dof_elbow_right":               (-45.0,  90.0),
     "dof_forearm_right":             (-90.0,  90.0),
     "dof_wrist_right":               (  0.0,  90.0),
-    # v5 (kein Präfix, Quelle: pib_upperbody_urdf_v5/robot.urdf, siehe
+    # v5 (no prefix, source: pib_upperbody_urdf_v5/robot.urdf, see
     # config/pib_hand_config_v5.py)
     "head_horizontal":           (-90.0,  90.0),
     "head_vertical":             (-45.0,  70.0),
@@ -343,12 +343,12 @@ _BODY_LIMITS = {
 
 def set_joint_limits(stg) -> int:
     """
-    Setzt Gelenk-Limits (Onshape-Konvention, seit flip_joint_sign.py identisch
-    mit der Isaac-Konvention). Idempotent: setzt immer denselben Zielwert,
-    kein Toggle, kein Flag.
+    Sets the joint limits (Onshape convention, identical to the Isaac convention
+    since flip_joint_sign.py). Idempotent: always sets the same target value,
+    no toggle, no flag.
 
-    Hand/Fingergelenke (proximal/distal/tip/rotator): [0°, 90°]
-    Körpergelenke: aus _BODY_LIMITS
+    Hand/finger joints (proximal/distal/tip/rotator): [0°, 90°]
+    Body joints: from _BODY_LIMITS
     """
     count = 0
     for prim in stg.Traverse():
@@ -374,11 +374,11 @@ def set_joint_limits(stg) -> int:
 
 def set_initial_pose(stg) -> None:
     """
-    Setzt alle Drive-Targets auf 0° (T-Pose, volle Streckung) — Onshape-
-    Konvention seit flip_joint_sign.py, positiv = Flexion. Kein Sonderfall
-    mehr für den Ellbogen (war vorher 30°, das war nie begründet). Traversiert
-    generisch über alle PhysicsRevoluteJoint-Prims, kein Namensabgleich nötig
-    — funktioniert für v4 und v5 identisch.
+    Sets all drive targets to 0° (T pose, fully extended) — Onshape
+    convention since flip_joint_sign.py, positive = flexion. No special case
+    for the elbow any more (it used to be 30°, which was never justified). Traverses
+    all PhysicsRevoluteJoint prims generically, no name matching needed
+    — works identically for v4 and v5.
     """
     count = 0
     for prim in stg.Traverse():
@@ -405,9 +405,9 @@ def setup_all(stg) -> None:
     set_initial_pose(stg)
 
 
-# ── Script-Editor-Block ───────────────────────────────────────────────────────
-# Wird übersprungen wenn start.py dieses Modul importiert
-# (setzt _SKIP_AUTO_SETUP = True vor exec_module).
+# ── Script Editor block ───────────────────────────────────────────────────────
+# Skipped when start.py imports this module
+# (sets _SKIP_AUTO_SETUP = True before exec_module).
 if not globals().get("_SKIP_AUTO_SETUP"):
     setup_all(stage)
     print("\nSetup abgeschlossen. Stage speichern (Ctrl+S), dann Play drücken.")

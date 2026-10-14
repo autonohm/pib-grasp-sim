@@ -16,7 +16,7 @@ danach von dort abgezweigt.
 
 ## Herkunft
 
-Leon hat den unten stehenden Prompt mit Gemini vorbereitet und Claude Code zur Bewertung
+Der Autor hat den unten stehenden Prompt mit Gemini vorbereitet und Claude Code zur Bewertung
 vorgelegt, bevor irgendetwas umgesetzt wurde. Wörtlich übernommen, keine Korrekturen am
 Text selbst — die Korrekturen stehen in den Abschnitten danach.
 
@@ -106,7 +106,7 @@ ist etabliertes Muster. Asymmetrische Action-Skalierung, EMA-Glättung der takti
 Action-Rate-Penalty, "verschwindender Tisch"-Validierungstrick — alles Standardtechniken,
 nichts Exotisches.
 
-**Zunächst unklar, dann durch Leon geklärt**: "8 Freiheitsgrade Unterarm+Handgelenk" passte
+**Zunächst unklar, dann durch den Autor geklärt**: "8 Freiheitsgrade Unterarm+Handgelenk" passte
 auf den ersten Blick zu keiner Lesart der pib-DOF-Struktur (Schulter/Ellbogen eingerechnet
 zu viele, nur Unterarm+Handgelenk zu wenige). Klärung: gemeint sind die **8 realen Servos**
 der physischen linken Hand (Handgelenk, Unterarmdrehung, Daumen-Rotator, 5× Finger-/
@@ -134,7 +134,7 @@ Design-Punkt: Aktionsraum".
 
 ## Entscheidung: eigener Branch statt Fortsetzung auf `experiment/omnigraph-lightweight`
 
-Leon: "eigentlich fände ich es nicht schlimm die Sache auf diesem Repo fortzuführen" —
+Der Autor: "eigentlich fände ich es nicht schlimm die Sache auf diesem Repo fortzuführen" —
 Rückfrage ergab: gleiches Repo ja (digitaler Zwilling wird sonst dupliziert/muss
 synchronisiert werden), aber eigener Branch, weil `experiment/omnigraph-lightweight` sich
 bewusst als minimaler Zweig versteht (kein Training-Pipeline-Scope, siehe dortiges

@@ -1,0 +1,8 @@
+Lizenz: noch nicht festgelegt (Platzhalter, Stand 2026-10-15)
+
+Für den eigenen Code dieses Repositories ist noch keine Lizenz gewählt. Bis dahin gilt das
+Urheberrecht des Autors; Nutzung im pib-Projekt und in der Lehre nach Absprache.
+
+Vorschlag für die Entscheidung: BSD-3-Clause (wie Isaac Lab), alternativ MIT oder Apache-2.0.
+Fremdbestandteile mit eigenen Lizenzen: siehe THIRD_PARTY.md — insbesondere die pib-CAD-Daten
+(Meshes, URDF) von isento GmbH, deren Lizenz vor einer Weitergabe zu klären ist.

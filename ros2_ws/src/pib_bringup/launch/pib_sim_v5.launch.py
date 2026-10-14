@@ -1,16 +1,16 @@
 """
-pib_sim_v5.launch.py — Startet den kompletten ros2_control-Stack für Isaac Sim (v5-Hand).
+pib_sim_v5.launch.py — starts the complete ros2_control stack for Isaac Sim (v5 hand).
 
-Identisch zu pib_sim.launch.py, nur gegen pib_description_v5/controllers_v5.yaml statt
-der v4-Pendants — siehe dort für Details. Nicht gleichzeitig mit pib_sim.launch.py starten,
-beide nutzen dieselben /pib/hw/*-Topics (immer nur eine Isaac-Sim-Stage — v4 oder v5 — aktiv).
+Identical to pib_sim.launch.py, only against pib_description_v5/controllers_v5.yaml instead of
+the v4 counterparts — see there for details. Do not start together with pib_sim.launch.py,
+both use the same /pib/hw/* topics (only one Isaac Sim stage — v4 or v5 — active at a time).
 
-Voraussetzung: Isaac Sim läuft, pib_upperbody_v5.usd (mit Action Graph) geladen,
-start.py ausgeführt, Play gedrückt.
+Prerequisite: Isaac Sim is running, pib_upperbody_v5.usd (with Action Graph) loaded,
+start.py executed, Play pressed.
 
 Start:
   source /opt/ros/jazzy/setup.bash
-  source ~/repos/pib-hand-sim/ros2_ws/install/setup.bash
+  source <repo>/ros2_ws/install/setup.bash
   ros2 launch pib_bringup pib_sim_v5.launch.py
 """
 import os
@@ -36,8 +36,8 @@ def generate_launch_description():
         "config", "controllers_v5.yaml"
     )
 
-    # robot_state_publisher — publiziert URDF auf /robot_description Topic
-    # (Jazzy: controller_manager subscribed Topic statt Parameter zu lesen)
+    # robot_state_publisher — publishes the URDF on the /robot_description topic
+    # (Jazzy: controller_manager subscribes to the topic instead of reading a parameter)
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -63,7 +63,7 @@ def generate_launch_description():
         arguments=["joint_state_broadcaster"],
     )
 
-    # JointTrajectoryController spawnen — erst nach JointStateBroadcaster
+    # spawn the JointTrajectoryController — only after the JointStateBroadcaster
     joint_trajectory_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",

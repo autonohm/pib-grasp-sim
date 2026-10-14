@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Keine automatischen Commits — Leon schaut erst drüber (docs/conventions.md)
+- Keine automatischen Commits — der Autor schaut erst drüber (docs/conventions.md)
 - Kein `time.sleep()` in Isaac-Sim-Code → `await app.next_update_async()` (CLAUDE.md)
 - DOF-Namen nie erfinden → immer aus `config/pib_hand_config.py` (CLAUDE.md)
 - Kein Test-Framework auf diesem Branch — Verifikationsskripte sind eigenständig lauffähig, kein pytest
@@ -176,7 +176,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ### Task 3: Testimport in separater Stage (Go/No-Go-Checkpoint)
 
-**Läuft komplett in Isaac Sim bei Leon** — kein Zugriff von hier aus möglich. Vor jeder Änderung an der bestehenden `pib_upperbody.usd`.
+**Läuft komplett in Isaac Sim beim Autor** — kein Zugriff von hier aus möglich. Vor jeder Änderung an der bestehenden `pib_upperbody.usd`.
 
 **Files:**
 - Isaac Sim: neue, leere Stage (nicht `pib_upperbody.usd`)
@@ -224,7 +224,7 @@ Play drücken, 4 Gelenke visuell gegen die Kommentare oben prüfen.
 
 ### Task 4: Bestehende Szene inventarisieren + Roboter-Prim ersetzen
 
-**Nur bei Go aus Task 3.** Läuft in Isaac Sim bei Leon.
+**Nur bei Go aus Task 3.** Läuft in Isaac Sim beim Autor.
 
 **Files:**
 - Isaac Sim: `isaac_sim/usd/pib_upperbody.usd`
@@ -245,7 +245,7 @@ Play drücken, 4 Gelenke visuell gegen die Kommentare oben prüfen.
 
 ### Task 5: Action Graph neu verkabeln
 
-**Nur nach Task 4.** Läuft in Isaac Sim bei Leon.
+**Nur nach Task 4.** Läuft in Isaac Sim beim Autor.
 
 **Files:**
 - Isaac Sim: Action Graph in `isaac_sim/usd/pib_upperbody.usd` (Window → Graph Editors → Action Graph)
@@ -475,7 +475,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ### Task 8: 44-DOF-Sweep ausführen (Verifikation)
 
-**Läuft komplett bei Leon in Isaac Sim.** Pflicht, kein Nice-to-have — die 44 Gelenke sind nicht alle gleich orientiert.
+**Läuft komplett beim Autor in Isaac Sim.** Pflicht, kein Nice-to-have — die 44 Gelenke sind nicht alle gleich orientiert.
 
 - [ ] **Step 1: `isaac_sim/tools/sweep_joints.py` im Script Editor ausführen**, bei jedem der 44 Ausgaben visuell bestätigen: positiver Zielwert = Flexion/Heben/Vorne (bzw. bei den 4 markierten Referenz-DOFs die notierte erwartete Bedeutung).
 

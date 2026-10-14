@@ -14,7 +14,7 @@ aenderung: 'Objektvielfalt wie Dexsuite (MultiAssetSpawnerCfg), Task HeavyMulti-
   Bounding Box (Oberfläche 3,5 cm vor der Handfläche), Drehung ±15° für alle. Notwendig dazu (sonst ~1/3
   der Starts mit Überlappung, tools/check_multi.py): Startbeugung der Finger 0–4° statt 0–15°, Handgelenk
   −3–0° statt −10–0°; Daumen unverändert. Belohnung unverändert (inkl. des Annäherungsfehlers, wie EXP-006).
-  Szenenprüfung statt Fenstertest (Leon remote): isaac_sim/tools/_check_multi.txt + Bilder.'
+  Szenenprüfung statt Fenstertest (remote): isaac_sim/tools/_check_multi.txt + Bilder.'
 bedingungen:
 - name: zylinder_seitlich
   objekt: Zylinder Ø 6 cm (±10 %), 15 cm, 0,05–0,2 kg (Benchmark)
@@ -61,7 +61,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: false              # ersetzt durch Szenenprüfung tools/check_multi.py (Leon remote)
+fenstertest: false              # ersetzt durch Szenenprüfung tools/check_multi.py (remote)
 
 # --- automatisch (experiments.py run) ---
 commit: ff7c673+lokal

@@ -1,9 +1,9 @@
 # Plan: Griff von oben (Stufe 4b)
 
-Stand 2026-10-10 abends, Entwurf (Claude, während Leon unterwegs war). Szene gebaut und geprüft (Schritte 1–3 unten);
+Stand 2026-10-10 abends, Entwurf (Claude, während der Autor unterwegs war). Szene gebaut und geprüft (Schritte 1–3 unten);
 noch keine Regel-Baseline nach ADR-020 und kein Training.
-Entscheidungen, die Leon treffen muss, stehen am Ende unter „Offene Fragen“. Einordnung: ADR-018 (ein Spezialist je
-Greifart), `docs/current-sprint.md` → Stufe 4b und Punkt 5e.
+Entscheidungen, die der Autor treffen muss, stehen am Ende unter „Offene Fragen“. Einordnung: ADR-018 (ein Spezialist je
+Greifart), `docs/protokoll/current-sprint.md` → Stufe 4b und Punkt 5e.
 
 ## Ziel
 
@@ -127,7 +127,7 @@ Kategorie „von oben“ nach ADR-018: rund, klein oder flach (seitlich braucht 
 6. **EXP-024 Spezialist „von oben“**: bestes seitliches Rezept, 5 Seeds, 300 Iterationen, eigenes Benchmark. Kurztraining
    vorab (Curriculum-Pfade gibt es nicht, Kurztest genügt).
 
-Schritte 1–3 sind erledigt (headless, Leon war unterwegs — im Fenster noch einmal ansehen), Schritt 6 braucht etwa 2 h
+Schritte 1–3 sind erledigt (headless, der Autor war unterwegs — im Fenster noch einmal ansehen), Schritt 6 braucht etwa 2 h
 Training plus Bewertung.
 
 ### Ergebnis Schritt 3 und Bewertungspfad (2026-10-10)
@@ -144,18 +144,18 @@ Training plus Bewertung.
 
 ## Stand 2026-10-11: gekippte Hand und Suche nach der Startpose
 
-- Leon (Fenstertest): waagrecht stößt der eingedrehte Daumen an den Tisch, die Handfläche berührt die Kugel nie → Hand so
+- Der Autor (Fenstertest): waagrecht stößt der eingedrehte Daumen an den Tisch, die Handfläche berührt die Kugel nie → Hand so
   kippen, dass bei Rotator 90° alle Fingerspitzen gleich hoch stehen: 36,5° um x, 4° um y (`tools/probe_neigung_oben.py`).
   Höhe je Objekt (`mdp.tip_height_for_object`). Machbarkeit damit schlecht (3–5/24): die gekippten Finger tauchen beim
   Schließen bis 30 mm unter ihre Startebene und streifen den Tisch; beim Start sitzt das Mittelfinger-Grundglied teils auf
   der Kugel (Platzprofil ohne den Objektversatz ±10 mm). Der Schließweg war bei der Starthöhe nicht berücksichtigt.
 - Daher Suche wie Greifplaner (GraspIt!, DexGraspNet): `tools/suche_startpose_oben.py` — je Umgebung eine Pose aus
   Kippung × Rollen × Rotator (60/75/90°) × Höhe × Versatz, Regel schließt, gemessen werden Halten, Start- und Tischkontakt;
-  Auswertung über alle Objekte `tools/auswertung_startpose_oben.py` → `docs/startpose-oben/ergebnis.md` (Nachtlauf
+  Auswertung über alle Objekte `tools/auswertung_startpose_oben.py` → `docs/protokoll/startpose-oben/ergebnis.md` (Nachtlauf
   2026-10-11). Erster Lauf Kugel Ø 7: beste Posen wenig gekippt (0–10°), Rotator 60°, tiefste Spitze 10–20 mm über dem Tisch.
   `env_cfg_oben.py` steht noch auf der gekippten Pose (36,5°) — umstellen nach Durchsicht der Suche.
 
-## Ergebnis der Suche (Nachtlauf 2026-10-11, `docs/startpose-oben/ergebnis.md`)
+## Ergebnis der Suche (Nachtlauf 2026-10-11, `docs/protokoll/startpose-oben/ergebnis.md`)
 
 Raster: Kippung {0, 10, 20, 30, 36,5, 45}° × Rollen {0, 4, 8}° × Rotator {60, 75, 90}° × Höhe der tiefsten Spitze {10, 20, 30,
 45, 60, 80} mm × Versatz {−20, 0, +20} mm, je 5 Wiederholungen, 6 Objekte (4860 Umgebungen je Objekt, ~1 min).
@@ -177,9 +177,9 @@ Zum Vergleich: waagrecht 35 mm (bis 2026-10-10) Kugel Ø 7 14–19/24, Kugel Ø 
 Die Handfläche berührt die Objekte weiterhin nie (Präzisionsgriff). Höhe grob linear ≈ 0,73 · Objekthöhe − 27 mm
 (≥ 10 mm). **Vorschlag**: `env_cfg_oben.py` auf diese Pose umstellen (HAND_ROT aus 20°/0°, Rotator-Start 75° fest, Höhe je
 Objekt aus der Tabelle bzw. der Näherung), danach `analyse_reset.py`, Regel-Baseline (ADR-020) und Spezialist (EXP-0xx) —
-nach Leons Durchsicht.
+nach Durchsicht.
 
-## Offene Fragen an Leon
+## Offene Fragen an den Autor
 
 1. **Handpose**: Unterarm waagrecht und Handfläche unten (Vorschlag, wie UniDexGrasp) oder gleich geneigt? Was kann der
    pib-Arm real anfahren (IK-Team)?

@@ -1,44 +1,44 @@
 """
-build_fingertip_force_graph_v5.py — bündelt die 10 Fingerspitzen-Kontaktkräfte von pib v5 auf
-EIN zeitgestempeltes Topic, nur native Nodes (ADR-008-Nachtrag):
+build_fingertip_force_graph_v5.py — bundles the 10 fingertip contact forces of pib v5 into
+ONE time-stamped topic, native nodes only (ADR-008 addendum):
 
-  ReadContact_<finger> ×10   isaacsim.sensors.physics.IsaacReadContactSensor (vorhanden, bleiben)
+  ReadContact_<finger> ×10   isaacsim.sensors.physics.IsaacReadContactSensor (existing, kept)
   FingertipForceArray        omni.graph.nodes.ConstructArray (arraySize 10, arrayType auto → float[])
-      input0..input9 ← Reader.outputs:value   (Kraft in N, float)
-  FingertipForceToDouble     omni.graph.nodes.ToDouble  (float[] → double[], JointState erwartet double)
+      input0..input9 ← Reader.outputs:value   (force in N, float)
+  FingertipForceToDouble     omni.graph.nodes.ToDouble  (float[] → double[], JointState expects double)
   FingertipForceTime         isaacsim.core.nodes.IsaacTimeSplitter
       time ← ReadSimTime.outputs:simulationTime
   PublisherFingertipForces   isaacsim.ros2.bridge.ROS2Publisher, sensor_msgs/JointState
-      execIn ← on_physics_step, name = 10 Fingernamen, effort ← FingertipForceToDouble.converted,
-      header.stamp ← FingertipForceTime (Simulationszeit)
+      execIn ← on_physics_step, name = 10 finger names, effort ← FingertipForceToDouble.converted,
+      header.stamp ← FingertipForceTime (simulation time)
       topic = /pib/fingertip_forces
 
-Verdrahtung des Publishers und arrayType werden DIREKT IN DIE USD geschrieben: über
-og.Controller gesetzte Werte/Verbindungen landen nur im laufenden Graph, nicht in der Datei —
-beim nächsten Neuaufbau aus der USD (Datei öffnen, Knoten umbenennen) verwirft der Publisher
-seine dynamischen Eingänge ("remove dynamic attributes") und sendet leere Nachrichten.
-Stehen sie in der USD, verwendet er sie beim Laden wieder ("reuse"). Nach dem Lauf deshalb:
-speichern UND Stage neu öffnen.
+The publisher's wiring and arrayType are written DIRECTLY INTO THE USD: values/connections set via
+og.Controller only end up in the running graph, not in the file —
+on the next rebuild from the USD (opening the file, renaming nodes) the publisher discards
+its dynamic inputs ("remove dynamic attributes") and sends empty messages.
+If they are in the USD, it reuses them on load ("reuse"). So after running:
+save AND reopen the stage.
 
-ConstructArray wandelt float NICHT nach double (Log: "Mismatched array element type ...
-expected 'double', got 'float'"), deshalb der ToDouble-Knoten. Existiert der Graph schon,
-repariert das Skript nur die Verdrahtung (idempotent).
+ConstructArray does NOT convert float to double (log: "Mismatched array element type ...
+expected 'double', got 'float'"), hence the ToDouble node. If the graph already exists,
+the script only repairs the wiring (idempotent).
 
-Ersetzt die Einzel-Publisher (PublishContact_<finger>, PublisherContactForces) und den alten
-index_right-Reader (isaac_read_contact_sensor_node) — die werden gelöscht. Fehlende
-ReadContact_<finger> werden angelegt.
+Replaces the single publishers (PublishContact_<finger>, PublisherContactForces) and the old
+index_right reader (isaac_read_contact_sensor_node) — these are deleted. Missing
+ReadContact_<finger> nodes are created.
 
-Danach KEINE Knoten im Stage-Tree umbenennen/verschieben und keinen Compound bilden, ohne
-vorher gespeichert und neu geöffnet zu haben: beides arbeitet auf dem laufenden Graph, der vom
-USD-Stand abweichen kann — so entstand am 2026-10-03 ein Stand, der bei Play abstürzt.
+Afterwards do NOT rename/move nodes in the stage tree and do not create a compound without
+having saved and reopened first: both operate on the running graph, which can differ from
+the USD state — that is how a state that crashes on Play came about on 2026-10-03.
 
-Reader und Publisher hängen parallel am Trigger: der Publisher kann den Wert des vorigen
-Physikschritts senden (1 Schritt Verzögerung) — bewusst, eine execOut-Kette würde abreißen,
-weil execOut laut Node-Doku nur feuert, wenn der Sensor Daten hat.
+Readers and publisher hang in parallel on the trigger: the publisher may send the value of the previous
+physics step (1 step of delay) — deliberately, an execOut chain would break,
+because according to the node docs execOut only fires when the sensor has data.
 
-Im Script Editor ausführen, bei geöffneter pib_upperbody_v5.usd, Simulation GESTOPPT.
-Danach Stage SPEICHERN und NEU ÖFFNEN, start.py, Play, `ros2 topic echo /pib/fingertip_forces`.
-Ausgabe (jeder Schritt OK/FEHLER + Attributliste des Publishers) nach
+Run in the Script Editor with pib_upperbody_v5.usd open and the simulation STOPPED.
+Then SAVE and REOPEN the stage, start.py, Play, `ros2 topic echo /pib/fingertip_forces`.
+Output (every step OK/FEHLER + attribute list of the publisher) to
 isaac_sim/tools/_fingertip_force_graph_build.txt (gitignored).
 """
 import io
@@ -63,7 +63,7 @@ TIME = "FingertipForceTime"
 PUB = "PublisherFingertipForces"
 TOPIC = "/pib/fingertip_forces"
 
-# Reihenfolge = Reihenfolge in JointState.name/effort
+# order = order in JointState.name/effort
 FINGERTIPS = {
     "thumb_left": "urdf_thumb_tip",
     "index_left": "urdf_finger_tip",
@@ -76,9 +76,9 @@ FINGERTIPS = {
     "ring_right": "urdf_finger_tip_7",
     "pinky_right": "urdf_finger_tip_8",
 }
-# Altlasten aus dem v4-Graph-Kopie / den Einzel-Topics — werden gelöscht. Der alte index_right-
-# Reader zeigte im committeten Stand mit csPrim auf den Roboter-Wrapper (falsch), daher kein
-# Wiederverwenden mehr: alle 10 Reader heißen einheitlich ReadContact_<finger>.
+# Leftovers from the copied v4 graph / the single topics — they are deleted. In the committed state the old index_right
+# reader pointed with csPrim at the robot wrapper (wrong), so it is no longer
+# reused: all 10 readers are uniformly named ReadContact_<finger>.
 LEGACY_READERS = {"index_right": "isaac_read_contact_sensor_node"}
 OLD_PUBLISHERS = ["PublisherContactForces"] + [f"PublishContact_{f}" for f in FINGERTIPS]
 OLD_NODES = OLD_PUBLISHERS + list(LEGACY_READERS.values())
@@ -144,8 +144,8 @@ def _usd_attr(prim, name: str, vtype):
 
 
 def _wire_output() -> None:
-    """Array (auto) → ToDouble → effort, Reader → Array, Zeitstempel, Namen — direkt in der USD.
-    Idempotent (Neubau und Reparatur). Wirkt erst nach Speichern + Neu-Öffnen der Stage."""
+    """Array (auto) → ToDouble → effort, reader → array, time stamp, names — directly in the USD.
+    Idempotent (rebuild and repair). Takes effect only after saving + reopening the stage."""
     keys = og.Controller.Keys
     if not _exists(TO_DOUBLE):
         _step("ToDouble anlegen", lambda: og.Controller.edit(GRAPH, {
@@ -161,9 +161,9 @@ def _wire_output() -> None:
               .SetConnections([Sdf.Path(f"{GRAPH}/{reader}.outputs:value")]))
     _step("ToDouble.value ← array", lambda: conv.GetAttribute("inputs:value")
           .SetConnections([Sdf.Path(f"{GRAPH}/{ARRAY}.outputs:array")]))
-    # Alle Felder von sensor_msgs/JointState als dynamische Eingänge (Namen/Typen laut Log von
-    # OgnROS2Publisher "create dynamic attributes") — vollständig, damit der Publisher sie
-    # beim Laden als passend erkennt und wiederverwendet
+    # All fields of sensor_msgs/JointState as dynamic inputs (names/types according to the log of
+    # OgnROS2Publisher "create dynamic attributes") — complete, so that the publisher recognises them
+    # as matching on load and reuses them
     fields = {
         "inputs:header:stamp:sec": Sdf.ValueTypeNames.Int,
         "inputs:header:stamp:nanosec": Sdf.ValueTypeNames.UInt,
@@ -188,7 +188,7 @@ def _wire_output() -> None:
 
 
 def _diagnose() -> None:
-    """Liest aus der USD — das ist der Stand, der gespeichert und beim Öffnen geladen wird."""
+    """Reads from the USD — that is the state that is saved and loaded on opening."""
     emit("\nDiagnose (USD):")
     for node in (ARRAY, TO_DOUBLE, PUB):
         prim = stage.GetPrimAtPath(f"{GRAPH}/{node}")
@@ -225,8 +225,8 @@ def main() -> None:
     emit("1. Altlasten entfernen (Einzel-Publisher, alter index_right-Reader)")
     old = [n for n in OLD_NODES if _exists(n)]
     if old:
-        # Knoten-Objekte statt Pfad-Strings: edit(GRAPH, ...) stellt Strings den Graph-Pfad
-        # voran ("/Graph/X//Graph/X/Node" → nicht gefunden)
+        # node objects instead of path strings: edit(GRAPH, ...) prefixes strings with the graph path
+        # ("/Graph/X//Graph/X/Node" → not found)
         _step(f"{len(old)} Knoten löschen", lambda: og.Controller.edit(
             GRAPH, {keys.DELETE_NODES: [og.Controller.node(f"{GRAPH}/{n}") for n in old]}))
     else:
@@ -262,7 +262,7 @@ def main() -> None:
                           (f"{PUB}.inputs:messageSubfolder", "msg"),
                           (f"{PUB}.inputs:messageName", "JointState"),
                           (f"{PUB}.inputs:topicName", TOPIC)],
-        # Bestehende Knoten mit vollem Pfad (relative Namen nur für neu angelegte)
+        # existing nodes with full path (relative names only for newly created ones)
         keys.CONNECT: [(TRIGGER, f"{PUB}.inputs:execIn"),
                        (CONTEXT, f"{PUB}.inputs:context"),
                        (SIM_TIME, f"{TIME}.inputs:time")],

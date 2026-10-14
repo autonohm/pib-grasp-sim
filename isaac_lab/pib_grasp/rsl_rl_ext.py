@@ -1,17 +1,17 @@
 """
-rsl_rl_ext.py — `bounds_loss` für rsl_rl (EXP-027, „Aktionsraum wie Dexsuite“; docs/pruefung-aktionsweg.md Nr. 3).
+rsl_rl_ext.py — `bounds_loss` for rsl_rl (EXP-027, "action space like Dexsuite"; docs/protokoll/pruefung-aktionsweg.md no. 3).
 
-Dexsuite (rl_games-Konfiguration) hält den Mittelwert der Policy mit `bounds_loss` im sinnvollen Bereich statt die Aktion
-zur Laufzeit abzuschneiden (`clip_actions: False`, `bounds_loss_coef: 1e-4`, weiche Grenze 1,1):
-    L_bounds = coef · mean_Batch Σ_j [ max(μ_j − 1,1; 0)² + min(μ_j + 1,1; 0)² ]
-rsl_rl kennt den Term nicht. Statt PPO.update zu kopieren, steckt er in der Entropie, die PPO ohnehin in den Verlust nimmt
-(loss = … − entropy_coef · mean(entropy)): entropy' = entropy − (coef / entropy_coef) · Σ_j penalty_j ergibt genau
-loss' = loss + coef · mean(Σ_j penalty_j). Nebenwirkung: die geloggte Entropie (Policy/mean_entropy) enthält den Term.
-Zur Laufzeit greift nichts ein; die Firmware begrenzt nur zur Sicherheit.
+Dexsuite (rl_games configuration) keeps the policy mean within a sensible range with `bounds_loss` instead of cutting
+off the action at runtime (`clip_actions: False`, `bounds_loss_coef: 1e-4`, soft bound 1.1):
+    L_bounds = coef · mean_batch Σ_j [ max(μ_j − 1.1; 0)² + min(μ_j + 1.1; 0)² ]
+rsl_rl does not have this term. Instead of copying PPO.update, it is put into the entropy, which PPO adds to the loss anyway
+(loss = … − entropy_coef · mean(entropy)): entropy' = entropy − (coef / entropy_coef) · Σ_j penalty_j gives exactly
+loss' = loss + coef · mean(Σ_j penalty_j). Side effect: the logged entropy (Policy/mean_entropy) contains the term.
+Nothing intervenes at runtime; the firmware clips only for safety.
 
-Einbinden: die Agenten-Konfiguration (agents/rsl_rl_ppo_cfg.py → PibGraspPPORunnerCfg_Bounds) importiert dieses Modul
-nach dem App-Start; der Import macht die Klasse für rsl_rl unter ihrem Namen auffindbar (der Runner löst `class_name` per
-eval() im Modul rsl_rl.runners.on_policy_runner auf). Kein Isaac-Lab-Import hier (pxr gibt es erst nach dem App-Start).
+Usage: the agent configuration (agents/rsl_rl_ppo_cfg.py → PibGraspPPORunnerCfg_Bounds) imports this module
+after the app has started; the import makes the class findable for rsl_rl by its name (the runner resolves `class_name` via
+eval() in the module rsl_rl.runners.on_policy_runner). No Isaac Lab import here (pxr only exists after the app start).
 """
 from __future__ import annotations
 
@@ -20,14 +20,14 @@ from rsl_rl.modules import ActorCritic
 
 
 class ActorCriticBounds(ActorCritic):
-    """ActorCritic mit bounds_loss wie rl_games (siehe Modul-Docstring)."""
+    """ActorCritic with bounds_loss like rl_games (see module docstring)."""
 
     def __init__(self, *args, bounds_loss_coef: float = 1e-4, soft_bound: float = 1.1, entropy_coef: float = 0.005,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.bounds_loss_coef = bounds_loss_coef
         self.soft_bound = soft_bound
-        self.bounds_entropy_coef = entropy_coef            # muss algorithm.entropy_coef entsprechen
+        self.bounds_entropy_coef = entropy_coef            # must match algorithm.entropy_coef
 
     def bounds_penalty(self) -> torch.Tensor:
         mu = self.action_mean
@@ -40,27 +40,27 @@ class ActorCriticBounds(ActorCritic):
 
 
 class ActorCriticCaps(ActorCriticBounds):
-    """bounds_loss plus CAPS (Mysore et al., ICRA 2021, *Regularizing Action Policies for Smooth Control*; Nachtlauf
-    2026-10-13, EXP-034/036): Zusatzverlust auf den Mittelwert der Policy — den, den die Bewertung und der Chip ausführen —
-    statt einer Strafe auf die verrauschte Aktion (ADR-022, Befund 2):
-        L_T = D(μ(s_t), μ(s_{t+1}))         aufeinanderfolgende Zustände desselben Rollouts, nicht über ein Episodenende
-        L_S = D(μ(s), μ(s̄)),  s̄ ~ N(s, σ)    σ je Eingang = erwartetes Messrauschen (wie die Störbedingung)
-        loss' = loss + λ_T·L_T + λ_S·L_S,     D = euklidischer Abstand (wie im Paper, nicht quadriert)
-    Wie bounds_loss über die Entropie in den PPO-Verlust (Modul-Docstring). L_S nutzt die Beobachtungen des Mini-Batches
-    (in act() gemerkt), L_T zufällige Zeitpaare aus dem ganzen Rollout — dafür setzt der Hook um PPO.update (register())
-    den Rollout-Speicher. Geloggt (Loss/…): caps_temporal, caps_spatial (Abstände) und caps_grad_share (Anteil des
-    CAPS-Gradienten am Gradienten des Actors, erster Mini-Batch je Update) — danach sind λ_T/λ_S gewählt."""
+    """bounds_loss plus CAPS (Mysore et al., ICRA 2021, *Regularizing Action Policies for Smooth Control*; night run
+    2026-10-13, EXP-034/036): an extra loss on the policy mean — the one the evaluation and the chip execute —
+    instead of a penalty on the noisy action (ADR-022, finding 2):
+        L_T = D(μ(s_t), μ(s_{t+1}))         consecutive states of the same rollout, not across an episode end
+        L_S = D(μ(s), μ(s̄)),  s̄ ~ N(s, σ)    σ per input = expected measurement noise (like the perturbed condition)
+        loss' = loss + λ_T·L_T + λ_S·L_S,     D = Euclidean distance (as in the paper, not squared)
+    Like bounds_loss, added to the PPO loss via the entropy (module docstring). L_S uses the observations of the mini-batch
+    (remembered in act()), L_T random time pairs from the whole rollout — for that the hook around PPO.update (register())
+    sets the rollout storage. Logged (Loss/…): caps_temporal, caps_spatial (distances) and caps_grad_share (share of the
+    CAPS gradient in the actor's gradient, first mini-batch per update) — λ_T/λ_S were chosen from these."""
 
     def __init__(self, *args, caps_lambda_t: float = 0.1, caps_lambda_s: float = 0.1, caps_obs_sigma=None,
                  caps_pairs: int = 4096, **kwargs):
         super().__init__(*args, **kwargs)
         self.caps_lambda_t = caps_lambda_t
         self.caps_lambda_s = caps_lambda_s
-        # σ je Eingang als Abschnitte [(Anzahl, σ), …] in der Reihenfolge des Beobachtungsvektors
+        # σ per input as segments [(count, σ), …] in the order of the observation vector
         self.caps_obs_sigma = [tuple(x) for x in (caps_obs_sigma or [])]
         self.caps_pairs = caps_pairs
-        self._caps_obs = None              # Actor-Beobachtung (roh) des aktuellen Mini-Batches
-        self._caps_seq = None              # (Actor-Beobachtungen [T, N, D] roh, gültige Paare [T-1, N])
+        self._caps_obs = None              # actor observation (raw) of the current mini-batch
+        self._caps_seq = None              # (actor observations [T, N, D] raw, valid pairs [T-1, N])
         self._caps_log = None
 
     def _sigma_vector(self, dim: int, device) -> torch.Tensor:
@@ -74,14 +74,14 @@ class ActorCriticCaps(ActorCriticBounds):
         return out[..., 0, :] if self.state_dependent_std else out
 
     def act(self, obs, **kwargs):
-        if torch.is_grad_enabled():        # nur im Update (Rollout läuft unter inference_mode)
+        if torch.is_grad_enabled():        # only in the update (the rollout runs under inference_mode)
             self._caps_obs = self.get_actor_obs(obs)
         return super().act(obs, **kwargs)
 
     def caps_begin(self, storage):
         with torch.no_grad():
             seq = self.get_actor_obs(storage.observations)                       # [T, N, D]
-            valid = storage.dones[:-1, :, 0] == 0                                 # Paar (t, t+1) im selben Episodenlauf
+            valid = storage.dones[:-1, :, 0] == 0                                 # pair (t, t+1) within the same episode
         self._caps_seq = (seq, valid.nonzero())
         self._caps_log = {"caps_temporal": 0.0, "caps_spatial": 0.0, "n": 0, "caps_grad_share": None}
 
@@ -125,8 +125,8 @@ class ActorCriticCaps(ActorCriticBounds):
 
 
 def _wrap_ppo_update():
-    """PPO.update so umhüllen, dass ActorCriticCaps den Rollout-Speicher sieht (zeitlicher Term) und der Anteil des
-    CAPS-Gradienten am gesamten Actor-Gradienten (vor dem Clipping, erster Mini-Batch) geloggt wird."""
+    """Wrap PPO.update so that ActorCriticCaps sees the rollout storage (temporal term) and the share of the
+    CAPS gradient in the total actor gradient (before clipping, first mini-batch) is logged."""
     from rsl_rl.algorithms import PPO
     if getattr(PPO.update, "_caps_wrapped", False):
         return
@@ -159,7 +159,7 @@ def _wrap_ppo_update():
 
 
 def register():
-    """Klassen für den rsl_rl-Runner auffindbar machen (eval(class_name) in rsl_rl.runners.on_policy_runner)."""
+    """Make the classes findable for the rsl_rl runner (eval(class_name) in rsl_rl.runners.on_policy_runner)."""
     import rsl_rl.runners.on_policy_runner as runner_module
     runner_module.ActorCriticBounds = ActorCriticBounds
     runner_module.ActorCriticCaps = ActorCriticCaps

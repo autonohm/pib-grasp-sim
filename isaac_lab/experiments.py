@@ -1,23 +1,23 @@
 """
-experiments.py — Experimente planen, ausführen, bewerten, vergleichen (experiments/README.md).
+experiments.py — plan, run, evaluate and compare experiments (experiments/README.md).
 
-Läuft mit System-Python (PyYAML, numpy), Isaac Lab nur als Unterprozess über isaaclab.sh —
-die conda-Umgebung env_isaaclab muss aktiv sein (isaaclab.sh nimmt deren Python).
+Runs with the system Python (PyYAML, numpy); Isaac Lab only as a subprocess via isaaclab.sh —
+the conda environment env_isaaclab must be active (isaaclab.sh uses its Python).
 
   /usr/bin/python3 isaac_lab/experiments.py new  --eltern EXP-001 --kurz name --titel "..."
   /usr/bin/python3 isaac_lab/experiments.py new  --eltern EXP-004 --kurz name --titel "..." --ohne-training
-  /usr/bin/python3 isaac_lab/experiments.py bench --envs 2048 4096      # Durchsatz → umgebungen: auto
-  /usr/bin/python3 isaac_lab/experiments.py run  EXP-001 [EXP-002 ...]  # Kurztest, Training, Bewertung, Bericht
-  /usr/bin/python3 isaac_lab/experiments.py eval EXP-000 [--neu]        # fehlende (--neu: alle) Bewertungen + Bericht
-  /usr/bin/python3 isaac_lab/experiments.py bericht EXP-000             # nur Bericht + Trainingsdiagramme neu
-  /usr/bin/python3 isaac_lab/experiments.py done                        # index.md neu erzeugen
-  /usr/bin/python3 isaac_lab/experiments.py medien [EXP-006] --videos --verlauf   # Videos + Episodenverlauf
+  /usr/bin/python3 isaac_lab/experiments.py bench --envs 2048 4096      # throughput → umgebungen: auto
+  /usr/bin/python3 isaac_lab/experiments.py run  EXP-001 [EXP-002 ...]  # smoke test, training, evaluation, report
+  /usr/bin/python3 isaac_lab/experiments.py eval EXP-000 [--neu]        # missing (--neu: all) evaluations + report
+  /usr/bin/python3 isaac_lab/experiments.py bericht EXP-000             # only rebuild report + training plots
+  /usr/bin/python3 isaac_lab/experiments.py done                        # regenerate index.md
+  /usr/bin/python3 isaac_lab/experiments.py medien [EXP-006] --videos --verlauf   # videos + episode time series
 
-run, eval und done enden mit der Sicherung nach Hugging Face (backup_policies.py --upload;
-abschalten mit --kein-backup).
+run, eval and done end with the backup to Hugging Face (backup_policies.py --upload;
+disable with --kein-backup).
 
-Isaac Labs train.py hängt nach dem Ende in simulation_app.close() — sobald der letzte
-Checkpoint geschrieben ist, wird der Prozess nach 60 s beendet.
+Isaac Lab's train.py hangs in simulation_app.close() after finishing — once the last
+checkpoint has been written, the process is terminated after 60 s.
 """
 import argparse
 import datetime as dt
@@ -31,8 +31,8 @@ import sys
 import time
 from pathlib import Path
 
-# conda env_isaaclab setzt PYTHONPATH auf Isaac Sims Pakete (cp311) — nur für diesen
-# Steuerprozess (System-Python) ausblenden; Unterprozesse erben die Umgebung unverändert
+# conda env_isaaclab sets PYTHONPATH to Isaac Sim's packages (cp311) — hide them only for this
+# control process (system Python); subprocesses inherit the environment unchanged
 sys.path[:] = [p for p in sys.path if "isaac" not in p.lower()]
 
 import numpy as np  # noqa: E402
@@ -46,13 +46,13 @@ ISAACLAB = Path.home() / "IsaacLab" / "isaaclab.sh"
 BENCH = EXP_DIR / "_bench.json"
 SMOKE = {"iterationen": 3, "umgebungen": 256, "seed": 0}
 EVAL = {"umgebungen": 256, "episoden": 1000, "video_umgebungen": 16, "video_schritte": 300,
-        "beste_video_schritte": 3 * 270}     # beste Videos: 3 Episoden (je 4,5 s × 60 Hz), ~14 s
+        "beste_video_schritte": 3 * 270}     # best videos: 3 episodes (4.5 s × 60 Hz each), ~14 s
 BOOT = 2000
-# Aktuelles Bewertungsprotokoll (eval_policy.PROTOCOL). eval-v2 (2026-10-09, ADR-021) = eval-v1 mit Reset ohne
-# Überlappung/Fall; eval-v1 ist mit dem heutigen Code nicht mehr reproduzierbar → bewertet wird nur unter PROTOKOLL,
-# ältere Experimente bleiben mit ihren Zahlen als Historie (umstellen: Experiment auf PROTOKOLL heben).
+# Current evaluation protocol (eval_policy.PROTOCOL). eval-v2 (2026-10-09, ADR-021) = eval-v1 with a reset without
+# overlap/fall; eval-v1 cannot be reproduced with today's code → only PROTOKOLL is evaluated, older experiments keep
+# their numbers as history (umstellen: lift an experiment to PROTOKOLL).
 PROTOKOLL = "eval-v2"
-# Leitplanken: (Schlüssel, Bezeichnung, Toleranz, Art) — Art "abs" = Einheit der Größe, "rel" = Anteil
+# Guardrails: (key, label, tolerance, kind) — kind "abs" = unit of the quantity, "rel" = fraction
 GUARDRAILS = [
     ("kipp_median_deg", "Kippwinkel Median [°]", 5.0, "abs"),
     ("unterarm_median_deg", "Unterarm Median [°]", 10.0, "abs"),
@@ -67,14 +67,14 @@ GUARDRAILS = [
 
 
 class _ParamsLoader(yaml.SafeLoader):
-    """SafeLoader, der zusätzlich Python-Tupel aus Isaac Labs env.yaml liest (sonst nichts Ausführbares)."""
+    """SafeLoader that additionally reads Python tuples from Isaac Lab's env.yaml (nothing executable otherwise)."""
 
 
 _ParamsLoader.add_constructor("tag:yaml.org,2002:python/tuple", lambda l, n: tuple(l.construct_sequence(n)))
 
 
 def _python_tag_as_text(loader, suffix, node):
-    """Übrige Python-Tags (slice, Klassen, Funktionen) nur als Text — nichts wird ausgeführt."""
+    """Other Python tags (slice, classes, functions) only as text — nothing is executed."""
     if isinstance(node, yaml.SequenceNode):
         return f"{suffix}{tuple(loader.construct_sequence(node, deep=True))}"
     if isinstance(node, yaml.MappingNode):
@@ -83,9 +83,9 @@ def _python_tag_as_text(loader, suffix, node):
 
 
 _ParamsLoader.add_multi_constructor("tag:yaml.org,2002:python/", _python_tag_as_text)
-# Schlüssel, die sich je Lauf ändern, ohne eine Änderung des Experiments zu sein
+# Keys that change per run without being a change of the experiment
 _DIFF_IGNORE = ("seed", "run_name", "log_dir", "load_run", "load_checkpoint", "resume")
-# reine Optik (Kamera, Farben) — keine Änderung des Experiments
+# pure visuals (camera, colours) — not a change of the experiment
 _DIFF_IGNORE_PARTS = ("viewer", "visual_material", "visual_material_path", "light", "sun")
 
 
@@ -107,7 +107,7 @@ def _flat(d, prefix=""):
 
 
 def config_diff(child: dict, parent: dict) -> list[str]:
-    """Alle Einstellungen, die sich zwischen zwei Läufen unterscheiden (agent.yaml + env.yaml)."""
+    """All settings that differ between two runs (agent.yaml + env.yaml)."""
     a, b = dict(_flat(child)), dict(_flat(parent))
     out = []
     for k in sorted(set(a) | set(b)):
@@ -160,13 +160,13 @@ def exp_prefix(d: Path) -> str:
 
 
 def exp_file(d: Path, name: str, sub: str = "") -> Path:
-    """Datei im Experimentordner mit Präfix EXP-NNN_, damit Namen repo-weit eindeutig sind (Editor-Tabs, Suche):
-    exp_file(d, "results.json") → EXP-017_results.json; sub = Unterordner (diagramme, videos, beste_videos)."""
+    """File in the experiment folder with prefix EXP-NNN_, so names are unique across the repo (editor tabs, search):
+    exp_file(d, "results.json") → EXP-017_results.json; sub = subfolder (diagramme, videos, beste_videos)."""
     return d / sub / f"{exp_prefix(d)}_{name}"
 
 
 def report_file(d: Path) -> Path:
-    """Bericht eines Experiments: <ordner>/<ordner>.md (heißt wie der Ordner, mit Kurzname)."""
+    """Report of an experiment: <folder>/<folder>.md (named like the folder, with short name)."""
     return d / f"{d.name}.md"
 
 
@@ -176,12 +176,12 @@ def load(exp_id: str) -> tuple[Path, dict]:
 
 
 def save_fields(d: Path, **fields):
-    """Felder in experiment.yaml ersetzen, Kommentare/Reihenfolge erhalten (einfache Skalare/Listen)."""
+    """Replace fields in experiment.yaml while keeping comments/order (simple scalars/lists)."""
     p = exp_file(d, "experiment.yaml")
     text = p.read_text(encoding="utf-8")
     for key, value in fields.items():
         dumped = yaml.safe_dump({key: value}, allow_unicode=True, default_flow_style=False, sort_keys=False).rstrip()
-        # Feld endet an der nächsten Zeile, die weder eingerückt noch Listeneintrag ist
+        # A field ends at the next line that is neither indented nor a list item
         pattern = re.compile(rf"^{key}:.*?(?=^[^\s-]|\Z)", re.M | re.S)
         if pattern.search(text):
             text = pattern.sub(lambda _: dumped + "\n", text, count=1)
@@ -200,7 +200,7 @@ def cmd_new(a):
     d.mkdir()
     text = (EXP_DIR / "_vorlage.yaml").read_text(encoding="utf-8")
     exp_file(d, "experiment.yaml").write_text(text, encoding="utf-8")
-    if a.ohne_training:          # nur bewerten: Läufe der Eltern unter eigenen Bedingungen
+    if a.ohne_training:          # evaluation only: the parent's runs under our own conditions
         training, extra = None, {"laeufe_von": a.eltern, "fenstertest": True}
     else:
         training, extra = dict(parent["training"]), {}
@@ -215,7 +215,7 @@ def cmd_new(a):
     print(f"\nJetzt ausfüllen: {exp_file(d, 'experiment.yaml').relative_to(REPO)} → hypothese, aenderung, fenstertest")
 
 
-# ── Unterprozesse: Training mit Schutz gegen Hängen ──────────────────────────
+# ── Subprocesses: training with protection against hanging ──────────────────
 
 def check_env():
     if os.environ.get("CONDA_DEFAULT_ENV") != "env_isaaclab":
@@ -228,7 +228,7 @@ def train(run_name: str, task: str, envs: int, iters: int, seed: int, extra: lis
            "--max_iterations", str(iters), "--seed", str(seed), "--run_name", run_name, *extra]
     log(f"  Training {run_name}: {envs} Umgebungen, {iters} Iterationen, Seed {seed}")
     start, vram, run_dir, done_at = time.time(), 0, None, None
-    # Schutz gegen Hänger: 3× erwartete Dauer (~2,3 s/Iteration bei 1024 Umgebungen), mind. 30 min
+    # Hang protection: 3× the expected duration (~2.3 s/iteration at 1024 environments), at least 30 min
     limit_s = max(1800.0, 3 * 2.3 * iters * envs / 1024 + 300)
     with open(log_file, "w", encoding="utf-8") as out:
         proc = subprocess.Popen(cmd, cwd=REPO, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
@@ -284,12 +284,12 @@ def write_meta(run_dir: Path, exp_id: str, seed: int, train_info: dict, cmdline:
         subprocess.run(["tar", "czf", str(run_dir / "pib_hand_sim_untracked.tar.gz"), *untracked], cwd=REPO)
 
 
-DEFAULT_CONDITION = "zylinder_seitlich"      # Bewertung ohne Suffix (eval-v1.json), Objekt zylinder_d6
+DEFAULT_CONDITION = "zylinder_seitlich"      # evaluation without suffix (eval-v1.json), object zylinder_d6
 DEFAULT_OBJECT = "zylinder_d6"
 
 
 def stem(exp: dict, cond: dict) -> str:
-    """Dateiname der Bewertung je Bedingung (wie eval_policy.py)."""
+    """File name of the evaluation per condition (as in eval_policy.py)."""
     return exp["protokoll"] if cond["name"] == DEFAULT_CONDITION else f"{exp['protokoll']}_{cond['name']}"
 
 
@@ -307,8 +307,8 @@ def require_current(exp: dict) -> bool:
 
 
 def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = False, only: list | None = None) -> bool:
-    """Lauf unter allen Bedingungen bewerten. Vorhandene Bewertungen bleiben (neu=True: neu bewerten) —
-    Experimente ohne Training teilen sich die Läufe mit ihrer Quelle, deren Zahlen sollen stehen bleiben."""
+    """Evaluate a run under all conditions. Existing evaluations are kept (neu=True: re-evaluate) —
+    experiments without training share their runs with their source, whose numbers must stay."""
     if not require_current(exp):
         return False
     ok = True
@@ -316,7 +316,7 @@ def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = 
                                          [c["name"] for c in exp["bedingungen"]] else [])
     with open(log_file, "a", encoding="utf-8") as out:
         for cond in conds:
-            if only and cond["name"] not in only:          # eval --bedingung: nur diese (z. B. neue Kennzahl nachholen)
+            if only and cond["name"] not in only:          # eval --bedingung: only these (e.g. to add a new metric)
                 continue
             if neu or not (run_dir / f"{stem(exp, cond)}.json").exists():
                 evaluate_condition(run_dir, exp, cond, video, out)
@@ -325,13 +325,13 @@ def evaluate(run_dir: Path, exp: dict, video: bool, log_file: Path, neu: bool = 
 
 
 def clip_args(run_dir: Path) -> list[str]:
-    """--action_clip wie im Training (agent.yaml clip_actions, EXP-020 ff.) — sonst sähe die Bewertung ungeclippte
-    Ausgaben, die die Policy so nie geschickt hat."""
+    """--action_clip as in training (agent.yaml clip_actions, EXP-020 ff.) — otherwise the evaluation would see unclipped
+    outputs that the policy never sent."""
     params = load_params(run_dir)
     clip = (params.get("agent") or {}).get("clip_actions")
     servos = ((params.get("env") or {}).get("actions") or {}).get("servos") or {}
     alpha = servos.get("alpha")                                                                   # EXP-024 ff.
-    scale = servos.get("scale")             # einheitliche Skala (Aktionsraum wie Dexsuite, EXP-027 ff.); sonst Dict
+    scale = servos.get("scale")             # uniform scale (action space like Dexsuite, EXP-027 ff.); otherwise a dict
     load = (((params.get("env") or {}).get("observations") or {}).get("policy") or {}).get("servo_load")     # EXP-037
     return ((["--action_clip", str(clip)] if clip else []) + (["--action_filter", str(alpha)] if alpha else [])
             + (["--action_scale", str(scale)] if isinstance(scale, (int, float)) else [])
@@ -339,23 +339,23 @@ def clip_args(run_dir: Path) -> list[str]:
 
 
 def kipp_arg(cond: dict) -> str:
-    """--max_kipp_deg für eval_policy: Anforderung der Bedingung, -1 = keine (von oben)."""
+    """--max_kipp_deg for eval_policy: requirement of the condition, -1 = none (top grasp)."""
     v = cond["anforderung"].get("max_kipp_deg")
     return str(v if v is not None else -1)
 
 
 def stoerung_args(cond: dict) -> list[str]:
-    """--stoerung für eval_policy (Störbedingung des Leaderboards v3: ungenaue Vorgreifpose, Verzögerung, Rauschen)."""
+    """--stoerung for eval_policy (perturbed condition of leaderboard v3: inaccurate pre-grasp pose, delay, noise)."""
     return ["--stoerung"] if cond.get("stoerung") else []
 
 
 def bewegung_args(cond: dict) -> list[str]:
-    """--bewegung für eval_policy (Belastungstest „Arm bewegt sich“, mdp.apply_arm_motion)."""
+    """--bewegung for eval_policy (load test "arm moves", mdp.apply_arm_motion)."""
     return ["--bewegung", cond["bewegung"]] if cond.get("bewegung") else []
 
 
 def greifart_args(cond: dict) -> list[str]:
-    """--greifart für eval_policy (Bedingungen „von oben“ tragen greifart: oben; ohne Angabe seitlich)."""
+    """--greifart for eval_policy (top-grasp conditions carry greifart: oben; default seitlich)."""
     return ["--greifart", cond["greifart"]] if cond.get("greifart") else []
 
 
@@ -366,11 +366,11 @@ def rule_args(exp: dict) -> list[str]:
 
 def evaluate_condition(run_dir: Path, exp: dict, cond: dict, video: bool, out):
     req = cond["anforderung"].get("max_kipp_deg")
-    # Regel: immer der LETZTE Checkpoint, nie der beste nach Bewertung (sonst Auswahl-Verzerrung)
+    # Rule: always the LAST checkpoint, never the best one after evaluation (otherwise selection bias)
     ckpts = sorted(run_dir.glob("model_*.pt"), key=lambda p: int(p.stem.split("_")[1]))
     exported = run_dir / "exported" / "policy.pt"
-    # Export aktueller als der letzte Checkpoint → Export nehmen (z. B. EXP-000: Critic-Eingang
-    # hat sich seitdem geändert, der Checkpoint lädt nicht mehr, der Actor schon)
+    # Export newer than the last checkpoint → use the export (e.g. EXP-000: the critic input
+    # has changed since, the checkpoint no longer loads, the actor still does)
     if exp.get("regel"):
         src = rule_args(exp)
     elif exported.exists() and (not ckpts or exported.stat().st_mtime >= ckpts[-1].stat().st_mtime):
@@ -393,8 +393,8 @@ def evaluate_condition(run_dir: Path, exp: dict, cond: dict, video: bool, out):
 # ── Statistik ─────────────────────────────────────────────────────────────────
 
 def iqm(values) -> float:
-    """Interquartilsmittel (Agarwal et al. 2021, rliable): Mittel der mittleren 50 % — untere und obere
-    25 % verworfen, Randwerte anteilig gewichtet (wie scipy.stats.trim_mean mit 0,25)."""
+    """Interquartile mean (Agarwal et al. 2021, rliable): mean of the middle 50 % — lower and upper
+    25 % discarded, boundary values weighted proportionally (like scipy.stats.trim_mean with 0.25)."""
     v = np.sort(np.asarray(values, float))
     n = len(v)
     lo, hi = 0.25 * n, 0.75 * n
@@ -406,7 +406,7 @@ FAIL_BELOW = 0.5        # Seed gilt als Fehlschlag unter 50 % Aufgabenerfolg
 
 
 def boot_means(per_seed: list[np.ndarray], rng) -> np.ndarray:
-    """Zweistufiger Bootstrap: Seeds ziehen, darin Episoden ziehen → BOOT Mittelwerte."""
+    """Two-level bootstrap: resample seeds, within them episodes → BOOT means."""
     k = len(per_seed)
     out = np.empty(BOOT)
     for b in range(BOOT):
@@ -416,8 +416,8 @@ def boot_means(per_seed: list[np.ndarray], rng) -> np.ndarray:
 
 
 def boot_iqm(per_seed: list[np.ndarray], rng) -> np.ndarray:
-    """Zweistufiger Bootstrap des IQM über Seeds (wie rliable): Seeds ziehen, darin Episoden ziehen,
-    IQM der Seed-Mittel → BOOT Werte."""
+    """Two-level bootstrap of the IQM over seeds (like rliable): resample seeds, within them episodes,
+    IQM of the seed means → BOOT values."""
     k = len(per_seed)
     out = np.empty(BOOT)
     for b in range(BOOT):
@@ -435,11 +435,11 @@ def find_condition(exp: dict, name: str) -> dict | None:
 
 
 def aggregate(exp: dict, cond: dict, req="eigene") -> dict:
-    """Ergebnisse aller Seeds unter einer Bedingung; Anforderung (max. Kippwinkel) wird hier angewandt —
-    für den Vergleich mit den Eltern deren Rohdaten unter der Anforderung des Kindes (req=...)."""
+    """Results of all seeds under one condition; the requirement (max. tilt angle) is applied here —
+    for the comparison with the parents, their raw data under the child's requirement (req=...)."""
     req = requirement(cond) if req == "eigene" else req
     evals, seed_ids = [], []
-    for r in dict.fromkeys(exp.get("laeufe") or []):      # doppelte Einträge nur einmal zählen
+    for r in dict.fromkeys(exp.get("laeufe") or []):      # count duplicate entries only once
         p = REPO / r / f"{stem(exp, cond)}.json"
         if p.exists():
             evals.append(json.loads(p.read_text()))
@@ -453,10 +453,10 @@ def aggregate(exp: dict, cond: dict, req="eigene") -> dict:
            "seed_ids": seed_ids, "je_seed": [e["zusammenfassung"] for e in evals]}
     def success(e):
         held = np.array(e["gehalten_je_episode"], bool)
-        if "kipp_je_episode" not in e:          # ältere Bewertung: Anforderung schon angewandt
+        if "kipp_je_episode" not in e:          # older evaluation: requirement already applied
             return np.array(e["erfolg_je_episode"], float)
         ok = held & ((np.array(e["kipp_je_episode"]) <= req) if req is not None else True)
-        if "rutsch_je_episode" in e:            # Belastungstest: zusätzlich < 2 cm Rutschen ab Bewegungsbeginn
+        if "rutsch_je_episode" in e:            # load test: additionally < 2 cm slip after motion start
             ok = ok & np.array([r is None or r < 20.0 for r in e["rutsch_je_episode"]])
         return ok.astype(float)
 
@@ -497,8 +497,8 @@ def verdict(child: dict, parent: dict) -> dict:
     diff = child["aufgabenerfolg"]["_boot"] - parent["aufgabenerfolg"]["_boot"]
     ci = [float(np.percentile(diff, 2.5)), float(np.percentile(diff, 97.5))]
     violated = []
-    # Mit geglätteter Aktion (EXP-024 ff.) erreicht der rohe Netzausgang die Servos nicht — die Leitplanke Unruhe gilt dann
-    # nur für „Unruhe wirksam“ (Aktion an den Servos), die rohe Unruhe ist dort keine Aussage über die Bewegung
+    # With a smoothed action (EXP-024 ff.) the raw network output does not reach the servos — the jitter guardrail then
+    # applies only to "Unruhe wirksam" (action at the servos); raw jitter says nothing about the motion there
     filtered = bool((((child.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
     for key, label, tol, kind in GUARDRAILS:
         if filtered and key == "unruhe":
@@ -521,8 +521,8 @@ def verdict(child: dict, parent: dict) -> dict:
 
 
 def training_plots(d: Path, exp: dict, training: bool, conditions: bool) -> dict | None:
-    """Diagramme (plot_training.py über isaaclab.sh) → <experiment>/diagramme/: Trainingsverlauf der eigenen
-    Läufe und/oder Ergebnis je Bedingung (aus results.json); Fehler nur als Warnung."""
+    """Plots (plot_training.py via isaaclab.sh) → <experiment>/diagramme/: training curves of the own
+    runs and/or result per condition (from results.json); errors only as a warning."""
     runs = list(dict.fromkeys(exp.get("laeufe") or []))
     out = exp_file(d, "training.json", "diagramme")
     vstems = [(stem(exp, c).replace(exp["protokoll"], "verlauf-v1", 1), c["kurz"]) for c in benchmark(exp)]
@@ -584,8 +584,8 @@ def _pct(x):
 
 
 def condition_result(exp: dict, cond: dict, pexp: dict | None, first: dict | None) -> tuple[dict, dict, str]:
-    """Ergebnis einer Bedingung + Vergleichspartner: die Eltern unter derselben Bedingung (eigene Läufe
-    vorausgesetzt), sonst — bei Experimenten auf fremden Läufen — die Referenzbedingung (erste)."""
+    """Result of a condition + comparison partner: the parents under the same condition (requires own
+    runs), otherwise — for experiments on foreign runs — the reference condition (first one)."""
     res = aggregate(exp, cond)
     if not res:
         return {}, {}, ""
@@ -644,7 +644,7 @@ def _details(title: str, body: list[str]) -> list[str]:
 
 def head_lines(d: Path, exp: dict, pexp: dict | None, rec: dict, prec: dict | None, res: dict,
                parent_main: dict, own_training: bool) -> tuple[list[str], dict]:
-    """Kopf des Berichts (Auswertung v2): Leistung, Zuverlässigkeit, Leitplanken, Befund, Urteilsvorschlag."""
+    """Report header (evaluation v2): performance, reliability, guardrails, findings, verdict proposal."""
     pct = lambda x: "–" if x is None else f"{100 * x:.0f} %"  # noqa: E731
     ci = lambda v: f"[{100 * v[0]:.0f}–{100 * v[1]:.0f} %]"  # noqa: E731
     per_obj = " · ".join(f"{k} {pct(v)}" for k, v in zip(rec["kurz"], rec["leistung_je_objekt"]))
@@ -694,7 +694,7 @@ def head_lines(d: Path, exp: dict, pexp: dict | None, rec: dict, prec: dict | No
         fc = (res.get("fingernutzung") or {}).get("finger_mit_kontakt")
         fp = (parent_main.get("fingernutzung") or {}).get("finger_mit_kontakt")
         filtered = bool((((res.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
-        uk, ul = ("unruhe_wirksam", "Unruhe wirksam") if filtered else ("unruhe", "Unruhe")   # geglättet: an den Servos
+        uk, ul = ("unruhe_wirksam", "Unruhe wirksam") if filtered else ("unruhe", "Unruhe")   # smoothed: at the servos
         for label, c, q, f in (("Kippwinkel", lp.get("kipp_median_deg"), pp.get("kipp_median_deg"), "{:.0f}°"),
                                ("Finger am Objekt", fc, fp, "{:.1f}"), (ul, lp.get(uk), pp.get(uk), "{:.2f}")):
             if c is not None and q and abs(c - q) / abs(q) >= 0.25:
@@ -720,7 +720,7 @@ def report(exp_id: str):
         return
     res, ref, _ = results[0]
     own_training = exp.get("training") is not None or bool(exp.get("regel"))
-    same = pexp is not None and pexp.get("protokoll") == exp.get("protokoll")   # sonst kein Vergleich (ADR-021)
+    same = pexp is not None and pexp.get("protokoll") == exp.get("protokoll")   # otherwise no comparison (ADR-021)
     parent_main = aggregate(pexp, pexp["bedingungen"][0]) if same and own_training else {}
     pparams = load_params(REPO / pexp["laeufe"][0]) if pexp and own_training and pexp.get("laeufe") else {}
     res["konfig_unterschiede"] = config_diff(res["_params"], pparams) if pparams else []
@@ -730,18 +730,18 @@ def report(exp_id: str):
     out = _clean(res)
     if len(results) > 1:
         out["weitere_bedingungen"] = {r["bedingung"]: _clean(r) for r, _, _ in results[1:]}
-    # Trainingsdiagramme zuerst: training.json braucht failure_causes (head_lines) — sonst beim ersten Bericht falsch
+    # Training plots first: training.json needs failure_causes (head_lines) — otherwise wrong in the first report
     tr = training_plots(d, exp, training=exp.get("training") is not None, conditions=False)
     head, rez = head_lines(d, exp, pexp, rec, prec, res, parent_main, own_training) if rec else ([], None)
     if rec:
         out["rezept"] = rez
         out["benchmark"] = {r["bedingung"]: _clean(r) for r in rec["_res"]}
     exp_file(d, "results.json").write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
-    if rec and len(rec["bedingungen"]) > 1:                  # Diagramm je Bedingung aus der neuen results.json
+    if rec and len(rec["bedingungen"]) > 1:                  # plot per condition from the new results.json
         training_plots(d, exp, training=False, conditions=True)
 
     lines = [f"# {exp_id}: {exp.get('titel', '')}", ""]
-    for n in exp.get("nachtrag") or []:            # spätere Befunde, die die Schlüsse betreffen (von Hand im YAML)
+    for n in exp.get("nachtrag") or []:            # later findings that affect the conclusions (by hand in the YAML)
         lines += [f"> **Nachtrag {n.get('datum', '')}:** {n.get('text', '')}", ""]
     lines += head
     src = exp.get("laeufe_von") or exp.get("eltern")
@@ -863,7 +863,7 @@ def cmd_run(a):
         envs = t["umgebungen"]
         if envs == "auto":
             envs = json.loads(BENCH.read_text())["beste"] if BENCH.exists() else 1024
-        # Seeds mit vorhandenem Lauf bleiben (Nachtrag weiterer Seeds, z. B. 3 → 5)
+        # Seeds with an existing run are kept (adding seeds later, e.g. 3 → 5)
         runs = [r for r in dict.fromkeys(exp.get("laeufe") or []) if (REPO / r).exists()]
         done_seeds = {int(m.group(1)) for r in runs if (m := re.search(r"_s(\d+)$", r))}
         todo = [s for s in t["seeds"] if s not in done_seeds]
@@ -872,10 +872,10 @@ def cmd_run(a):
             continue
         log(f"== {exp_id}: {exp.get('titel')} ({envs} Umgebungen, {t['iterationen']} Iterationen, Seeds {todo}"
             + (f", vorhanden {sorted(done_seeds)}" if done_seeds else "") + ")")
-        # nur Code zählt (experiments/ ändert das Framework selbst während des Laufs)
+        # only code counts (experiments/ is changed by the framework itself during the run)
         commit = sh("git", "rev-parse", "--short", "HEAD") + (
             "+lokal" if sh("git", "status", "--porcelain", "--", "isaac_lab", "config", "isaac_sim") else "")
-        if runs:   # Nachtrag: Commit des Experiments bleibt, der neue steht in meta.json der Läufe
+        if runs:   # addendum: the experiment's commit stays, the new one is in the runs' meta.json
             save_fields(d, status="läuft", commit_nachtrag=commit)
         else:
             save_fields(d, status="läuft", commit=commit)
@@ -904,9 +904,9 @@ def cmd_run(a):
 
 
 def run_rule(d: Path, exp: dict):
-    """Regel-Baseline (kein RL): Parameterraster mit eigenem Bewertungs-Seed (2000, 256 Episoden je Benchmark-
-    Objekt) auswählen, dann die gewählte Einstellung nach PROTOKOLL (Seed 1000) bewerten — Auswahl und finale
-    Bewertung getrennt (Patterson et al. 2024)."""
+    """Rule baseline (no RL): pick the setting from a parameter grid with its own evaluation seed (2000, 256 episodes per
+    benchmark object), then evaluate the chosen setting under PROTOKOLL (seed 1000) — selection and final
+    evaluation kept separate (Patterson et al. 2024)."""
     r = exp["regel"]
     run_dir = REPO / "logs" / "regel" / exp["id"]
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -940,8 +940,8 @@ def run_rule(d: Path, exp: dict):
 
 
 def run_without_training(d: Path, exp: dict):
-    """Experiment ohne eigenes Training (z. B. Transfer an andere Objekte): bewertet die Läufe von
-    `laeufe_von` unter den eigenen Bedingungen; vorhandene Bewertungen der Quelle bleiben unverändert."""
+    """Experiment without its own training (e.g. transfer to other objects): evaluates the runs of
+    `laeufe_von` under its own conditions; existing evaluations of the source stay unchanged."""
     src_id = exp.get("laeufe_von") or exp.get("eltern")
     runs = list(dict.fromkeys(load(src_id)[1].get("laeufe") or []))
     log(f"== {exp['id']}: {exp.get('titel')} (ohne Training, {len(runs)} Läufe von {src_id}, "
@@ -969,7 +969,7 @@ def cmd_eval(a):
 
 
 def _belastung_runs(exp: dict) -> tuple[str | None, list[str]]:
-    """Top-Seed (Einsatz-Kandidat, `best_seed`) und alle erfolgreichen Läufe eines Rezepts; Regel: ihr einer Lauf."""
+    """Top seed (deployment candidate, `best_seed`) and all successful runs of a recipe; rule: its single run."""
     runs = list(dict.fromkeys(exp.get("laeufe") or []))
     if exp.get("regel"):
         return (runs[0] if runs else None), runs[:1]
@@ -989,8 +989,8 @@ def _bew_result(run: str, exp: dict, cond: dict) -> dict | None:
 
 
 def cmd_belastung(a):
-    """Belastungstest „Arm bewegt sich“ (nur Bewertung): Rampe und Dreh-Treppe am Top-Seed, Transport auf allen
-    erfolgreichen Seeds; fehlende Bewertungen werden nachgeholt, vorhandene bleiben. Danach experiments/belastung.md."""
+    """Load test "arm moves" (evaluation only): ramp and rotation staircase on the top seed, transport on all
+    successful seeds; missing evaluations are added, existing ones kept. Then experiments/belastung.md."""
     check_env()
     for exp_id in a.ids:
         d, exp = load(exp_id)
@@ -1009,7 +1009,7 @@ def cmd_belastung(a):
         for c in B["rampe"]:
             ensure(top, c)
         for art in ("gieren", "nicken"):
-            for c in B[art]:                                   # Dauer absteigend = härter; Abbruch bei < 20 %
+            for c in B[art]:                                   # duration descending = harder; stop below 20 %
                 r = ensure(top, c)
                 if r is None or r["erfolg_bewegt"] < 0.2:
                     break
@@ -1020,7 +1020,7 @@ def cmd_belastung(a):
 
 
 def belastung_values(exp: dict) -> dict | None:
-    """Ergebnisse des Belastungstests eines Rezepts (None, wenn nicht getestet)."""
+    """Load-test results of a recipe (None if not tested)."""
     B = BEWEGUNG[greifart(exp)]
     top, ok = _belastung_runs(exp)
     if not top or _bew_result(top, exp, B["rampe"][0]) is None:
@@ -1033,7 +1033,7 @@ def belastung_values(exp: dict) -> dict | None:
 
 
 def write_belastung():
-    """experiments/belastung.md: Grenzbeschleunigung, Drehen und Transport je Rezept und Greifart."""
+    """experiments/belastung.md: limit acceleration, rotation and transport per recipe and grasp type."""
     alle = trained_experiments()
     L = ["# Belastungstest „Arm bewegt sich“", "",
          "Automatisch erzeugt (`experiments.py belastung`). Die Hand bleibt fest, die Armbewegung wirkt als Scheinkraft auf "
@@ -1078,8 +1078,8 @@ def write_belastung():
 
 
 def cmd_umstellen(a):
-    """Experiment auf das aktuelle Protokoll heben (ADR-021): protokoll = PROTOKOLL, das alte bleibt als
-    protokoll_vorher (Leaderboard-Historie); danach `leaderboard --bewerten` (Benchmark + Testobjekte) und `eval`."""
+    """Lift an experiment to the current protocol (ADR-021): protokoll = PROTOKOLL, the old one stays as
+    protokoll_vorher (leaderboard history); afterwards `leaderboard --bewerten` (benchmark + test objects) and `eval`."""
     for exp_id in a.ids:
         d, exp = load(exp_id)
         if exp.get("protokoll") == PROTOKOLL:
@@ -1137,7 +1137,7 @@ def _index_row(d: Path, exp: dict, cond: dict, r: dict, first: bool) -> str:
 
 
 def backup():
-    """Policies + experiments/ nach Hugging Face (backup_policies.py) — Fehler nur als Warnung."""
+    """Policies + experiments/ to Hugging Face (backup_policies.py) — errors only as a warning."""
     commits = {json.loads(m.read_text()).get("commit") for m in RUNS.glob("*/meta.json")} - {None}
     unpushed = [c[:7] for c in sorted(commits) if not sh("git", "branch", "-r", "--contains", c)]
     if unpushed:
@@ -1156,29 +1156,29 @@ def backup():
         log(f"WARNUNG: Sicherung fehlgeschlagen ({log_file}) — wird beim nächsten done nachgeholt")
 
 
-# ── Leaderboard: alle Policies (Experimente mit eigenem Training) unter festen Benchmark-Bedingungen ──
+# ── Leaderboard: all policies (experiments with their own training) under fixed benchmark conditions ──
 
-BENCHMARK = [   # Reihenfolge = Spalten; die erste ist die Sortierbedingung
+BENCHMARK = [   # order = columns; the first one is the sort condition
     {"name": "zylinder_seitlich", "objekt_id": "zylinder_d6", "kurz": "Ø 6 cm", "anforderung": {"max_kipp_deg": 45}},
     {"name": "zylinder_d8_seitlich", "objekt_id": "zylinder_d8", "kurz": "Ø 8 cm", "anforderung": {"max_kipp_deg": 45}},
     {"name": "quader_seitlich", "objekt_id": "quader_7x7x20", "kurz": "Quader", "anforderung": {"max_kipp_deg": 45}},
 ]
 
 
-# Testobjekte: nie im Training (Generalisierung) — nicht in Gesamt/Leistung, eigene Spalten/Zeile
+# Test objects: never in training (generalisation) — not in overall/performance, own columns/row
 TESTOBJEKTE = [
     {"name": "flasche_seitlich", "objekt_id": "flasche_d7x25", "kurz": "Flasche (Test)", "anforderung": {"max_kipp_deg": 45}},
     {"name": "saftpackung_seitlich", "objekt_id": "saftpackung_9x6x19", "kurz": "Saftpackung (Test)",
      "anforderung": {"max_kipp_deg": 45}},
-    # YCB (echte Masse 0,41–0,60 kg, über dem Trainingsbereich; Hand startet fast offen — env_cfg.OBJECTS)
+    # YCB (real mass 0.41–0.60 kg, above the training range; hand starts almost open — env_cfg.OBJECTS)
     {"name": "ycb_cracker_seitlich", "objekt_id": "ycb_003_cracker", "kurz": "Cracker (YCB)", "anforderung": {"max_kipp_deg": 45}},
     {"name": "ycb_zucker_seitlich", "objekt_id": "ycb_004_zucker", "kurz": "Zucker (YCB)", "anforderung": {"max_kipp_deg": 45}},
     {"name": "ycb_senf_seitlich", "objekt_id": "ycb_006_senf", "kurz": "Senf (YCB)", "anforderung": {"max_kipp_deg": 45}},
 ]
 
 
-# Greifart „von oben“ (Stufe 4b, docs/plan-griff-von-oben.md, env_cfg_oben.OBJECTS_OBEN): eigenes Benchmark und eigene
-# Leaderboard-Tabelle (ADR-018: ein Spezialist je Greifart); keine Kippanforderung (Heben wie Dexsuite Lift).
+# Grasp type "top" (stage 4b, docs/protokoll/plan-griff-von-oben.md, env_cfg_oben.OBJECTS_OBEN): own benchmark and own
+# leaderboard table (ADR-018: one specialist per grasp type); no tilt requirement (lifting like Dexsuite Lift).
 BENCHMARK_OBEN = [
     {"name": "kugel_d7_oben", "objekt_id": "kugel_d7", "kurz": "Kugel Ø 7", "greifart": "oben", "anforderung": {"max_kipp_deg": None}},
     {"name": "kugel_d5_oben", "objekt_id": "kugel_d5", "kurz": "Kugel Ø 5", "greifart": "oben", "anforderung": {"max_kipp_deg": None}},
@@ -1191,8 +1191,8 @@ TESTOBJEKTE_OBEN = [
      "anforderung": {"max_kipp_deg": None}},
 ]
 GREIFARTEN = {"seitlich": (BENCHMARK, TESTOBJEKTE), "oben": (BENCHMARK_OBEN, TESTOBJEKTE_OBEN)}
-# Leaderboard v3 (2026-10-11): Robustheit = Erfolg in einer Störbedingung je Greifart (Hauptobjekt; ungenaue Vorgreifpose,
-# 1 Schritt Verzögerung, Sensorrauschen — eval_policy --stoerung)
+# Leaderboard v3 (2026-10-11): robustness = success in a perturbed condition per grasp type (main object; inaccurate
+# pre-grasp pose, 1-step delay, sensor noise — eval_policy --stoerung)
 STOERUNG = {"seitlich": {"name": "zylinder_seitlich_gestoert", "objekt_id": "zylinder_d6", "kurz": "Ø 6 gestört",
                          "stoerung": True, "anforderung": {"max_kipp_deg": 45}},
             "oben": {"name": "kugel_d7_oben_gestoert", "objekt_id": "kugel_d7", "kurz": "Kugel Ø 7 gestört", "greifart": "oben",
@@ -1203,10 +1203,10 @@ def stoerung(exp: dict) -> dict:
     return STOERUNG[greifart(exp)]
 
 
-# Belastungstest „Arm bewegt sich“ (2026-10-12; mdp.apply_arm_motion, Literatur im Plan bzw. experiments/belastung.md):
-# Scheinkräfte im Handrahmen statt bewegter Hand. Rampe bis zum Versagen (Grasp to Act 2026, SoGraB) am Haupt- und am
-# schwersten Objekt, Drehen ±45° wie GRASPA als Treppe über die Dauer, Transport 0,3 m mit 5 m/s² (realistisch für pib).
-# Nur Bewertung, nicht im Index (Leon). Erfolg zusätzlich: < 2 cm Rutschen relativ zur Hand (GenDexGrasp/GAGrasp).
+# Load test "arm moves" (2026-10-12; mdp.apply_arm_motion, literature in the plan and experiments/belastung.md):
+# fictitious forces in the hand frame instead of a moving hand. Ramp until failure (Grasp to Act 2026, SoGraB) on the main
+# and the heaviest object, rotation ±45° like GRASPA as a staircase over the duration, transport 0.3 m at 5 m/s² (realistic
+# for pib). Evaluation only, not part of the index. Success additionally: < 2 cm slip relative to the hand (GenDexGrasp/GAGrasp).
 DREH_T = (0.8, 0.45, 0.25)
 
 
@@ -1227,7 +1227,7 @@ BEWEGUNG = {
 
 
 def greifart(exp: dict) -> str:
-    """Greifart eines Experiments (experiment.yaml → greifart; ohne Angabe seitlich, alle bis EXP-023)."""
+    """Grasp type of an experiment (experiment.yaml → greifart; default seitlich, all up to EXP-023)."""
     return exp.get("greifart") or "seitlich"
 
 
@@ -1240,7 +1240,7 @@ def testobjekte(exp: dict) -> list[dict]:
 
 
 def test_performance(exp: dict, rec: dict | None) -> list:
-    """Median des Aufgabenerfolgs der erfolgreichen Seeds (aus dem Benchmark) je Testobjekt, None wenn nicht bewertet."""
+    """Median task success of the successful seeds (from the benchmark) per test object, None if not evaluated."""
     out = []
     for c in testobjekte(exp):
         r = aggregate(exp, c)
@@ -1263,15 +1263,15 @@ def trained_experiments() -> list[tuple[Path, dict]]:
 
 
 def pooled_iqm(results: list[dict], rng) -> dict | None:
-    """IQM über alle Objekte (rliable, Agarwal et al. 2021): Erfolgsquoten aller Seeds × Objekte poolen,
-    IQM davon; 95-%-KI per stratifiziertem Bootstrap (je Objekt Seeds und Episoden ziehen)."""
+    """IQM over all objects (rliable, Agarwal et al. 2021): pool the success rates of all seeds × objects,
+    IQM of those; 95 % CI via stratified bootstrap (resample seeds and episodes per object)."""
     if not results or not all(results) or len({tuple(r["seed_ids"]) for r in results}) != 1:
-        return None      # nur vollständig bewertete Policies (gleiche Seeds an allen Objekten)
+        return None      # only fully evaluated policies (same seeds on all objects)
     return pooled_iqm_lists([r["_erfolg_je_seed"] for r in results], rng)
 
 
 def pooled_iqm_lists(per_obj: list[list[np.ndarray]], rng) -> dict | None:
-    """Wie pooled_iqm, direkt auf Erfolg je Episode: per_obj[Objekt][Seed] = Array."""
+    """Like pooled_iqm, directly on success per episode: per_obj[object][seed] = array."""
     if not per_obj or not all(per_obj):
         return None
     point = iqm([s.mean() for obj in per_obj for s in obj])
@@ -1286,9 +1286,9 @@ def pooled_iqm_lists(per_obj: list[list[np.ndarray]], rng) -> dict | None:
 
 
 def prob_improvement(x: list[list[float]], y: list[list[float]], rng) -> dict:
-    """P(X > Y) nach rliable (Agarwal et al. 2021): je Objekt Anteil der Lauf-Paare mit x > y (Gleichstand
-    zählt ½), gemittelt über die Objekte; 95-%-KI per stratifiziertem Bootstrap der Läufe je Objekt.
-    Gesichert besser, wenn die untere KI-Grenze > 0,5."""
+    """P(X > Y) after rliable (Agarwal et al. 2021): per object the fraction of run pairs with x > y (ties
+    count ½), averaged over the objects; 95 % CI via stratified bootstrap of the runs per object.
+    Significantly better if the lower CI bound > 0.5."""
     def p(xs, ys):
         return float(np.mean([np.mean([(a > b) + 0.5 * (a == b) for a in xo for b in yo]) for xo, yo in zip(xs, ys)]))
     boot = np.empty(BOOT)
@@ -1298,7 +1298,7 @@ def prob_improvement(x: list[list[float]], y: list[list[float]], rng) -> dict:
     return {"p": p(x, y), "ki95": [float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))]}
 
 
-# ── Auswertung v2: Leistung und Zuverlässigkeit getrennt (Chan et al. 2020, Agarwal et al. 2021) ──────
+# ── Evaluation v2: performance and reliability separately (Chan et al. 2020, Agarwal et al. 2021) ──────
 
 AUSWERTUNG = "auswertung-v2"
 
@@ -1311,14 +1311,14 @@ def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> list[float]:
 
 
 def recipe(exp: dict, conds: list[dict] | None = None) -> dict | None:
-    """Kennzahlen eines Rezepts über Bedingungen (Standard: Benchmark): Leistung = IQM des Aufgabenerfolgs der
-    erfolgreichen Seeds (Mittel über die Objekte ≥ 50 %, README) über Seeds × Objekte; Zuverlässigkeit =
-    erfolgreiche Seeds k/n (Clopper-Pearson-KI); Gesamt = IQM aller Seeds × Objekte (rliable)."""
+    """Metrics of a recipe over conditions (default: benchmark): performance = IQM of the task success of the
+    successful seeds (mean over the objects ≥ 50 %, README) over seeds × objects; reliability =
+    successful seeds k/n (Clopper-Pearson CI); overall = IQM of all seeds × objects (rliable)."""
     conds = conds or benchmark(exp)
     res = [aggregate(exp, c) for c in conds]
     if not all(res) or len({tuple(r["seed_ids"]) for r in res}) != 1:
         return None
-    M = np.array([r["aufgabenerfolg"]["je_seed"] for r in res])            # Objekte × Seeds
+    M = np.array([r["aufgabenerfolg"]["je_seed"] for r in res])            # objects × seeds
     ok = M.mean(axis=0) >= FAIL_BELOW
     rng = np.random.default_rng(0)
     k, n = int(ok.sum()), len(ok)
@@ -1332,7 +1332,7 @@ def recipe(exp: dict, conds: list[dict] | None = None) -> dict | None:
 
 
 def compare_recipes(child: dict, parent: dict) -> dict:
-    """Leistung: P(Kind > Eltern) über die erfolgreichen Seeds (rliable); Zuverlässigkeit: exakter Fisher-Test."""
+    """Performance: P(child > parents) over the successful seeds (rliable); reliability: exact Fisher test."""
     from scipy.stats import fisher_exact
     out = {}
     if child["k"] and parent["k"] and child["bedingungen"] == parent["bedingungen"]:
@@ -1359,8 +1359,8 @@ def verdict_v2(cmp: dict, violated: list[str]) -> str:
 
 
 def failure_causes(d: Path, rec: dict) -> list[str]:
-    """Ursache je gescheitertem Seed: hält gekippt (Haltequote ≥ 50 %), lernt nicht zu greifen (Gegengriff im
-    Training ≈ 0) oder greift, verliert das Objekt."""
+    """Cause per failed seed: holds but tilted (hold rate ≥ 50 %), never learns to grasp (opposition in
+    training ≈ 0), or grasps but loses the object."""
     tj = exp_file(d, "training.json", "diagramme")
     train = {s["seed"]: s["endwerte"] for s in json.loads(tj.read_text())["je_seed"]} if tj.exists() else {}
     main = rec["_res"][0]
@@ -1379,20 +1379,20 @@ def failure_causes(d: Path, rec: dict) -> list[str]:
 
 
 def best_seed(res: dict, bench: list[dict] = BENCHMARK):
-    """Bester Seed nach mittlerem Aufgabenerfolg über alle Benchmark-Objekte (Einsatz-Kandidat) oder None."""
+    """Best seed by mean task success over all benchmark objects (deployment candidate) or None."""
     if not all(res.get(c["name"]) for c in bench):
         return None, {}
     per = {c["name"]: dict(zip(res[c["name"]]["seed_ids"], res[c["name"]]["aufgabenerfolg"]["je_seed"])) for c in bench}
     ids = res[bench[0]["name"]]["seed_ids"]
     best = max(ids, key=lambda s: np.mean([per[c["name"]].get(s, 0) for c in bench]))
     if max(per[c["name"]].get(best, 0) for c in bench) == 0:
-        return None, per          # Policy greift nie — kein Kandidat
+        return None, per          # policy never grasps — no candidate
     return best, per
 
 
 def best_videos(d: Path, exp: dict) -> tuple[object, list[str]]:
-    """Links zu den Videos des besten Seeds je Benchmark-Objekt: lang (3 Episoden, beste_videos/, im Git,
-    von `medien` aufgenommen), sonst die kurze Aufnahme aus videos/."""
+    """Links to the videos of the best seed per benchmark object: long (3 episodes, beste_videos/, in git,
+    recorded by `medien`), otherwise the short recording from videos/."""
     bench = benchmark(exp)
     best, _ = best_seed({c["name"]: aggregate(exp, c) for c in bench}, bench)
     if exp.get("regel"):
@@ -1413,9 +1413,9 @@ def cmd_leaderboard(a):
     if a.bewerten:
         check_env()
         for d, exp in trained_experiments():
-            if exp.get("protokoll") != PROTOKOLL:          # Historie (eval-v1) wird nicht nachbewertet
+            if exp.get("protokoll") != PROTOKOLL:          # history (eval-v1) is not re-evaluated
                 continue
-            for phase in ("benchmark", "test"):           # Testobjekte erst, wenn der Benchmark steht (k > 0)
+            for phase in ("benchmark", "test"):           # test objects only once the benchmark stands (k > 0)
                 rec = recipe(exp)
                 todo = benchmark(exp) if phase == "benchmark" else (testobjekte(exp) if rec and rec["k"] else [])
                 for r in dict.fromkeys(exp["laeufe"]):
@@ -1431,14 +1431,14 @@ def cmd_leaderboard(a):
 
 
 def cmd_medien(a):
-    """Je Policy, Seed und Benchmark-Objekt: Verlauf über die Episode (verlauf-v1_*.json im Laufordner,
-    256 Episoden) und Video mit der aktuellen Kamera → experiments/EXP-NNN_*/videos/EXP-NNN_<objekt>_s<seed>.mp4.
-    Vorhandenes bleibt (--neu: neu erzeugen); Bewertungsdateien werden nie überschrieben (--nur-medien)."""
+    """Per policy, seed and benchmark object: time series over the episode (verlauf-v1_*.json in the run folder,
+    256 episodes) and video with the current camera → experiments/EXP-NNN_*/videos/EXP-NNN_<objekt>_s<seed>.mp4.
+    Existing files are kept (--neu: regenerate); evaluation files are never overwritten (--nur-medien)."""
     check_env()
     exps = [(d, e) for d, e in trained_experiments() if not a.ids or e["id"] in a.ids]
     tmp = LOGS / "_medien_tmp"
     for d, exp in exps:
-        if a.beste or a.ycb:        # nur die langen Videos des besten Seeds (--beste: neu; --ycb: YCB dazu)
+        if a.beste or a.ycb:        # only the long videos of the best seed (--beste: new; --ycb: plus YCB)
             record_best_videos(d, exp, tmp, neu=a.beste, ycb=a.ycb)
             report(exp["id"])
             continue
@@ -1485,17 +1485,17 @@ def cmd_medien(a):
 
 
 def ycb_objekte(exp: dict) -> list[dict]:
-    """YCB-Testobjekte der Greifart (echte Masse, nie trainiert)."""
+    """YCB test objects of the grasp type (real mass, never trained)."""
     return [c for c in testobjekte(exp) if c["objekt_id"].startswith("ycb_")]
 
 
 def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bool = False):
-    """Lange Videos (3 Episoden) des besten Seeds je Benchmark-Objekt → <experiment>/beste_videos/ (im Git);
-    mit ycb=True zusätzlich je YCB-Testobjekt. Videos anderer Seeds dort werden entfernt."""
+    """Long videos (3 episodes) of the best seed per benchmark object → <experiment>/beste_videos/ (in git);
+    with ycb=True additionally per YCB test object. Videos of other seeds there are removed."""
     bench = benchmark(exp)
     best, _ = best_seed({c["name"]: aggregate(exp, c) for c in bench}, bench)
     if exp.get("regel"):
-        best = 0                                             # ein Lauf, Label s0
+        best = 0                                             # one run, label s0
     out = d / "beste_videos"
     keep = ({exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos").name for c in bench + ycb_objekte(exp)}
             if best is not None else set())
@@ -1532,17 +1532,17 @@ def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bo
 
 
 def vorschlag(d: Path, exp: dict, rec: dict) -> str:
-    """Kurzer Urteilsvorschlag (Auswertung v2) aus results.json; ✓, wenn Leon ein Urteil bestätigt hat."""
+    """Short verdict proposal (evaluation v2) from results.json; ✓ if a human has confirmed a verdict."""
     r = json.loads(exp_file(d, "results.json").read_text()) if exp_file(d, "results.json").exists() else {}
     u = (r.get("rezept") or {}).get("urteil") or "–"
     return u + (" ✓" if "bestätigt" in str(exp.get("urteil") or "") else "")
 
 
 def write_leaderboard():
-    """Rangliste aller Policies (Auswertung v2): sortiert nach **Leistung** (IQM der erfolgreichen Seeds über die
-    Benchmark-Objekte) — Ziel ist eine brauchbare Policy je Greifart, die Zuverlässigkeit ist zweitrangig (Leon,
-    2026-10-08). Daneben Gesamt (alle Seeds, rliable) und Zuverlässigkeit. Je Protokoll eine eigene Tabelle
-    (ADR-021): oben das aktuelle (zählt), darunter ältere als Historie — nie über Protokolle hinweg verglichen."""
+    """Ranking of all policies (evaluation v2): sorted by **performance** (IQM of the successful seeds over the
+    benchmark objects) — the goal is one usable policy per grasp type, reliability is secondary (decision
+    2026-10-08). Next to it overall (all seeds, rliable) and reliability. One table per protocol
+    (ADR-021): the current one on top (counts), older ones below as history — never compared across protocols."""
     alle = trained_experiments()
     L = ["# Leaderboard — Greif-Policies", "",
          f"Automatisch erzeugt ({AUSWERTUNG}). Benchmark: Kippwinkel ≤ 45°, "
@@ -1552,11 +1552,11 @@ def write_leaderboard():
          "alle Seeds (rliable). **Zuverlässigkeit** = erfolgreiche Seeds. **P(1 > X)**: Wahrscheinlichkeit, "
          "dass ein erfolgreicher Lauf von Platz 1 besser ist (gesichert, wenn die untere KI-Grenze > 0,5). ⚠: unter 5 "
          "Seeds oder unter 3 erfolgreichen — Leistung vorläufig. Werte in %, KI 95 %. "
-         "Vorschlag = Urteilsregel v2 gegenüber den Eltern (✓: Leon hat das Experiment bewertet, Urteil im Bericht). "
+         "Vorschlag = Urteilsregel v2 gegenüber den Eltern (✓: Urteil bestätigt, steht im Bericht). "
          "Je Bewertungsprotokoll eine Tabelle; verglichen wird nur innerhalb eines Protokolls (ADR-021). "
          "Quellen: Agarwal et al. 2021 (rliable), Chan et al. 2020 (Zuverlässigkeit)."]
     n_current, n_rows = 0, 0
-    for art, (bench, tests) in GREIFARTEN.items():          # je Greifart eigene Tabellen (ADR-018), seitlich zuerst
+    for art, (bench, tests) in GREIFARTEN.items():          # separate tables per grasp type (ADR-018), side grasp first
         exps = [(d, e) for d, e in alle if greifart(e) == art]
         if art != "seitlich":
             if not exps:
@@ -1571,28 +1571,28 @@ def write_leaderboard():
     log(f"leaderboard.md aktualisiert ({n_current} Policies unter {PROTOKOLL}, {n_rows} Zeilen gesamt)")
 
 
-# ── Leaderboard v3 (2026-10-11, Leon): Wünschbarkeitsindex statt reiner Leistung ─────────────────────────────────────
-# Je Größe eine lineare Wunschfunktion d ∈ [0, 1] (0 = inakzeptabel, 1 = Ziel), Gesamtwert = geometrisches Mittel
-# (Derringer & Suich 1980: eine schlechte Größe zieht alles herunter); dazu Pareto-Front über die d-Werte. Zielwerte aus
-# dem Endziel (echte Hand), docs/nachtlauf-2026-10-12.md. Schwingen: Ziel = Regel-Baseline, inakzeptabel = schlechtestes.
-WUNSCH = [  # (Schlüssel, Kurzname, inakzeptabel, Ziel, Format)
+# ── Leaderboard v3 (2026-10-11): desirability index instead of performance alone ───────────────────────────────────
+# One linear desirability function d ∈ [0, 1] per quantity (0 = unacceptable, 1 = target), overall = geometric mean
+# (Derringer & Suich 1980: one bad quantity pulls everything down); plus a Pareto front over the d values. Targets from
+# the end goal (real hand), docs/protokoll/nachtlauf-2026-10-12.md. Oscillation: target = rule baseline, unacceptable = worst.
+WUNSCH = [  # (key, short name, unacceptable, target, format)
     ("leistung", "Leistung", 0.70, 0.95, "pct"),
     ("robustheit", "Robust", 0.50, 0.90, "pct"),
     ("unruhe_wirksam", "Unruhe", 1.0, 0.1, "{:.2f}"),
     ("schwingen_mm_s", "Schwingen mm/s", None, None, "{:.0f}"),
     ("objektweg_mm", "Objektweg mm", 150.0, 35.0, "{:.0f}"),
-    ("kipp_median_deg", "Kipp °", 45.0, 5.0, "{:.0f}"),       # inakzeptabel = Anforderung der Bedingung
+    ("kipp_median_deg", "Kipp °", 45.0, 5.0, "{:.0f}"),       # unacceptable = requirement of the condition
     ("servo_last", "Servo-Last", 1.0, 0.20, "pct"),
 ]
-# Unterarm nur zur Info, nicht im Index: egal, solange das Objekt aufrecht bleibt (Leon, 2026-10-12)
-D_MIN = 0.1     # weiche Untergrenze je Größe: eine Größe jenseits von „inakzeptabel“ drückt den Index, nullt ihn nicht
+# Forearm for information only, not in the index: irrelevant as long as the object stays upright (2026-10-12)
+D_MIN = 0.1     # soft lower bound per quantity: a quantity beyond "unacceptable" lowers the index but does not zero it
 
 
 def v3_values(exp: dict, seed=None) -> dict | None:
-    """Kennzahlen eines Rezepts für das Leaderboard v3, alle nur über die **erfolgreichen Seeds** (wie die Leistung;
-    Leon, 2026-10-12 — Zuverlässigkeit k/n steht daneben): Leistung aus dem Benchmark (IQM), Robustheit = Erfolg in der
-    Störbedingung, übrige Größen aus der Hauptbedingung (Mittel der Seeds); Servo-Last = Stall je Servo, gemittelt über
-    die 7 Servos (ohne Handgelenk). Mit `seed` nur dieser Seed (Top-Kandidat), Leistung = Mittel über die Objekte."""
+    """Metrics of a recipe for leaderboard v3, all over the **successful seeds** only (like performance;
+    2026-10-12 — reliability k/n is shown next to it): performance from the benchmark (IQM), robustness = success in the
+    perturbed condition, other quantities from the main condition (mean over seeds); servo load = stall per servo, averaged
+    over the 7 servos (without wrist). With `seed` only this seed (top candidate), performance = mean over the objects."""
     rec = recipe(exp)
     if not rec or not rec.get("leistung"):
         return None
@@ -1608,15 +1608,15 @@ def v3_values(exp: dict, seed=None) -> dict | None:
     last = [float(np.mean(s["stall_je_servo"]["anteil"])) for s in seeds
             if s.get("stall_je_servo") and None not in s["stall_je_servo"]["anteil"]]
     schutz = [s["servo_schutz"]["schutz_anteil"] for s in seeds
-              if (s.get("servo_schutz") or {}).get("schutz_anteil") is not None]      # seit 2026-10-13 (Überlastschutz)
-    # wie am echten Servo (seit 2026-10-14: Sehne zieht nur, Firmware-Grenzen, ≥ 80 %) — nur wenn alle Seeds sie haben
+              if (s.get("servo_schutz") or {}).get("schutz_anteil") is not None]      # since 2026-10-13 (overload protection)
+    # as on the real servo (since 2026-10-14: 8 servos incl. wrist, firmware limits, ≥ 80 %) — only if all seeds have it
     real = [s["servo_last_real"]["mittel"] for s in seeds if (s.get("servo_last_real") or {}).get("mittel") is not None]
     schutz_real = [s["servo_schutz"]["schutz_anteil_real"] for s in seeds
                    if (s.get("servo_schutz") or {}).get("schutz_anteil_real") is not None]
     leistung = (rec["leistung"]["iqm"] if seed is None else
                 float(np.mean([row[rec["seed_ids"].index(seed)] for row in rec["je_seed"]])))
     return {"leistung": leistung, "robustheit": float(np.mean(robust)) if robust else None,
-            "unruhe_wirksam": mean_of("unruhe_wirksam"),        # an den Servos (begrenzt, ggf. geglättet)
+            "unruhe_wirksam": mean_of("unruhe_wirksam"),        # at the servos (clipped, possibly smoothed)
             "schwingen_mm_s": mean_of("schwingen_mm_s"), "objektweg_mm": mean_of("objektweg_mm"),
             "kipp_median_deg": mean_of("kipp_median_deg"), "unterarm_median_deg": mean_of("unterarm_median_deg"),
             "servo_last": float(np.mean(last)) if last else None, "schutz": float(np.mean(schutz)) if schutz else None,
@@ -1626,7 +1626,7 @@ def v3_values(exp: dict, seed=None) -> dict | None:
 
 
 def bewegt_info(exp: dict) -> str:
-    """Info-Spalte „Bewegt“ (nicht im Index): Grenzbeschleunigung Hauptobjekt (Top-Seed) · Transport-Erfolg."""
+    """Info column "Bewegt" (not in the index): limit acceleration main object (top seed) · transport success."""
     v = belastung_values(exp)
     if not v or not v["rampe"][0]:
         return "–"
@@ -1635,14 +1635,14 @@ def bewegt_info(exp: dict) -> str:
 
 
 def leaderboard_v3(exps: list, art: str) -> list[str]:
-    # von oben ohne Kippwinkel: die Bedingung hat keine Kippanforderung (Objekt hängt zwischen den Fingern)
+    # top grasp without tilt angle: the condition has no tilt requirement (object hangs between the fingers)
     wunsch = [w for w in WUNSCH if not (art == "oben" and w[0] == "kipp_median_deg")]
     rows = [(d, e, v3_values(e)) for d, e in exps if e.get("protokoll") == PROTOKOLL]
     rows = [r for r in rows if r[2]]
     if not rows:
         return []
-    # Servo-Last im Index wie am echten Servo (Leon, 2026-10-13), sobald alle Rezepte mit Servo-Last sie haben
-    # (Nachbewertung der Hauptbedingung); bis dahin wie bisher (≥ 90 %, alle Stall-Momente), die andere Größe zur Info
+    # Servo load in the index as on the real servo (decision 2026-10-13) once all recipes with servo load have it
+    # (re-evaluation of the main condition); until then as before (≥ 90 %, all stall torques), the other quantity as info
     real = all(v["servo_last_real"] is not None for _, _, v in rows if v["servo_last"] is not None)
 
     def as_real(v):
@@ -1668,7 +1668,7 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
         return (float(np.prod([max(x, D_MIN) for x in have]) ** (1 / len(have))) if have else 0.0), ds, len(have) < len(wunsch)
 
     def top(e, idx):
-        """Index des besten Seeds (Einsatz-Kandidat, wie in den Videos) — Regel: ein Lauf, gleich dem Rezept."""
+        """Index of the best seed (deployment candidate, as in the videos) — rule: one run, equal to the recipe."""
         if e.get("regel"):
             return idx, None
         bench = benchmark(e)
@@ -1722,7 +1722,7 @@ def leaderboard_v3(exps: list, art: str) -> list[str]:
 
 
 def leaderboard_tables(exps: list, bench: list[dict], tests: list[dict]) -> tuple[list[str], int, int]:
-    """Tabellen einer Greifart: je Protokoll eine (aktuell zuerst, ältere als Historie), dazu die Einsatz-Kandidaten."""
+    """Tables of one grasp type: one per protocol (current first, older as history), plus the deployment candidates."""
     pct = lambda x: "–" if x is None else f"{100 * x:.0f}"  # noqa: E731
     versions = [PROTOKOLL] + sorted({v for _, e in exps for v in (e.get("protokoll"), e.get("protokoll_vorher"))
                                      if v and v != PROTOKOLL}, reverse=True)
@@ -1761,7 +1761,7 @@ def leaderboard_tables(exps: list, bench: list[dict], tests: list[dict]) -> tupl
 
 def leaderboard_table(rows: list, version: str, bench: list[dict] = BENCHMARK,
                       tests: list[dict] = TESTOBJEKTE) -> list[str]:
-    """Eine Tabelle des Leaderboards: alle Zeilen unter demselben Protokoll, Rang und P(1 > X) innerhalb."""
+    """One leaderboard table: all rows under the same protocol, rank and P(1 > X) within it."""
     pct = lambda x: "–" if x is None else f"{100 * x:.0f}"  # noqa: E731
     ci = lambda m: f"[{pct(m['iqm_ki95'][0])}–{pct(m['iqm_ki95'][1])}]" if m else ""  # noqa: E731
     lead = rows[0][2] if rows and rows[0][2] else None
@@ -1777,7 +1777,7 @@ def leaderboard_table(rows: list, version: str, bench: list[dict] = BENCHMARK,
                      + " |" * (len(bench) + len(tests) + 7))
             continue
         tie = "–"
-        if i > 1 and lead and lead["k"] and rec["k"]:       # über die erfolgreichen Seeds, passend zur Sortierung
+        if i > 1 and lead and lead["k"] and rec["k"]:       # over the successful seeds, matching the sort order
             pi = prob_improvement([lead["_M"][j, lead["_ok"]].tolist() for j in range(len(bench))],
                                   [rec["_M"][j, rec["_ok"]].tolist() for j in range(len(bench))], rng)
             tie = f"{pi['p']:.2f} [{pi['ki95'][0]:.2f}–{pi['ki95'][1]:.2f}]" + (" gesichert" if pi["ki95"][0] > 0.5 else "")
@@ -1788,7 +1788,7 @@ def leaderboard_table(rows: list, version: str, bench: list[dict] = BENCHMARK,
         vids = " ".join(f"[▶]({d.name}/beste_videos/{f.name})" for f in bv if f.exists()) or "–"
         lp0 = rec["_res"][0]
         filtered = bool((((lp0.get("_params") or {}).get("env") or {}).get("actions") or {}).get("servos", {}).get("alpha"))
-        unruhe = lp0["leitplanken"].get("unruhe_wirksam" if filtered else "unruhe")    # geglättet: an den Servos
+        unruhe = lp0["leitplanken"].get("unruhe_wirksam" if filtered else "unruhe")    # smoothed: at the servos
         warn = "" if rec["n"] >= 5 and rec["k"] >= 3 else " ⚠"
         current = exp.get("protokoll") == version
         L.append(f"| {i} | {link} | {exp.get('titel', '')} | "

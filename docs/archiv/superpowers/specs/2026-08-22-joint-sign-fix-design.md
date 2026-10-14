@@ -115,7 +115,7 @@ Reihenfolge, jeweils in Isaac Sim verifiziert bevor committed wird:
    `dof_elbow_right: -30.0`) auf positives Vorzeichen drehen; JOINT_SIGN-Kommentare entfernen.
 4. **44-DOF-Sweep-Verifikation**: kleines Test-Skript (via `test_client_pickup.py`-Pattern
    oder direkt Script Editor), das jedes der 44 Gelenke einzeln durch seinen Bereich fährt —
-   Leon bestätigt visuell pro Gelenk, dass positiv weiterhin die dokumentierte
+   Der Autor bestätigt visuell pro Gelenk, dass positiv weiterhin die dokumentierte
    Onshape-Bedeutung hat (Referenzwerte aus `docs/conventions.md`). Pflicht, kein
    Nice-to-have — die Gelenke sind nicht alle gleich orientiert.
 5. **Pickup-/Putdown-Demo** erneut end-to-end laufen lassen (Regressionscheck fürs bereits
@@ -132,7 +132,7 @@ Reihenfolge, jeweils in Isaac Sim verifiziert bevor committed wird:
 - **44 Gelenke sind nicht alle gleich orientiert** — die generalisierte Funktion muss das pro
   Gelenk korrekt ableiten. Sweep-Check (Migrationsschritt 4) ist deshalb Pflicht.
 - **Kein direkter Isaac-Sim-Zugriff** bei der Entwicklung dieses Fixes — Spike und alle
-  Verifikationsschritte laufen im Script Editor bei Leon; Code wird geliefert, Ausführung und
+  Verifikationsschritte laufen im Script Editor beim Autor; Code wird geliefert, Ausführung und
   visuelle Bestätigung liegen bei ihm.
 - Falls der Spike zeigt, dass die 180°-Frame-Rotation Limits/Drive-Konfiguration unerwartet
   durcheinanderbringt, müsste zusätzlich `configure_drives()`/`set_joint_limits()` angepasst

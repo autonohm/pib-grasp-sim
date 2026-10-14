@@ -1,9 +1,9 @@
 """
-reward_diag.py — Größenordnung der Belohnungsterme vor einem Lauf prüfen (ADR-017-Arbeitsregel).
+reward_diag.py — check the magnitude of the reward terms before a run (ADR-017 working rule).
 
-Lässt eine Policy in einer Task-Variante laufen und mittelt je Term den Beitrag je Sekunde
-(Gewicht × Term, aus dem Reward-Manager) über laufende Umgebungen — vor dem Absenken (0–2 s) und in
-der Haltephase (ab 2,5 s). Ausgabe angehängt an isaac_sim/tools/_reward_diag.txt.
+Runs a policy in a task variant and averages, per term, the contribution per second
+(weight × term, from the reward manager) over running environments — before the lowering (0–2 s) and in
+the hold phase (from 2.5 s). Output appended to isaac_sim/tools/_reward_diag.txt.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/reward_diag.py --headless --task Pib-Grasp-Hand-Left-HeavyDexsuite-v0 \
       --policy <run>/exported/policy.pt

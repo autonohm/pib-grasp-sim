@@ -1,17 +1,17 @@
 """
-machbarkeit_oben.py — Ist „von oben“ mit dieser Hand lösbar, und mit welchem Vorgreifabstand/welcher Objektlage?
-(Plan: docs/plan-griff-von-oben.md, Schritt 2; Vorbild Machbarkeitstest 2026-10-04: Rotator 90° → 14–15/16 gehalten.)
+machbarkeit_oben.py — Can the "top" grasp be solved with this hand, and with which pre-grasp distance/object position?
+(Plan: docs/protokoll/plan-griff-von-oben.md, step 2; modelled on the feasibility test 2026-10-04: rotator 90° → 14–15/16 held.)
 
-Szene env_cfg_oben (Handfläche unten) mit einem Objekt aus OBJECTS_OBEN, ohne Policy: Regel „alle schließen“ wie EXP-014
-(Rotator bis 0,4 s auf sein Ziel, dann Daumen + Finger mit 0,2 des maximalen Schritts schließen, Unterarm/Handgelenk
-halten); Rotator-Ziel je Umgebung reihum aus --thumb_rot. Je Umgebung eine Episode: Startkontakt Hand↔Objekt in den
-ersten 0,1 s (Kontaktsensor am Objekt mit Filter auf alle Handkörper, über beide Physik-Unterschritte), gehalten bis zum
-Ende, Objektweg in der Tischebene, Finger am Objekt in der Haltephase. Ein Abstand/eine Lage je Prozess (Isaac Lab: eine
-Umgebung je Prozess) → Raster über ein Shell-Skript. Bericht: isaac_sim/tools/_machbarkeit_oben.txt (angehängt)
+Scene env_cfg_oben (palm down) with one object from OBJECTS_OBEN, without a policy: rule "close all" like EXP-014
+(rotator to its target until 0.4 s, then thumb + fingers close at 0.2 of the maximum step, forearm/wrist
+hold); rotator target per environment in turn from --thumb_rot. One episode per environment: start contact hand↔object in
+the first 0.1 s (contact sensor on the object with a filter on all hand bodies, over both physics substeps), held until
+the end, object path in the table plane, fingers on the object in the hold phase. One distance/position per process (Isaac
+Lab: one environment per process) → grid via a shell script. Report: isaac_sim/tools/_machbarkeit_oben.txt (appended)
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/machbarkeit_oben.py --headless --objekt kugel_d7 --abstand 0.015 --y -0.34
-Mit Fenster zum Zuschauen: ohne --headless, mit --real_time --num_envs 16 — läuft nach der gewerteten ersten Episode
-weiter, bis das Fenster geschlossen wird.
+With a window to watch: without --headless, with --real_time --num_envs 16 — keeps running after the scored first episode
+until the window is closed.
 """
 import argparse
 import math
@@ -60,7 +60,7 @@ cfg = apply_object_oben(PibGraspEnvCfg_Oben(), args.objekt)
 cfg.scene.num_envs = args.num_envs
 cfg.seed = 1000
 cfg.events.place_objects.params.update(center_xy=xy)
-if gap is not None:                          # feste Höhe statt Regel: Versätze so groß, dass min_tip_height greift
+if gap is not None:                          # fixed height instead of the rule: offsets so large that min_tip_height applies
     cfg.events.place_objects.params.update(min_tip_height=gap, sphere_offset=1.0, block_offset=1.0)
 if args.rot_start_max is not None:
     cfg.events.reset_hand.params["ranges_deg"]["thumb_left_rotator"] = (0.0, args.rot_start_max)
@@ -68,7 +68,7 @@ cfg.scene.object.spawn.activate_contact_sensors = True
 cfg.scene.object_contact = ContactSensorCfg(
     prim_path="{ENV_REGEX_NS}/Object", history_length=cfg.decimation,
     filter_prim_paths_expr=[f"{{ENV_REGEX_NS}}/Robot/{b}" for b in BODIES])
-# Tisch ↔ Hand (Leon, Fenstertest 2026-10-10: „Daumen stößt gegen den Tisch“): Sensor am kinematischen Tisch
+# table ↔ hand (window test 2026-10-10: "thumb hits the table"): sensor on the kinematic table
 cfg.scene.table.spawn.activate_contact_sensors = True
 cfg.scene.table_contact = ContactSensorCfg(
     prim_path="{ENV_REGEX_NS}/Table", history_length=cfg.decimation,
@@ -89,15 +89,15 @@ N = env.num_envs
 
 
 def rule_action(hold_q):
-    """Regel je Umgebung nach ihrer Episodenzeit (auch nach automatischem Reset): Unterarm/Handgelenk halten, Rotator
-    auf sein Ziel, ab 0,4 s Daumen + Finger schließen. hold_q wird bei Episodenbeginn aus der Startstellung gesetzt."""
+    """Rule per environment by its episode time (also after an automatic reset): hold forearm/wrist, rotator
+    to its target, from 0.4 s on close thumb + fingers. hold_q is set from the start position at episode start."""
     q = robot.data.joint_pos[:, ids]
     new = env.episode_length_buf == 0
     hold_q[new] = q[new]
     t = ((env.episode_length_buf + 1) * dt)[:, None]
     a = torch.zeros(N, 8, device=env.device)
     a[:, :2] = ((hold_q[:, :2] - q[:, :2]) / scale[:2]).clamp(-1, 1)
-    if args.handgelenk is not None:                                # Handgelenk (Index 1) ab 0,4 s auf Zielwinkel
+    if args.handgelenk is not None:                                # wrist (index 1) to its target angle from 0.4 s on
         wrist = ((math.radians(args.handgelenk) - q[:, 1:2]) / scale[1]).clamp(-1, 1)
         a[:, 1:2] = torch.where(t >= 0.4, wrist, a[:, 1:2])
     a[:, 2] = ((rot_target - q[:, 2]) / scale[2]).clamp(-1, 1)
@@ -111,10 +111,10 @@ with torch.inference_mode():
     alive = torch.ones(N, dtype=torch.bool, device=env.device)
     start_contact = torch.zeros(N, device=env.device)
     fingers = torch.zeros(N, device=env.device)
-    palm = torch.zeros(N, device=env.device)                      # Schritte der Haltephase mit Handfläche am Objekt
-    table_thumb = torch.zeros(N, device=env.device)               # größte Kraft Tisch ↔ Daumen / Finger [N]
+    palm = torch.zeros(N, device=env.device)                      # steps of the hold phase with the palm on the object
+    table_thumb = torch.zeros(N, device=env.device)               # largest force table ↔ thumb / fingers [N]
     table_fingers = torch.zeros(N, device=env.device)
-    table_fingers_early = torch.zeros(N, device=env.device)       # … vor dem Schließen (bis 0,4 s): Reset-Überlappung
+    table_fingers_early = torch.zeros(N, device=env.device)       # … before closing (until 0.4 s): reset overlap
     n_hold = 0
     xy0 = obj.data.root_pos_w[:, :2].clone()
     for step in range(1, int(env.max_episode_length)):
@@ -122,11 +122,11 @@ with torch.inference_mode():
         _, _, term, trunc, _ = env.step(rule_action(hold_q))
         alive &= ~(term | trunc)
         if step <= early:
-            # (N, Verlauf, Körper=1, Filter, 3): größte Kraft eines Handkörpers in beiden Unterschritten
+            # (N, history, bodies=1, filters, 3): largest force of a hand body over both substeps
             start_contact = torch.maximum(start_contact, sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1)
                                           .amax(dim=(1, 2)))
             xy0 = obj.data.root_pos_w[:, :2].clone()
-        tf = table_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)     # (N, Körper)
+        tf = table_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)     # (N, bodies)
         table_thumb = torch.maximum(table_thumb, tf[:, THUMB].amax(-1) * alive)
         table_fingers = torch.maximum(table_fingers, tf[:, FINGERS].amax(-1) * alive)
         if step * dt < 0.4:
@@ -160,7 +160,7 @@ text = "\n".join(lines)
 print(text, flush=True)
 with open(Path(__file__).resolve().parents[2] / "isaac_sim" / "tools" / "_machbarkeit_oben.txt", "a", encoding="utf-8") as f:
     f.write(text + "\n")
-if not args.headless:                  # mit Fenster: weiterlaufen lassen (gewertet ist nur die erste Episode)
+if not args.headless:                  # with window: keep running (only the first episode is scored)
     print("Fenster: läuft weiter, bis es geschlossen wird", flush=True)
     with torch.inference_mode():
         while app.is_running():

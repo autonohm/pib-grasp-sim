@@ -1,19 +1,19 @@
 """
-env_cfg_oben.py — Greifart „von oben“ (Stufe 4b, ADR-018, Plan: docs/plan-griff-von-oben.md).
+env_cfg_oben.py — grasp type "top" (stage 4b, ADR-018, plan: docs/protokoll/plan-griff-von-oben.md).
 
-Startpose aus der parallelen Suche (tools/suche_startpose_oben.py, docs/startpose-oben/ergebnis.md, 2026-10-11; Vorbild
-Greifplaner „vorschlagen → schließen → bewerten“): Hand von oben, **20° um x gekippt** (Finger leicht nach unten), nicht
-gerollt, **Daumen-Rotator beim Start 75°**, Objekt in der Greifmitte zwischen Daumen- und Fingerspitzen. Die Höhe der
-tiefsten Fingerspitze (der Daumen) über dem Tisch hängt vom Objekt ab (mdp.tip_height_for_object; Regel „alle schließen“
-damit 90–100 % auf Kugel Ø 5/7/9, Dose, Schachtel und YCB-Suppe, 48 Episoden je Höhe). Im Training wird die Höhe je
-Umgebung ±5 mm gestreut und die Lage ±1 cm (ungenaue Vorgreifpose des Arms).
-Ablauf wie seitlich: 0–2 s greifen, 2–2,5 s senkt sich der Tisch um 10 cm (≙ Arm hebt an), danach halten.
+Start pose from the parallel search (tools/suche_startpose_oben.py, docs/protokoll/startpose-oben/ergebnis.md, 2026-10-11;
+modelled on grasp planners "propose → close → evaluate"): hand from above, **tilted 20° about x** (fingers slightly
+down), not rolled, **thumb rotator at 75° at the start**, object in the grasp centre between thumb and fingertips. The
+height of the lowest fingertip (the thumb) above the table depends on the object (mdp.tip_height_for_object; with it the
+rule "close all" reaches 90–100 % on spheres Ø 5/7/9, can, small box and YCB soup, 48 episodes per height). In training
+the height is spread ±5 mm per environment and the position ±1 cm (inaccurate pre-grasp pose of the arm).
+Sequence as for the side grasp: 0–2 s grasp, 2–2.5 s the table lowers by 10 cm (≙ the arm lifts), then hold.
 
-Verworfen: waagrecht mit 3,5 cm Abstand (Daumen stieß gegen den Tisch, Kugel Ø 5/Schachtel ≤ 3/24) und 36,5° gekippt mit
-gleich hohen Spitzen (Finger streiften beim Schließen den Tisch, 3–5/24) — Plan, Abschnitte „Gemessen“ und „Stand 2026-10-11“.
+Rejected: horizontal with 3.5 cm distance (thumb hit the table, sphere Ø 5/small box ≤ 3/24) and tilted 36.5° with
+fingertips at equal height (fingers brushed the table while closing, 3–5/24) — plan, sections "Gemessen" and "Stand 2026-10-11".
 
-Belohnung = seitliches Rezept ohne Orientierungsterme, wie Dexsuite Lift (orientation_tracking = None, success ohne
-rot_std): beim Heben zählt nur, dass das Objekt in der Hand bleibt. Bewertung ohne Kippanforderung (--max_kipp_deg -1).
+Reward = side-grasp recipe without orientation terms, like Dexsuite Lift (orientation_tracking = None, success without
+rot_std): when lifting, all that counts is that the object stays in the hand. Evaluation without tilt requirement (--max_kipp_deg -1).
 """
 import math
 
@@ -26,30 +26,30 @@ from . import mdp
 from .env_cfg import (GRASP_TIME_S, HAND_POS, HOLD_STD_M, START_REF_S, XY_PENALTY_WEIGHT, YCB_SPAWN_LIFT,
                       PibGraspEnvCfg, RewardsProgressCfg, dexsuite_action_space, ycb_upright_usd)
 
-# Pose und Geometrie (Mesh-Punkte der Fingerspitzen bei Rotator 75°, übrige Gelenke 0, logs/startpose_oben/geometrie.npz aus
-# tools/probe_neigung_oben.py --dump), relativ zum Hand-Root nach der Drehung, in Weltachsen:
+# Pose and geometry (mesh points of the fingertips at rotator 75°, other joints 0, logs/startpose_oben/geometrie.npz from
+# tools/probe_neigung_oben.py --dump), relative to the hand root after the rotation, in world axes:
 HAND_ROT_OBEN = (0.98481, 0.17365, 0.0, 0.0)                 # (w, x, y, z) = 20° um x
 ROTATOR_START_DEG = 75.0
-TIP_LOW_Z = HAND_POS[2] - 0.1914                             # tiefster Punkt aller fünf Spitzen (Daumen; Finger ≈ −0,150)
-GRASP_XY = (HAND_POS[0] - 0.0203, HAND_POS[1] - 0.2870)      # Greifmitte: zwischen Daumenspitze und Mitte der Fingerspitzen
-# Höhe der tiefsten Spitze über dem Tisch (Suche): Kugeln max(10 mm, Ø − 60 mm), sonst max(10 mm, Höhe − 40 mm)
+TIP_LOW_Z = HAND_POS[2] - 0.1914                             # lowest point of all five tips (thumb; fingers ≈ −0.150)
+GRASP_XY = (HAND_POS[0] - 0.0203, HAND_POS[1] - 0.2870)      # grasp centre: between the thumb tip and the middle of the fingertips
+# height of the lowest tip above the table (search): spheres max(10 mm, Ø − 60 mm), otherwise max(10 mm, height − 40 mm)
 SPHERE_OFFSET, BLOCK_OFFSET, MIN_TIP_HEIGHT = 0.060, 0.040, 0.010
-TRAIN_HEIGHT_JITTER = 0.005          # Training: Höhe je Umgebung ±5 mm (Bewertung: 0; Störbedingung ±5 mm)
+TRAIN_HEIGHT_JITTER = 0.005          # training: height per environment ±5 mm (evaluation: 0; perturbed condition ±5 mm)
 OBJECT_XY_RANGE = {"x": (-0.01, 0.01), "y": (-0.01, 0.01)}
-# Tisch um die Greifmitte, je Umgebung in der Höhe an die Objektunterseite gesetzt (mdp.place_objects_from_above)
+# table around the grasp centre, its height set per environment to the object's bottom (mdp.place_objects_from_above)
 TABLE_SIZE_OBEN = (0.30, 0.30, 0.04)
 
-# ── Objektkatalog von oben: rund, klein oder flach (ADR-018; seitlich braucht ≥ 15 cm Höhe) ─────────────────────────
-# form, Maße [m] (Kugel: Radius; Zylinder: Radius, Höhe; Quader: x quer zu den Fingern, y längs, z), Gier beim Reset
+# ── Object catalogue for the top grasp: round, small or flat (ADR-018; the side grasp needs ≥ 15 cm height) ─────────
+# shape, dimensions [m] (sphere: radius; cylinder: radius, height; box: x across the fingers, y along, z), yaw on reset
 OBJECTS_OBEN = {
     "kugel_d7": {"form": "kugel", "masse": (0.035,), "gier": (-math.pi, math.pi)},          # Apfel-Ersatz (Benchmark)
     "kugel_d5": {"form": "kugel", "masse": (0.025,), "gier": (-math.pi, math.pi)},          # Mandarine/Pflaume
-    "kugel_d9": {"form": "kugel", "masse": (0.045,), "gier": (-math.pi, math.pi)},          # Orange/großer Apfel
+    "kugel_d9": {"form": "kugel", "masse": (0.045,), "gier": (-math.pi, math.pi)},          # orange/large apple
     "dose_d68x10": {"form": "zylinder", "masse": (0.034, 0.10), "gier": (-math.pi, math.pi)},   # kurze Dose aufrecht
     "quader_9x6x4": {"form": "quader", "masse": (0.09, 0.06, 0.04),                          # flache Schachtel
                      "gier": (-math.radians(15), math.radians(15))},
-    # Testobjekt (nie trainiert): YCB 005 Tomatensuppendose, 349 g, 6,8 × 10,2 cm, aufrecht (wie 003/004/006 über eine
-    # Wrapper-USD; Oberseite des Assets zeigt nach −y → −90° um x). Ruhelage noch nicht gemessen → 3 mm Fallhöhe.
+    # Test object (never trained): YCB 005 tomato soup can, 349 g, 6.8 × 10.2 cm, upright (like 003/004/006 via a
+    # wrapper USD; the top of the asset points to −y → −90° about x). Rest pose not measured yet → 3 mm drop height.
     "ycb_005_suppe": {"form": "usd", "ycb": "005_tomato_soup_can", "drehung": (-90, 0, 0),
                       "masse": (0.0677, 0.0677, 0.1019), "gier": (-math.pi, math.pi)},
 }
@@ -70,14 +70,14 @@ def _height(spec: dict) -> float:
 
 @configclass
 class RewardsObenCfg(RewardsProgressCfg):
-    """EXP-022-Rezept ohne Orientierung (Dexsuite Lift): kein upright, Erfolg = gehalten (ohne Kippfaktor)."""
+    """EXP-022 recipe without orientation (Dexsuite Lift): no upright term, success = held (without tilt factor)."""
     upright = None
     success = RewTerm(func=mdp.object_held, weight=10.0, params={"drop_start_s": GRASP_TIME_S, "std": HOLD_STD_M})
 
 
 @configclass
 class PibGraspEnvCfg_Oben(PibGraspEnvCfg):
-    """Basisaufgabe „von oben“ (Bewertung je Objekt über apply_object_oben, Standard Kugel Ø 7 cm)."""
+    """Base task "top" (evaluation per object via apply_object_oben, default sphere Ø 7 cm)."""
     rewards: RewardsObenCfg = RewardsObenCfg()
 
     def __post_init__(self):
@@ -92,24 +92,24 @@ class PibGraspEnvCfg_Oben(PibGraspEnvCfg):
         self.scene.object.init_state.pos = (*GRASP_XY, TIP_LOW_Z - 0.03 + h / 2)       # Ausgangswert, s. u.
         self.scene.table.spawn.size = TABLE_SIZE_OBEN
         self.scene.table.init_state.pos = (*GRASP_XY, TIP_LOW_Z - 0.03 - TABLE_SIZE_OBEN[2] / 2)
-        # Startlage je Umgebung aus Bounding Box und Form (inkl. Zufallsgröße): Objekt in der Greifmitte, Tisch so hoch,
-        # wie die Suche je Objekt ergab — ersetzt place_objects_by_size
+        # Start pose per environment from bounding box and shape (incl. random scale): object in the grasp centre, table as
+        # high as the search found per object — replaces place_objects_by_size
         self.events.place_objects = EventTerm(
             func=mdp.place_objects_from_above, mode="startup",
             params={"center_xy": GRASP_XY, "tip_low_z": TIP_LOW_Z, "sphere_offset": SPHERE_OFFSET,
                     "block_offset": BLOCK_OFFSET, "min_tip_height": MIN_TIP_HEIGHT, "height_jitter": 0.0,
                     "table_thickness": TABLE_SIZE_OBEN[2], "lift": 0.0})
-        # Vorgreifpose: Daumen-Rotator fest auf 75° (wie in der Suche), übrige Servos wie seitlich fast offen
+        # pre-grasp pose: thumb rotator fixed at 75° (as in the search), other servos almost open as for the side grasp
         self.events.reset_hand.params["ranges_deg"]["thumb_left_rotator"] = (ROTATOR_START_DEG, ROTATOR_START_DEG)
         self.events.reset_object.params["pose_range"] = {**OBJECT_XY_RANGE, "yaw": (-math.pi, math.pi)}
-        # von schräg vorn/oben auf Fingerspitzen und Daumen (Hand liegt waagrecht)
+        # obliquely from the front/above onto fingertips and thumb (the hand lies horizontally)
         self.viewer.eye = (1.6, -2.6, 1.5)
         self.viewer.lookat = (0.15, -0.5, 0.4)
 
 
 def apply_object_oben(cfg: PibGraspEnvCfg_Oben, key: str) -> PibGraspEnvCfg_Oben:
-    """Objekt aus OBJECTS_OBEN einsetzen (wie env_cfg.apply_object; Startlage setzt das Startup-Event place_objects
-    aus der tatsächlichen Bounding Box). YCB: echte Masse/Größe aus dem Asset, keine Zufallsmasse/-größe."""
+    """Insert an object from OBJECTS_OBEN (like env_cfg.apply_object; the start pose is set by the startup event
+    place_objects from the actual bounding box). YCB: real mass/size from the asset, no random mass/scale."""
     spec = OBJECTS_OBEN[key]
     old = cfg.scene.object.spawn
     common = {k: getattr(old, k) for k in ("rigid_props", "collision_props", "mass_props", "physics_material",
@@ -128,7 +128,7 @@ def apply_object_oben(cfg: PibGraspEnvCfg_Oben, key: str) -> PibGraspEnvCfg_Oben
     return cfg
 
 
-# ── Training: Objektvielfalt wie EXP-013 (prozedural, MultiAssetSpawnerCfg), Masse wie Heavy ──────────────────────
+# ── Training: object variety like EXP-013 (procedural, MultiAssetSpawnerCfg), mass like Heavy ──────────────────────
 TRAIN_SPHERES_OBEN = [0.025, 0.03, 0.035, 0.04, 0.045]                                 # Radius: Ø 5–9 cm
 TRAIN_CYLINDERS_OBEN = [(r, h) for r in (0.025, 0.03, 0.035, 0.04) for h in (0.06, 0.10)]
 TRAIN_CUBOIDS_OBEN = [(0.06, 0.06, 0.04), (0.08, 0.08, 0.05), (0.09, 0.06, 0.04), (0.06, 0.09, 0.05)]
@@ -136,8 +136,8 @@ TRAIN_CUBOIDS_OBEN = [(0.06, 0.06, 0.04), (0.08, 0.08, 0.05), (0.09, 0.06, 0.04)
 
 @configclass
 class PibGraspEnvCfg_ObenMulti(PibGraspEnvCfg_Oben):
-    """Spezialist „von oben“ (voraussichtlich EXP-024): 17 Formen (5 Kugeln, 8 kurze Zylinder, 4 flache Quader),
-    Masse 0,04–0,4 kg (wie EXP-006 ff.), Gier ±15° (bei Kugeln/Zylindern ohne Wirkung). Agent PibGraspPPORunnerCfg_Clip."""
+    """Specialist "top" (planned as EXP-024 at the time): 17 shapes (5 spheres, 8 short cylinders, 4 flat boxes),
+    mass 0.04–0.4 kg (like EXP-006 ff.), yaw ±15° (no effect on spheres/cylinders). Agent PibGraspPPORunnerCfg_Clip."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -155,7 +155,7 @@ class PibGraspEnvCfg_ObenMulti(PibGraspEnvCfg_Oben):
 
 @configclass
 class PibGraspEnvCfg_ObenMultiDex(PibGraspEnvCfg_ObenMulti):
-    """EXP-029: Spezialist „von oben“ mit dem Rezept von EXP-027 (Aktionsraum wie Dexsuite, Agent mit bounds_loss)."""
+    """EXP-029: specialist "top" with the recipe of EXP-027 (action space like Dexsuite, agent with bounds_loss)."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -164,7 +164,7 @@ class PibGraspEnvCfg_ObenMultiDex(PibGraspEnvCfg_ObenMulti):
 
 @configclass
 class RewardsObenXYCfg(RewardsObenCfg):
-    """Nur falls EXP-023 die Strafe auf die Verschiebung in der Tischebene stützt."""
+    """Only if EXP-023 supports the penalty on the displacement in the table plane."""
     object_xy = RewTerm(func=mdp.object_xy_displacement, weight=XY_PENALTY_WEIGHT,
                         params={"ref_s": START_REF_S, "max_dist": 0.2})
 

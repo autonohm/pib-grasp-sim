@@ -1,11 +1,11 @@
 """
-ruhelage_objekt.py — Ruhelage („stable pose“) eines Katalogobjekts auf dem Tisch messen, damit es beim Reset genau so
-gespawnt wird, wie es von selbst steht (kein Fallen/Setzen/Kippen bei t = 0).
+ruhelage_objekt.py — measure the rest pose ("stable pose") of a catalogue object on the table so that it is spawned on
+reset exactly the way it stands by itself (no falling/settling/tipping at t = 0).
 
-Objekt wenige mm über dem Tisch, Hand ganz offen, Aktionen 0, 1,5 s (vor dem Absenken). Gemessen je Umgebung: Höhe des
-Objektursprungs über der Tischplatte und Neigung im Körperrahmen (q_reset⁻¹ · q_end, unabhängig von der Gierdrehung),
-dazu Restbewegung und Streuung. Ergebnis als Eintrag für env_cfg.OBJECTS[...]["ruhelage"].
-Bericht: isaac_sim/tools/_ruhelage_<objekt>.txt
+Object a few mm above the table, hand fully open, actions 0, 1.5 s (before the lowering). Measured per environment: height
+of the object origin above the table top and tilt in the body frame (q_reset⁻¹ · q_end, independent of the yaw rotation),
+plus residual motion and spread. Result as an entry for env_cfg.OBJECTS[...]["ruhelage"].
+Report: isaac_sim/tools/_ruhelage_<objekt>.txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/ruhelage_objekt.py --headless --objekt ycb_004_zucker
 """
@@ -37,7 +37,7 @@ cfg = apply_object(PibGraspEnvCfg(), args.objekt)
 cfg.scene.num_envs = args.num_envs
 cfg.seed = 1000
 cfg.events.reset_hand.params["ranges_deg"] = {k: (0.0, 0.0) for k in cfg.events.reset_hand.params["ranges_deg"]}
-cfg.events.place_objects.params["lift"] = args.fall_mm / 1000      # ohne gespeicherte Ruhelage, wenige mm Fall
+cfg.events.place_objects.params["lift"] = args.fall_mm / 1000      # without a stored rest pose, a drop of a few mm
 cfg.events.place_objects.params["root_height"] = None
 cfg.scene.object.init_state.rot = (1.0, 0.0, 0.0, 0.0)
 env = gym.make("Pib-Grasp-Hand-Left-v0", cfg=cfg)
@@ -58,15 +58,15 @@ assert steps * u.step_dt < GRASP_TIME_S
 p_end = obj.data.root_pos_w - org
 height = p_end[:, 2] - TABLE_TOP_Z
 q_settle = quat_mul(quat_inv(q_reset), obj.data.root_quat_w)
-q_settle = q_settle * torch.sign(q_settle[:, :1])                    # w ≥ 0 (gleiche Hemisphäre)
+q_settle = q_settle * torch.sign(q_settle[:, :1])                    # w ≥ 0 (same hemisphere)
 tilt = torch.rad2deg(mdp.object_tilt(u))
-# typische Ruhelage = Umgebung mit dem Median der Neigung (Ausreißer — umgefallen/geschaukelt — nicht mitteln)
+# typical rest pose = environment with the median tilt (do not average outliers — fallen over/rocking)
 med = int(tilt.argsort()[len(tilt) // 2])
 typical = (tilt - tilt[med]).abs() < 1.0
 q_typ = q_settle[typical].mean(0)
 q_typ = q_typ / q_typ.norm()
 h_typ = height[typical].mean()
-rest_motion = 1000 * (p_end - p_half).norm(dim=-1)                    # letzte 0,5 s
+rest_motion = 1000 * (p_end - p_half).norm(dim=-1)                    # last 0.5 s
 
 lines = [f"== {args.objekt} | {u.num_envs} Umgebungen, Start {args.fall_mm} mm über dem Tisch, Hand offen, 1,5 s",
          f"Ursprung über Tischplatte [mm]: Mittel {1000 * height.mean().item():.2f}, Streuung "

@@ -3,54 +3,54 @@ import numpy as np
 # ── Roboter ───────────────────────────────────────────────────────────────────
 ROBOT_PRIM_PATH = "/World/pib_upperbody_URDF/pib_upperbody_URDF"
 
-# ── Körper-DOFs (Kopf, Schultern, Arme, Handgelenke) ─────────────────────────
-# Seit isaac_sim/tools/flip_joint_sign.py (siehe dort) stimmen Onshape- und
-# Isaac-Konvention überein — kein JOINT_SIGN mehr nötig. Direkte Grad-Werte,
-# positiv = Flexion/Heben/Vorne.
-# Limits aus inventory_output.txt (2026-06-18).
+# ── Body DOFs (head, shoulders, arms, wrists) ─────────────────────────────────
+# Since isaac_sim/tools/flip_joint_sign.py (see there) the Onshape and
+# Isaac conventions agree — no JOINT_SIGN needed any more. Direct degree values,
+# positive = flexion/raise/forward.
+# Limits from inventory_output.txt (2026-06-18).
 BODY_DOFS = {
     "names": [
         # Kopf
         "dof_head_horizontal",           # idx  0  — Drehen l/r         [-90, 90]
         "dof_head_vertical",             # idx  3  — Nicken             [-45, 70]
-        # Linke Seite
+        # Left side
         "dof_shoulder_vertical_left",    # idx  1  — Heben/Senken       [-90, 90]
-        "dof_shoulder_horizontal_left",  # idx  4  — Vor/Zurück         [-90, 90]
+        "dof_shoulder_horizontal_left",  # idx  4  — forward/back        [-90, 90]
         "dof_upper_arm_left",            # idx  6  — Rotation           [-90, 90]
         "dof_elbow_left",                # idx  8  — Flexion (pos=biegen)[-45,90]
         "dof_forearm_left",              # idx 10  — Pronation          [-90, 90]
-        "dof_wrist_left",                # idx 12  — Beugung            [  0, 90]
-        # Rechte Seite
+        "dof_wrist_left",                # idx 12  — flexion            [  0, 90]
+        # Right side
         "dof_shoulder_vertical_right",   # idx  2  — Heben/Senken       [-90, 90]
-        "dof_shoulder_horizontal_right", # idx  5  — Vor/Zurück         [-90, 90]
+        "dof_shoulder_horizontal_right", # idx  5  — forward/back        [-90, 90]
         "dof_upper_arm_right",           # idx  7  — Rotation           [-90, 90]
         "dof_elbow_right",               # idx  9  — Flexion (pos=biegen)[-45,90]
         "dof_forearm_right",             # idx 11  — Pronation          [-90, 90]
-        "dof_wrist_right",               # idx 13  — Beugung            [  0, 90]
+        "dof_wrist_right",               # idx 13  — flexion            [  0, 90]
     ],
     "indices": [0, 3, 1, 4, 6, 8, 10, 12, 2, 5, 7, 9, 11, 13],
 }
 
-# ── DOF-Daten beider Hände (aus inventory_output.txt, 2026-06-18) ─────────────
-# Anatomisch sortiert: Daumen-Rotator → Daumen MCP → IP →
-#   Zeigefinger MCP → PIP → DIP → Mittelfinger ... → Kleiner Finger
+# ── DOF data of both hands (from inventory_output.txt, 2026-06-18) ─────────────
+# Sorted anatomically: thumb rotator → thumb MCP → IP →
+# index MCP → PIP → DIP → middle finger ... → little finger
 #
-# Struktur pro Seite:
-#   names   — DOF-Namen in anatomischer Reihenfolge (15 Einträge)
-#   indices — zugehörige Artikulations-DOF-Indizes (aus inventory DOF API)
-#   servos  — 6 Servo-Gruppen: {servo_name: [usd_index, ...]}
+# Structure per side:
+# names   — DOF names in anatomical order (15 entries)
+# indices — corresponding articulation DOF indices (from the inventory DOF API)
+# servos  — 6 servo groups: {servo_name: [usd_index, ...]}
 #
-# Servo-Gruppen:
-#   thumb_opp  — Daumen CMC (Opposition/Abduktion), 1 Gelenk
-#   thumb      — Daumen MCP + IP, 2 Gelenke
-#   index/middle/ring/pinky — MCP + PIP + DIP, je 3 Gelenke
+# Servo groups:
+# thumb_opp  — thumb CMC (opposition/abduction), 1 joint
+# thumb      — thumb MCP + IP, 2 joints
+# index/middle/ring/pinky — MCP + PIP + DIP, 3 joints each
 
 HAND_DOFS = {
     "left": {
         "names": [
-            "dof_thumb_left_rotator",    # 0  — Daumen CMC
-            "dof_thumb_left_proximal",   # 1  — Daumen MCP
-            "dof_thumb_left_distal",     # 2  — Daumen IP
+            "dof_thumb_left_rotator",    # 0  — thumb CMC
+            "dof_thumb_left_proximal",   # 1  — thumb MCP
+            "dof_thumb_left_distal",     # 2  — thumb IP
             "dof_index_left_proximal",   # 3  — Zeigefinger MCP
             "dof_index_left_distal",     # 4  — Zeigefinger PIP
             "dof_index_left_tip",        # 5  — Zeigefinger DIP
@@ -92,9 +92,9 @@ HAND_DOFS = {
     },
     "right": {
         "names": [
-            "dof_thumb_right_rotator",    # 0  — Daumen CMC
-            "dof_thumb_right_proximal",   # 1  — Daumen MCP
-            "dof_thumb_right_distal",     # 2  — Daumen IP
+            "dof_thumb_right_rotator",    # 0  — thumb CMC
+            "dof_thumb_right_proximal",   # 1  — thumb MCP
+            "dof_thumb_right_distal",     # 2  — thumb IP
             "dof_index_right_proximal",   # 3  — Zeigefinger MCP
             "dof_index_right_distal",     # 4  — Zeigefinger PIP
             "dof_index_right_tip",        # 5  — Zeigefinger DIP
@@ -136,9 +136,9 @@ HAND_DOFS = {
     },
 }
 
-# ── Greifposen als Servo-Werte (0–90°) ───────────────────────────────────────
-# Seitenneutral — servo_pose_to_joints() rechnet auf 15 DOF-Winkel um.
-# Alle Werte sind Richtwerte; beim Test über config/sequences.py (TENDON) anpassen.
+# ── Grasp poses as servo values (0–90°) ──────────────────────────────────────
+# Side-neutral — servo_pose_to_joints() converts them to 15 DOF angles.
+# All values are guide values; adjust when testing via config/sequences.py (TENDON).
 GRASP_POSES = {
     "open": {
         "thumb_opp": 0,
@@ -149,7 +149,7 @@ GRASP_POSES = {
         "pinky":     0,
     },
     "closed_fist": {
-        "thumb_opp": 30,   # CMC-Opposition, kein Beugegelenk → bleibt bei 30°
+        "thumb_opp": 30,   # CMC opposition, not a flexion joint → stays at 30°
         "thumb":     90,
         "index":     90,
         "middle":    90,
@@ -182,10 +182,10 @@ GRASP_POSES = {
     },
 }
 
-# ── Lineare Approximations-Faktoren pro Gelenk-Typ ───────────────────────────
-# Vereinfachung: alle Gelenke eines Fingers folgen dem Servo 1:1 (factor=1.0).
-# Bei Vollanschlag (90°) nehmen alle Gelenke 90° ein.
-# Später mit AS5600-Messdaten kalibrierbar.
+# ── Linear approximation factors per joint type ──────────────────────────────
+# Simplification: all joints of a finger follow the servo 1:1 (factor=1.0).
+# At full stop (90°) all joints take 90°.
+# Can be calibrated later with AS5600 measurements.
 _SERVO_FACTORS = {
     "thumb_opp": [1.0],
     "thumb":     [1.0, 1.0],
@@ -198,18 +198,18 @@ _SERVO_FACTORS = {
 
 def servo_pose_to_joints(servo_pose: dict, side: str) -> dict:
     """
-    Rechnet ein Servo-Dictionary in ein vollständiges 15-DOF-Dictionary um.
+    Converts a servo dictionary into a complete 15-DOF dictionary.
 
-    Lineare Näherung: alle Gelenke eines Fingers folgen dem Servo 1:1 (factor=1.0).
+    Linear approximation: all joints of a finger follow the servo 1:1 (factor=1.0).
 
     Parameters
     ----------
-    servo_pose : {servo_name: winkel_deg}  — fehlende Servos werden als 0° angenommen
-    side       : "left" oder "right"
+    servo_pose : {servo_name: angle_deg}  — missing servos are assumed to be 0°
+    side       : "left" or "right"
 
     Returns
     -------
-    {dof_name: winkel_deg}  — 15 Einträge, alle in Grad
+    {dof_name: angle_deg}  — 15 entries, all in degrees
     """
     hand = HAND_DOFS[side]
     dof_names  = hand["names"]
@@ -222,15 +222,15 @@ def servo_pose_to_joints(servo_pose: dict, side: str) -> dict:
         servo_val   = float(servo_pose.get(servo_name, 0.0))
 
         for usd_idx, factor in zip(usd_indices, factors):
-            # DOF-Name über den USD-Index ermitteln
+            # determine the DOF name via the USD index
             art_idx = hand["indices"].index(usd_idx)
             result[dof_names[art_idx]] = np.clip(servo_val * factor, 0.0, 90.0)
 
     return result
 
 
-# ── Normierung ────────────────────────────────────────────────────────────────
-# 0.0 = offen (0°), 1.0 = geschlossen (90°)
+# ── Normalisation ─────────────────────────────────────────────────────────────
+# 0.0 = open (0°), 1.0 = closed (90°)
 
 def normalize_pos(pos_deg: np.ndarray) -> np.ndarray:
     return np.clip(pos_deg / 90.0, 0.0, 1.0)
@@ -238,7 +238,7 @@ def normalize_pos(pos_deg: np.ndarray) -> np.ndarray:
 def denormalize_pos(pos_norm: np.ndarray) -> np.ndarray:
     return np.clip(pos_norm * 90.0, 0.0, 90.0)
 
-# ── Physik-Parameterbereiche (für synthetische Datengenerierung) ──────────────
+# ── Physics parameter ranges (for synthetic data generation) ─────────────────
 PHYSICS_RANGES = {
     "stiffness": (50.0, 200.0),
     "damping":   (5.0,  30.0),

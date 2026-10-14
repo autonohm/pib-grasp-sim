@@ -1,27 +1,27 @@
 """
-audit_asset.py — Schritt 1 "Asset inspizieren" (nach NVIDIAs Tuning-Reihe, Tutorial 3):
-liest den physikalischen Ist-Zustand der Stage und schreibt ihn nach
-isaac_sim/tools/_asset_audit.txt (gitignored). Ändert NICHTS an der Stage.
+audit_asset.py — step 1 "inspect the asset" (after NVIDIA's tuning series, tutorial 3):
+reads the physical state of the stage and writes it to
+isaac_sim/tools/_asset_audit.txt (gitignored). Changes NOTHING in the stage.
 
-Abschnitte:
-  1. Physics Scene     — Zeitschritt, Solver, GPU-Dynamics, Readback
-  2. Articulation Root — Self-Collision, Solver-Iterationen
-  3. Links             — Masse/Trägheit in der USD (authored) und wie PhysX sie nutzt, Vergleich
-                         mit der URDF, Collider-Typ/Offsets, Instanceable, Depenetration-Velocity
-  4. Gelenke           — Limits, Antrieb (Stiffness/Damping/maxForce/Typ/Target), Armature,
-                         maxJointVelocity, Mimic-Konfiguration
-  5. Gelenk-Dynamik    — effektive Trägheit (Diagonale der Massenmatrix), Schwerkraftmoment in der
-                         aktuellen Pose, daraus ω_n, ζ, ω_n·Δt und Sättigungsfehler, mit Warnungen
-                         nach NVIDIA Articulation Stability Guide
+Sections:
+  1. Physics Scene     — time step, solver, GPU dynamics, readback
+  2. Articulation Root — self-collision, solver iterations
+  3. Links             — mass/inertia in the USD (authored) and as PhysX uses them, comparison
+                         with the URDF, collider type/offsets, instanceable, depenetration velocity
+  4. Joints            — limits, drive (stiffness/damping/maxForce/type/target), armature,
+                         maxJointVelocity, mimic configuration
+  5. Joint dynamics    — effective inertia (diagonal of the mass matrix), gravity torque in the
+                         current pose, from that ω_n, ζ, ω_n·Δt and saturation error, with warnings
+                         after the NVIDIA Articulation Stability Guide
 
-Einheiten: USD-Angular-Drive stiffness = Nm/°, damping = Nm·s/°, maxJointVelocity = °/s
-(siehe generatedSchema.usda). Für ω_n/ζ wird auf Nm/rad umgerechnet.
-Massenmatrix: PhysX zählt die Armature NICHT mit (verifiziert: MCP M_ii ≈ 6.6e-5 bei Armature 5e-3),
-daher I_eff = M_ii + Armature für ω_n/ζ.
+Units: USD angular drive stiffness = Nm/°, damping = Nm·s/°, maxJointVelocity = °/s
+(see generatedSchema.usda). For ω_n/ζ they are converted to Nm/rad.
+Mass matrix: PhysX does NOT include the armature (verified: MCP M_ii ≈ 6.6e-5 at armature 5e-3),
+hence I_eff = M_ii + armature for ω_n/ζ.
 
-Im Script Editor ausführen, bei geöffneter Stage (v4 oder v5), nach start.py, Simulation auf
-PLAY (Abschnitt 3 "PhysX" und 5 brauchen die laufende Physik; sonst werden sie übersprungen).
-Pose: Abschnitt 5 gilt für die aktuelle Pose (nach start.py: T-Pose).
+Run in the Script Editor with the stage open (v4 or v5), after start.py, simulation on
+PLAY (sections 3 "PhysX" and 5 need the running physics; otherwise they are skipped).
+Pose: section 5 applies to the current pose (after start.py: T pose).
 """
 import io
 import math
@@ -36,10 +36,10 @@ from pxr import Usd, UsdPhysics
 stage = omni.usd.get_context().get_stage()
 out = io.StringIO()
 
-STIFF_WN_DT_MAX = 2.0        # NVIDIA: ω_n·Δt "nicht viel größer als 1" — Warnung ab 2
+STIFF_WN_DT_MAX = 2.0        # NVIDIA: ω_n·Δt "not much larger than 1" — warning from 2
 ZETA_UNDER = 0.7
 ZETA_OVER = 3.0
-VEL_UNLIMITED = 1.0e5        # Schema-Default ist 1e6 °/s
+VEL_UNLIMITED = 1.0e5        # the schema default is 1e6 °/s
 
 
 def emit(line: str = "") -> None:
@@ -77,7 +77,7 @@ def _fmt(v, spec=".4g"):
     return "-" if v is None else format(v, spec)
 
 
-# ── URDF-Referenz (Onshape-Werte) ─────────────────────────────────────────────
+# ── URDF reference (Onshape values) ───────────────────────────────────────────
 
 def _load_urdf() -> dict:
     stage_name = Path(stage.GetRootLayer().realPath).name
@@ -208,7 +208,7 @@ def audit_links(robot_root: str, urdf: dict, view) -> None:
              f"{_fmt(_get(body, 'physxRigidBody:maxDepenetrationVelocity'), '.3g'):>9}  {'; '.join(notes)}")
 
 
-# ── 4./5. Gelenke ─────────────────────────────────────────────────────────────
+# ── 4./5. Joints ──────────────────────────────────────────────────────────────
 
 def _mimic(prim):
     for schema in prim.GetAppliedSchemas():

@@ -1,18 +1,18 @@
 """
-suche_startpose_oben.py — Startpose für „von oben“ per paralleler Suche (Leon, 2026-10-11; Plan docs/plan-griff-von-oben.md).
+suche_startpose_oben.py — start pose for the "top" grasp via a parallel search (2026-10-11; plan docs/protokoll/plan-griff-von-oben.md).
 
-Vorbild Greifplaner „vorschlagen → schließen → bewerten“ (GraspIt!, DexGraspNet/UniDexGrasp: Posen in der Simulation geprüft):
-jede Umgebung bekommt eine eigene feste Handpose aus einem Raster — Kippung um x (Finger nach unten), Rollen um y, Daumen-
-Rotator (Start = Ziel), Höhe der tiefsten Fingerspitze über dem Tisch, Versatz des Objekts zur Greifmitte längs der Finger —,
-je Kombination mehrere Wiederholungen (Zufallsgröße/-masse/-lage wie im Training). Die Regel „alle schließen“ (wie EXP-014,
-Rotator hält seine Stellung) greift, der Tisch senkt sich wie gewohnt. Je Umgebung: gehalten, Startkontakt Hand↔Objekt (erste
-0,1 s), Hand↔Tisch vor dem Schließen und beim Schließen (Daumen/Finger), Handfläche am Objekt, Objektweg.
+Modelled on grasp planners "propose → close → evaluate" (GraspIt!, DexGraspNet/UniDexGrasp: poses checked in simulation):
+every environment gets its own fixed hand pose from a grid — tilt about x (fingers down), roll about y, thumb
+rotator (start = target), height of the lowest fingertip above the table, offset of the object from the grasp centre along
+the fingers —, several repetitions per combination (random scale/mass/position as in training). The rule "close all" (like
+EXP-014, the rotator keeps its position) grasps, the table lowers as usual. Per environment: held, start contact hand↔object
+(first 0.1 s), hand↔table before and during closing (thumb/fingers), palm on the object, object path.
 
-Geometrie der Fingerspitzen je Rotator aus tools/probe_neigung_oben.py --dump (Mesh-Punkte, Hand-Root-Frame). Für eine Drehung
-R = Ry·Rx: tiefster Punkt je Spitze; Greifmitte = Mitte zwischen Daumenspitze und Mittel der vier Fingerspitzen; der Hand-Root
-wird so gesetzt, dass die tiefste Spitze h über dem Tisch steht und die Greifmitte um dy vor/hinter der Objektmitte liegt.
-Ein Objekt je Prozess (Isaac Lab: eine Umgebung je Prozess). Ergebnis: logs/startpose_oben/<objekt>.csv (je Umgebung) und
-Zusammenfassung isaac_sim/tools/_suche_startpose_oben.txt; Auswertung über alle Objekte: tools/auswertung_startpose_oben.py.
+Fingertip geometry per rotator from tools/probe_neigung_oben.py --dump (mesh points, hand root frame). For a rotation
+R = Ry·Rx: lowest point per tip; grasp centre = midpoint between the thumb tip and the mean of the four fingertips; the hand
+root is placed so that the lowest tip is h above the table and the grasp centre lies dy in front of/behind the object centre.
+One object per process (Isaac Lab: one environment per process). Result: logs/startpose_oben/<objekt>.csv (per environment)
+and summary isaac_sim/tools/_suche_startpose_oben.txt; evaluation over all objects: tools/auswertung_startpose_oben.py.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/probe_neigung_oben.py --headless --dump logs/startpose_oben/geometrie.npz
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/suche_startpose_oben.py --headless --objekt kugel_d7
@@ -58,8 +58,8 @@ KIPP_X = [0.0, 10.0, 20.0, 30.0, 36.5, 45.0]
 ROLL_Y = [0.0, 4.0, 8.0]
 ROTATOR = [60, 75, 90]
 HOEHE = [0.010, 0.020, 0.030, 0.045, 0.060, 0.080]
-VERSATZ_Y = [-0.02, 0.0, 0.02]                 # Objektmitte ggü. Greifmitte längs der Finger (− = Richtung Fingerspitzen)
-if args.pose:                                  # feste Pose (Nachprüfung, Fenstertest): nur die Höhen variieren
+VERSATZ_Y = [-0.02, 0.0, 0.02]                 # object centre vs. grasp centre along the fingers (− = towards the fingertips)
+if args.pose:                                  # fixed pose (re-check, window test): only the heights vary
     _k, _r, _rot = (float(v) for v in args.pose.split(","))
     KIPP_X, ROLL_Y, ROTATOR, VERSATZ_Y = [_k], [_r], [int(_rot)], [0.0]
     HOEHE = [float(v) for v in (args.hoehen or "0.015").split(",")]
@@ -72,12 +72,12 @@ BODIES = ["urdf_elbow_lower", "urdf_forearm_left", "urdf_palm_left", "urdf_thumb
 PALM = BODIES.index("urdf_palm_left")
 THUMB = [BODIES.index(b) for b in ("urdf_thumb_rotator_left", "urdf_thumb_proximal", "urdf_thumb_tip")]
 FINGERS = [i for i, b in enumerate(BODIES) if b.startswith("urdf_finger_")]
-HAND = list(range(2, len(BODIES)))            # ohne Ellbogen/Unterarm
+HAND = list(range(2, len(BODIES)))            # without elbow/forearm
 
 
 def set_start_rotator(env, env_ids):
-    """Reset: Daumen-Rotator je Umgebung auf seine Raster-Stellung (Vorgreifpose; nach reset_hand)."""
-    if not hasattr(env, "pib_rot_start"):          # erster Reset beim Aufbau, bevor die Raster-Stellungen gesetzt sind
+    """Reset: thumb rotator per environment to its grid position (pre-grasp pose; after reset_hand)."""
+    if not hasattr(env, "pib_rot_start"):          # first reset during setup, before the grid positions are set
         return
     robot = env.scene["robot"]
     j = robot.joint_names.index("thumb_left_rotator")
@@ -104,7 +104,7 @@ robot, obj, table = env.scene["robot"], env.scene["object"], env.scene["table"]
 obj_sensor, table_sensor = env.scene["object_contact"], env.scene["table_contact"]
 dev = env.device
 
-# ── Handpose je Umgebung aus der Geometrie ──────────────────────────────────────────────────────────────────────────
+# ── Hand pose per environment from the geometry ──────────────────────────────────────────────────────────────────────
 geo = np.load(args.geometrie)
 P = np.array(params)                          # kipp, roll, rot, h, dy
 root_pos = np.zeros((N, 3))
@@ -149,8 +149,8 @@ def zeros():
 
 
 def rule_action(hold_q):
-    """Regel je Umgebung nach ihrer Episodenzeit (auch nach automatischem Reset): Unterarm/Handgelenk halten, Rotator
-    hält seine Stellung, ab 0,4 s Daumen + Finger mit 0,2 schließen."""
+    """Rule per environment by its episode time (also after an automatic reset): hold forearm/wrist, the rotator
+    keeps its position, from 0.4 s on thumb + fingers close at 0.2."""
     q = robot.data.joint_pos[:, ids]
     new = env.episode_length_buf == 0
     hold_q[new] = q[new]
@@ -175,7 +175,7 @@ with torch.inference_mode():
         if args.real_time:
             time.sleep(max(0.0, dt - (time.time() - t0)))
         alive &= ~(term | trunc)
-        of = obj_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)      # (N, Körper)
+        of = obj_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)      # (N, bodies)
         tf = table_sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)
         if step <= early:
             start_contact = torch.maximum(start_contact, of[:, HAND].amax(-1))
@@ -198,14 +198,14 @@ cols = ["kipp_x", "roll_y", "rotator", "hoehe_m", "versatz_y_m", "gehalten", "st
 rows = np.column_stack([P, alive.float().cpu(), start_contact.cpu(), table_early.cpu(), table_thumb.cpu(),
                         table_fingers.cpu(), (palm / max(n_hold, 1)).cpu(), (fingers / max(n_hold, 1)).cpu(), path.cpu(),
                         env.pib_tip_height.cpu()])
-# feste Pose (Prüfung/Fenster): eigene Datei, die Raster-Ergebnisse der Suche bleiben unverändert
+# fixed pose (check/window): own file, the grid results of the search stay unchanged
 with open(out_dir / (f"{args.objekt}_pose.csv" if args.pose else f"{args.objekt}.csv"), "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     w.writerow(cols)
     w.writerows(rows.tolist())
 
-# Zusammenfassung: je Kombination Anteile über die Wiederholungen; „sauber“ = kein Startkontakt, kein Tischkontakt vor dem
-# Schließen; Rangfolge nach gehalten, dann wenig Tischkontakt beim Schließen
+# Summary: per combination fractions over the repetitions; "clean" = no start contact, no table contact before
+# closing; ranked by held, then little table contact while closing
 r = args.wiederholungen
 agg = rows.reshape(len(combos), r, -1)
 held = agg[:, :, 5].mean(1)
@@ -224,7 +224,7 @@ text = "\n".join(lines)
 print(text, flush=True)
 with open(REPO / "isaac_sim" / "tools" / "_suche_startpose_oben.txt", "a", encoding="utf-8") as f:
     f.write(text + "\n")
-if not args.headless:                  # mit Fenster: weiterlaufen lassen (gewertet ist nur die erste Episode)
+if not args.headless:                  # with window: keep running (only the first episode is scored)
     print("Fenster: läuft weiter, bis es geschlossen wird", flush=True)
     with torch.inference_mode():
         while app.is_running():

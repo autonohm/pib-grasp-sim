@@ -51,9 +51,9 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-07_22-24-38_EXP-004_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Aufgabenerfolg (≤ 45°) Ø 6 cm 47,6 % → Ø 8 cm 34,4 % (−13 PP) → Quader
-  21,7 % (−26 PP); Finger ~2. Sichten (Leon): Objekt wird bei allen drei Objekten
+  21,7 % (−26 PP); Finger ~2. Sichten: Objekt wird bei allen drei Objekten
   so hoch wie möglich gehalten, vereinzelt Zappeln.'
-urteil: Hypothese bestätigt (teilweiser Transfer) — bestätigt (Leon, 2026-10-08)
+urteil: Hypothese bestätigt (teilweiser Transfer) — bestätigt (2026-10-08)
 schluss: Der Zylinder-Spezialist überträgt nur teilweise; Quader > 10 PP unter der
   Referenz → Training mit Objektvielfalt.
 laeufe_von: EXP-004

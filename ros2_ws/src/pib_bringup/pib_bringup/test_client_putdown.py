@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-test_client_putdown.py — Kehrt die Pickup-Demo exakt um (Dose absetzen und loslassen).
+test_client_putdown.py — reverses the pickup demo exactly (put the can down and release it).
 
-Identische 4 Keyframes wie test_client.py → _make_pickup_trajectory(), nur in
-umgekehrter Reihenfolge durchlaufen:
+The same 4 keyframes as test_client.py → _make_pickup_trajectory(), only run in
+reverse order:
 
-  Step 1 lift     → t=0.0s  Startzustand: Dose gehoben, Hand geschlossen
-  Step 2 grasp    → t=2.0s  Ellbogen senkt ab (elbow_right 55.4° → 17.7°) — Dose auf dem Tisch
-  Step 3 approach → t=4.0s  Finger öffnen (33.3° → 0°) — Dose losgelassen
-  Step 4 neutral  → t=6.0s  Arm zurück in T-Pose
+  Step 1 lift     → t=0.0s  start state: can lifted, hand closed
+  Step 2 grasp    → t=2.0s  elbow lowers (elbow_right 55.4° → 17.7°) — can on the table
+  Step 3 approach → t=4.0s  fingers open (33.3° → 0°) — can released
+  Step 4 neutral  → t=6.0s  arm back to the T pose
 
-Voraussetzung: Roboter steht im Endzustand von test_client_pickup.py (Dose bereits gehoben).
-Reihenfolge: zuerst `ros2 run pib_bringup test_client_pickup`, danach dieses Skript.
+Prerequisite: the robot is in the final state of test_client_pickup.py (can already lifted).
+Order: first `ros2 run pib_bringup test_client_pickup`, then this script.
 
 Start:
   ros2 run pib_bringup test_client_putdown
@@ -31,7 +31,7 @@ def _r(deg: float) -> float:
     return math.radians(deg)
 
 
-# ── Identisch zu test_client.py — gleiche 25 von 44 DOFs ─────────────────────
+# ── Identical to test_client.py — the same 25 of 44 DOFs ─────────────────────
 PICKUP_JOINTS = [
     "dof_shoulder_vertical_left", "dof_shoulder_horizontal_left",
     "dof_upper_arm_left", "dof_elbow_left", "dof_forearm_left",
@@ -78,7 +78,7 @@ def _make_putdown_trajectory():
         _G, _G, _G,
     ]
 
-    # Step 3 — Approach: Finger öffnen, Dose losgelassen
+    # Step 3 — approach: fingers open, can released
     approach = [
         90.0, 90.0, 0.1, -45.0, -0.2,
         62.5, 90.0, 17.7, 1.4, 4.0,

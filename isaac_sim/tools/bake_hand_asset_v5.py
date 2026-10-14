@@ -1,23 +1,23 @@
 """
-bake_hand_asset_v5.py — Roboter-Einstellungen fest in die Hand-USD schreiben (Isaac Lab).
+bake_hand_asset_v5.py — write the robot settings permanently into the hand USD (Isaac Lab).
 
-Isaac Lab führt start.py nicht aus. Alles, was dort pro Session gesetzt wird und für die
-Physik der Hand zählt, muss deshalb in der Asset-USD stehen. Dieses Skript wendet aus
-isaac_sim/setup_stage.py nur den roboterbezogenen Teil an — keine Physics Scene, kein
-Boden, kein Licht (gehören nicht in ein Asset):
-  - configure_drives       Servo-Aktuatormodell + passive Folgegelenke (ADR-012)
-  - configure_mimic_joints PIP/DIP/IP folgen dem MCP (ADR-011) — einziger Punkt, den
-                           Isaac Lab nicht selbst konfigurieren kann
-  - set_joint_limits       wie im Vollroboter
-  - Self-Collision am Articulation Root an (ADR-012)
-Danach prüft es das Ergebnis und schreibt einen Bericht nach
+Isaac Lab does not run start.py. Everything that is set there per session and matters for the
+physics of the hand must therefore be in the asset USD. This script applies only the
+robot-related part of isaac_sim/setup_stage.py — no physics scene, no
+ground, no light (they do not belong in an asset):
+  - configure_drives       servo actuator model + passive followers (ADR-012)
+  - configure_mimic_joints PIP/DIP/IP follow the MCP (ADR-011) — the only point that
+                           Isaac Lab cannot configure itself
+  - set_joint_limits       as in the full robot
+  - self-collision on at the articulation root (ADR-012)
+Afterwards it checks the result and writes a report to
 isaac_sim/tools/_hand_asset_bake.txt.
 
-Ablauf (Script Editor):
-  1. pib_hand_left_urdf_v5/robot.urdf importieren (Static Base, Convex Hull,
-     Self-Collision an), als isaac_sim/usd/pib_hand_left_v5.usd speichern und öffnen
-  2. dieses Skript ausführen
-  3. Bericht prüfen, Stage speichern (Ctrl+S) und neu öffnen
+Procedure (Script Editor):
+  1. import pib_hand_left_urdf_v5/robot.urdf (static base, convex hull,
+     self-collision on), save as isaac_sim/usd/pib_hand_left_v5.usd and open it
+  2. run this script
+  3. check the report, save the stage (Ctrl+S) and reopen it
 """
 import os
 import sys
@@ -66,7 +66,7 @@ roots = [p for p in stage.Traverse() if p.HasAPI(UsdPhysics.ArticulationRootAPI)
 for prim in roots:
     PhysxSchema.PhysxArticulationAPI.Apply(prim).CreateEnabledSelfCollisionsAttr().Set(True)
 
-# ── Prüfung ───────────────────────────────────────────────────────────────────
+# ── Check ─────────────────────────────────────────────────────────────────────
 _log()
 _log("── Prüfung ──")
 problems = []

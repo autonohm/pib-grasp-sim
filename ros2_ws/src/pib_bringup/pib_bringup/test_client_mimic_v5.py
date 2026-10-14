@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-test_client_mimic_v5.py — Test der Mimic Joints (Stufe 1, linear, gearing=-1) für die v5-Hand.
+test_client_mimic_v5.py — test of the mimic joints (stage 1, linear, gearing=-1) for the v5 hand.
 
-Fährt nur das MCP-Gelenk (`<finger>_<seite>_proximal`) per FollowJointTrajectory und
-misst, ob PIP/DIP (bzw. Daumen-IP) rein über die PhysX-Zwangsbedingung mitlaufen. PIP/DIP
-werden bewusst NICHT mitgesendet (controllers_v5.yaml: allow_partial_joints_goal: true) —
-ihre Antriebe sind ohnehin neutralisiert (isaac_sim/setup_stage.py: configure_drives).
+Moves only the MCP joint (`<finger>_<side>_proximal`) via FollowJointTrajectory and
+measures whether PIP/DIP (or the thumb IP) follow purely via the PhysX constraint. PIP/DIP
+are deliberately NOT sent (controllers_v5.yaml: allow_partial_joints_goal: true) —
+their drives are neutralised anyway (isaac_sim/setup_stage.py: configure_drives).
 
-Sequenz (MCP): 0° → 45° (3 s) → halten (2 s) → 90° (3 s) → halten (2 s) → 0° (3 s) → halten (2 s)
-Ausgewertet wird jeweils das letzte 1,0 s jeder Haltephase (Ruhelage, ohne Einschwingen):
-  Δ = θ_folge − θ_MCP   (erwartet 0°, Toleranz --tol, Standard 1,0°)
-Zusätzlich: maximale Abweichung über die gesamte Fahrt (dynamisch, nur zur Info) und der
-MCP-Regelfehler (θ_MCP − Soll) — wächst der, trägt der MCP-Servo Last aus der Kopplung.
+Sequence (MCP): 0° → 45° (3 s) → hold (2 s) → 90° (3 s) → hold (2 s) → 0° (3 s) → hold (2 s)
+Evaluated is the last 1.0 s of each hold phase (at rest, without settling):
+  Δ = θ_follower − θ_MCP   (expected 0°, tolerance --tol, default 1.0°)
+Additionally: maximum deviation over the whole motion (dynamic, info only) and the
+MCP control error (θ_MCP − target) — if it grows, the MCP servo carries load from the coupling.
 
-Voraussetzung:
-  1. Isaac Sim läuft (pib_upperbody_v5.usd, start.py ausgeführt → Mimic Joints gesetzt,
+Prerequisites:
+  1. Isaac Sim is running (pib_upperbody_v5.usd, start.py executed → mimic joints set,
      Stop → Play)
   2. ros2 launch pib_bringup pib_sim_v5.launch.py
 
 Start:
   ros2 run pib_bringup test_client_mimic_v5                 # index_left
   ros2 run pib_bringup test_client_mimic_v5 --finger thumb_right
-  ros2 run pib_bringup test_client_mimic_v5 --finger all    # alle 10 MCPs gleichzeitig
+  ros2 run pib_bringup test_client_mimic_v5 --finger all    # all 10 MCPs at once
   ros2 run pib_bringup test_client_mimic_v5 --tol 0.5
 
-Exit-Code 0 = alle Haltepunkte innerhalb der Toleranz, 1 = mindestens einer außerhalb,
-2 = Goal abgelehnt/abgebrochen oder keine Messdaten.
+Exit code 0 = all hold points within tolerance, 1 = at least one outside,
+2 = goal rejected/aborted or no measurement data.
 """
 import argparse
 import math
@@ -43,9 +43,9 @@ FINGERS = ("index", "middle", "ring", "pinky")
 SIDES = ("left", "right")
 ALL_TARGETS = [f"{f}_{s}" for s in SIDES for f in FINGERS] + [f"thumb_{s}" for s in SIDES]
 
-# (Zeit s, MCP-Sollwinkel °) — Haltephasen enden bei 6 / 11 / 16 s
+# (time s, MCP target angle °) — hold phases end at 6 / 11 / 16 s
 WAYPOINTS = [
-    (1.0, 0.0),     # Startpunkt
+    (1.0, 0.0),     # start point
     (4.0, 45.0),
     (6.0, 45.0),    # Halten 45°
     (9.0, 90.0),
@@ -54,11 +54,11 @@ WAYPOINTS = [
     (16.0, 0.0),    # Halten 0°
 ]
 HOLD_WINDOW_S = 1.0
-HOLDS = [(6.0, 45.0), (11.0, 90.0), (16.0, 0.0)]  # (Ende der Haltephase, Soll °)
+HOLDS = [(6.0, 45.0), (11.0, 90.0), (16.0, 0.0)]  # (end of the hold phase, target °)
 
 
 def _chain(target: str) -> list:
-    """(Name, Folgegelenk, Referenzgelenk) für einen Finger/Daumen — alle gegen das MCP gemessen."""
+    """(name, follower, reference joint) for one finger/thumb — all measured against the MCP."""
     if target.startswith("thumb"):
         side = target.split("_")[1]
         return [("IP", f"thumb_{side}_tip")]
@@ -78,7 +78,7 @@ class PibMimicTestV5(Node):
         self._action_client = ActionClient(
             self, FollowJointTrajectory, "/joint_trajectory_controller/follow_joint_trajectory"
         )
-        self.recorder = None   # wird bei Goal-Annahme gestartet (t=0 ~ Trajektorienstart)
+        self.recorder = None   # started at goal acceptance (t=0 ~ trajectory start)
         self.accepted = None
         self.error_code = None
         self.done = False
@@ -122,7 +122,7 @@ def _mean(values):
 
 
 class _JointStateRecorder:
-    """Zeichnet /joint_states mit Zeit relativ zum Goal-Start auf (Folgegelenke stehen nicht im Feedback)."""
+    """Records /joint_states with time relative to the goal start (followers are not in the feedback)."""
 
     def __init__(self, node: Node):
         from sensor_msgs.msg import JointState
@@ -147,8 +147,8 @@ def report(node: PibMimicTestV5, rec: _JointStateRecorder, tol_deg: float) -> in
         node.get_logger().error("Keine /joint_states empfangen — läuft die Bridge (pib_sim_v5.launch.py)?")
         return 2
 
-    # Trajektorie startet erst nach Goal-Annahme; Versatz zwischen Recorder-t0 und Trajektorien-t0
-    # ist klein (< 0,2 s) gegenüber den 1-s-Auswertefenstern am Ende der Haltephasen.
+    # The trajectory only starts after goal acceptance; the offset between recorder t0 and trajectory t0
+    # is small (< 0.2 s) compared with the 1 s evaluation windows at the end of the hold phases.
     failed = False
     print()
     print(f"{'Gelenk':<22}{'Halten':>8}{'MCP-Ist':>10}{'Folge-Ist':>11}{'Δ (Folge-MCP)':>15}{'MCP-Fehler':>12}  Ergebnis")
@@ -201,7 +201,7 @@ def main(args=None):
     while rclpy.ok() and not node.done:
         rclpy.spin_once(node, timeout_sec=0.1)
 
-    # kurzes Nachlaufen, damit die letzten /joint_states noch eingesammelt werden
+    # short overrun so that the last /joint_states are still collected
     for _ in range(5):
         rclpy.spin_once(node, timeout_sec=0.05)
 

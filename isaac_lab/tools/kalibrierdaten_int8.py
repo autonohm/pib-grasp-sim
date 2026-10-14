@@ -1,10 +1,10 @@
 """
-kalibrierdaten_int8.py — Beobachtungen aus Sim-Rollouts als Kalibrierdaten für die int8-Quantisierung (M2, conventions.md →
-„ST Edge AI“: Kalibrierdaten aus Sim-Rollouts).
+kalibrierdaten_int8.py — observations from sim rollouts as calibration data for the int8 quantisation (M2, conventions.md →
+"ST Edge AI": calibration data from sim rollouts).
 
-Rollout der Policy (TorchScript, deterministisch, Aktion wie im Training begrenzt/geglättet) in der Trainingsaufgabe (Objekte
-und Zufall wie im Training), je Schritt der Beobachtungsvektor des Actors (105 Werte, vor der Normalisierung — die steckt im
-Netz). Zufällig gezogen: Kalibrier- und Testmenge, gespeichert als .npz (calib, test).
+Rollout of the policy (TorchScript, deterministic, action clipped/smoothed as in training) in the training task (objects
+and randomness as in training), per step the actor's observation vector (105 values, before the normalisation — that is
+inside the network). Randomly drawn: calibration and test set, saved as .npz (calib, test).
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/kalibrierdaten_int8.py --headless --policy <run>/exported/policy.pt \
       --task Pib-Grasp-Hand-Left-HeavyMultiProgressClipXY-v0 --action_clip 1.0 --out logs/int8/<name>/daten.npz
@@ -38,7 +38,7 @@ import pib_grasp  # noqa: E402,F401
 from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
 
 cfg = parse_env_cfg(args.task, num_envs=args.num_envs)
-cfg.seed = 3000                                              # weder Trainings- noch Bewertungs-Seed
+cfg.seed = 3000                                              # neither the training nor the evaluation seed
 env = gym.make(args.task, cfg=cfg)
 policy = torch.jit.load(args.policy, map_location=env.unwrapped.device).eval()
 obs, _ = env.reset(seed=3000)

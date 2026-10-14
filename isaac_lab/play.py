@@ -1,5 +1,5 @@
-"""play.py — wie train.py, startet Isaac Labs rsl_rl/play.py (lädt den letzten Checkpoint,
-exportiert die Policy als ONNX/JIT nach <log>/exported/)."""
+"""play.py — like train.py, runs Isaac Lab's rsl_rl/play.py (loads the last checkpoint,
+exports the policy as ONNX/JIT to <log>/exported/)."""
 import os
 import runpy
 from pathlib import Path

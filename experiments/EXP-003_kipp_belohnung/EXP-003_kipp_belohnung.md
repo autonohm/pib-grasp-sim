@@ -92,7 +92,7 @@ Seeds dünn, Mittel kräftig, Eltern gestrichelt (nur Abbrüche/PPO — Training
 
 Actor [256, 128, 64] (elu), 68808 Parameter, 105 Eingänge (Verlauf 5) · Critic [512, 256, 128] · PPO: Lernrate 0.001, Entropie 0.005, 5 Epochen × 4 Mini-Batches, 32 Schritte/Umgebung · 1024 Umgebungen × 300 Iterationen
 
-Geplante Änderung: Kippabbruch entfernt; Halte-Belohnung multiplikativ mit Aufrecht-Faktor (rot_std 0,5 rad wie Dexsuite success_reward) statt additiver Aufrecht-Belohnung. Bedingung: Anforderung ≤ 45° (Leon 2026-10-07, verschlossene Packung) — wird bei der Auswertung angewandt, Eltern unter derselben Bedingung.
+Geplante Änderung: Kippabbruch entfernt; Halte-Belohnung multiplikativ mit Aufrecht-Faktor (rot_std 0,5 rad wie Dexsuite success_reward) statt additiver Aufrecht-Belohnung. Bedingung: Anforderung ≤ 45° (2026-10-07, verschlossene Packung) — wird bei der Auswertung angewandt, Eltern unter derselben Bedingung.
 
 Konfiguration gegenüber EXP-001 (10 Unterschiede):
 

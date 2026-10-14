@@ -1,8 +1,8 @@
 """
-pib_grasp — Isaac-Lab-Greifaufgabe der realen linken pib-v5-Hand (Proof of Concept).
+pib_grasp — Isaac Lab grasping task of the real left pib v5 hand (proof of concept).
 
-Registriert die Gym-Tasks. Nur String-Einstiegspunkte: dieses Modul wird vor dem Start
-der Isaac-Sim-App importiert (isaac_lab/train.py), die Configs erst danach.
+Registers the Gym tasks. String entry points only: this module is imported before the
+Isaac Sim app starts (isaac_lab/train.py), the configs only afterwards.
 """
 import gymnasium as gym
 
@@ -16,7 +16,7 @@ gym.register(
     },
 )
 
-# Trainingsvarianten für Experimente (Bewertung immer in Pib-Grasp-Hand-Left-v0, eval-v1)
+# Training variants for experiments (always evaluated in Pib-Grasp-Hand-Left-v0, eval-v1)
 for _name, _cfg in (("FingerCount", "PibGraspEnvCfg_FingerCount"), ("Heavy", "PibGraspEnvCfg_Heavy"),
                    ("HeavyDexsuite", "PibGraspEnvCfg_HeavyDexsuite"), ("HeavyMulti", "PibGraspEnvCfg_HeavyMulti"),
                    ("HeavyMultiRand", "PibGraspEnvCfg_HeavyMultiRand"), ("HeavyMultiADR", "PibGraspEnvCfg_HeavyMultiADR")):
@@ -30,27 +30,27 @@ for _name, _cfg in (("FingerCount", "PibGraspEnvCfg_FingerCount"), ("Heavy", "Pi
         },
     )
 
-# ADR-022 (EXP-019–022): je Variante Env-Konfiguration × Agenten-Konfiguration (Clip = Aktionen auf [−1, 1])
+# ADR-022 (EXP-019–022): per variant env configuration × agent configuration (Clip = actions clipped to [−1, 1])
 for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg"),
                             ("HeavyMultiClip", "PibGraspEnvCfg_HeavyMulti", "PibGraspPPORunnerCfg_Clip"),
                             ("HeavyMultiPriv", "PibGraspEnvCfg_HeavyMultiPriv", "PibGraspPPORunnerCfg"),
                             ("HeavyMultiProgressClip", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg_Clip"),
                             ("HeavyMultiProgressClipXY", "PibGraspEnvCfg_HeavyMultiProgressXY", "PibGraspPPORunnerCfg_Clip"),
-                            # Nachtlauf 2026-10-11 (EXP-024–026): je eine Änderung ggü. EXP-022
+                            # Night run 2026-10-11 (EXP-024–026): one change each vs. EXP-022
                             ("HeavyMultiProgressClipFilter", "PibGraspEnvCfg_HeavyMultiProgressFilter", "PibGraspPPORunnerCfg_Clip"),
                             ("HeavyMultiProgressClipTorque", "PibGraspEnvCfg_HeavyMultiProgressTorque", "PibGraspPPORunnerCfg_Clip"),
                             ("HeavyMultiProgressClipFingers", "PibGraspEnvCfg_HeavyMultiProgressFingers", "PibGraspPPORunnerCfg_Clip"),
-                            # Nachtlauf 2026-10-12: Aktionsraum wie Dexsuite (Skala 0,1 alle, bounds_loss statt Begrenzung)
+                            # Night run 2026-10-12: action space like Dexsuite (scale 0.1 for all, bounds_loss instead of clipping)
                             ("HeavyMultiProgressDex", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Bounds"),
                             ("HeavyMultiProgressDexGross", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_BoundsGross"),
-                            # EXP-033: bounds_loss mit der alten Skala (0,03 Unterarm/Handgelenk) — Ursache Kippen in EXP-027?
+                            # EXP-033: bounds_loss with the old scale (0.03 forearm/wrist) — cause of the tipping in EXP-027?
                             ("HeavyMultiProgressBounds", "PibGraspEnvCfg_HeavyMultiProgress", "PibGraspPPORunnerCfg_Bounds"),
-                            # Nachtlauf 2026-10-13 (EXP-034–037): Unruhe (CAPS) und Servo-Stall (PID-Lagrange), Eltern EXP-027
+                            # Night run 2026-10-13 (EXP-034–037): jitter (CAPS) and servo stall (PID Lagrangian), parent EXP-027
                             ("HeavyMultiProgressDexCaps", "PibGraspEnvCfg_HeavyMultiProgressDex", "PibGraspPPORunnerCfg_Caps"),
                             ("HeavyMultiProgressDexLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Bounds"),
                             ("HeavyMultiProgressDexCapsLagrange", "PibGraspEnvCfg_HeavyMultiProgressDexLagrange", "PibGraspPPORunnerCfg_Caps"),
                             ("HeavyMultiProgressDexLagrangeLoad", "PibGraspEnvCfg_HeavyMultiProgressDexLagrangeLoad", "PibGraspPPORunnerCfg_Bounds"),
-                            # Nachtlauf 2026-10-14 (EXP-038–041): Stall wie am echten Servo, Grenze je Servo, Fingerzahl; Eltern EXP-036
+                            # Night run 2026-10-14 (EXP-038–041): stall as on the real servo, limit per servo, finger count; parent EXP-036
                             ("HeavyMultiProgressDexCapsLagrangeReal", "PibGraspEnvCfg_LagrangeReal", "PibGraspPPORunnerCfg_Caps"),
                             ("HeavyMultiProgressDexCapsLagrangeJeServo", "PibGraspEnvCfg_LagrangeJeServo", "PibGraspPPORunnerCfg_Caps"),
                             ("HeavyMultiProgressDexCapsLagrangeJeServoFinger", "PibGraspEnvCfg_LagrangeJeServoFinger", "PibGraspPPORunnerCfg_Caps"),
@@ -65,8 +65,8 @@ for _name, _cfg, _agent in (("HeavyMultiProgress", "PibGraspEnvCfg_HeavyMultiPro
         },
     )
 
-# Greifart „von oben“ (Stufe 4b, docs/plan-griff-von-oben.md): Basisaufgabe für die Bewertung, Trainingsvarianten mit
-# dem EXP-022-Rezept (Fortschritt, Aktionen auf ±1)
+# Grasp type "top" (stage 4b, docs/protokoll/plan-griff-von-oben.md): base task for the evaluation, training variants with
+# the EXP-022 recipe (progress, actions clipped to ±1)
 for _name, _cfg, _agent in (("Oben", "PibGraspEnvCfg_Oben", "PibGraspPPORunnerCfg_Clip"),
                             ("ObenMulti", "PibGraspEnvCfg_ObenMulti", "PibGraspPPORunnerCfg_Clip"),
                             ("ObenMultiXY", "PibGraspEnvCfg_ObenMultiXY", "PibGraspPPORunnerCfg_Clip"),

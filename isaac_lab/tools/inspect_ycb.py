@@ -1,9 +1,9 @@
 """
-inspect_ycb.py — YCB-Assets aus Isaac Sim 5.1 inspizieren, bevor sie Testobjekte werden (nur lesend).
+inspect_ycb.py — inspect YCB assets from Isaac Sim 5.1 before they become test objects (read-only).
 
-Listet Props/YCB/ auf dem Asset-Server und liest je USD in Axis_Aligned_Physics/: Einheiten/Hochachse,
-Default-Prim, Bounding Box (Welt, in m), Lage des Ursprungs relativ zur Box, Rigid Body, Masse/Dichte,
-Collider (Approximation) und gebundenes Physik-Material (Reibung). Bericht: isaac_sim/tools/_ycb_inspect.txt.
+Lists Props/YCB/ on the asset server and reads per USD in Axis_Aligned_Physics/: units/up axis,
+default prim, bounding box (world, in m), position of the origin relative to the box, rigid body, mass/density,
+collider (approximation) and the bound physics material (friction). Report: isaac_sim/tools/_ycb_inspect.txt.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/inspect_ycb.py --headless
 """
@@ -46,7 +46,7 @@ def fmt(v):
 
 
 def material_info(stage, prim):
-    """Physik-Material: direkt gebunden (purpose physics) oder allgemein gebunden, mit Reibwerten."""
+    """Physics material: bound directly (purpose physics) or bound in general, with friction values."""
     for purpose in ("physics", ""):
         rel = UsdShade.MaterialBindingAPI(prim).GetDirectBindingRel(purpose) if purpose else \
             UsdShade.MaterialBindingAPI(prim).GetDirectBindingRel()

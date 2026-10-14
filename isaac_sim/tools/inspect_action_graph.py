@@ -1,14 +1,14 @@
 """
-inspect_action_graph.py — Listet alle OmniGraph-Action-Graphs der offenen Stage mit ihren
-Knoten, Attributwerten, tatsächlichen Verbindungen (Exec- und Daten-Pins) und Relationships
-auf, dazu alle ContactSensor-Prims der Stage und welche Relationships auf sie zeigen.
-Ändert nichts.
+inspect_action_graph.py — lists all OmniGraph action graphs of the open stage with their
+nodes, attribute values, actual connections (exec and data pins) and relationships,
+plus all ContactSensor prims of the stage and which relationships point to them.
+Changes nothing.
 
-Gedacht als Grundlage für die Contact Sensors (ADR-008): einmal auf v4 ausführen (dort ist
-index_right verifiziert = Referenzverkabelung), einmal auf v5.
+Intended as the basis for the contact sensors (ADR-008): run once on v4 (where
+index_right is verified = reference wiring), once on v5.
 
-Schreibt nach isaac_sim/tools/_action_graph_inventory_<stage>.txt (gitignored).
-Im Script Editor ausführen, Play-Zustand egal.
+Writes to isaac_sim/tools/_action_graph_inventory_<stage>.txt (gitignored).
+Run in the Script Editor, play state does not matter.
 """
 import io
 from pathlib import Path
@@ -52,19 +52,19 @@ else:
                 if value in (None, "", [], 0.0):
                     continue
                 emit(f"      {name} = {value!r}")
-            # Relationships (z.B. targetPrim, oder ein evtl. csPrim/sensorPrim-Bezug
-            # eines Contact-Sensor-Read-Nodes) — GetAttributes() oben sieht diese NICHT.
+            # Relationships (e.g. targetPrim, or a possible csPrim/sensorPrim reference
+            # of a contact sensor read node) — GetAttributes() above does NOT see them.
             for rel in node.GetRelationships():
                 targets = rel.GetTargets()
                 if targets:
                     emit(f"      {rel.GetName()} (rel) -> {[str(t) for t in targets]}")
         emit()
 
-# ── ContactSensor-Prims (ganze Stage, nicht nur Action-Graph-Kinder) ──────────
-# ADR-008: "nativer IsaacContactSensor-Prim" — Typname hier bewusst als String-
-# Vergleich (kein Schema-Import), um nichts über die tatsächliche Isaac-Sim-API
-# zu raten; "contactsensor" case-insensitive als Substring, falls die exakte
-# Schreibweise abweicht.
+# ── ContactSensor prims (whole stage, not only Action Graph children) ─────────
+# ADR-008: "native IsaacContactSensor prim" — type name compared deliberately as a
+# string (no schema import) so as not to guess anything about the actual Isaac Sim API;
+# "contactsensor" case-insensitive as a substring in case the exact
+# spelling differs.
 emit("=== ContactSensor-Prims (ganze Stage) ===")
 sensor_prims = [p for p in stage.Traverse() if "contactsensor" in p.GetTypeName().lower()]
 if not sensor_prims:
@@ -83,7 +83,7 @@ else:
             emit(f"      {name} = {value!r}")
 emit()
 
-# Welche Nodes/Relationships zeigen auf einen der obigen Sensor-Prims?
+# Which nodes/relationships point to one of the sensor prims above?
 if sensor_prims:
     sensor_paths = {sp.GetPath() for sp in sensor_prims}
     emit("=== Relationships, die auf einen ContactSensor-Prim zeigen ===")
@@ -99,8 +99,8 @@ emit("Fertig.")
 
 
 def _find_project_root() -> Path:
-    # __file__ ist im Script Editor nicht definiert (exec-Kontext) — Root wie in
-    # setup_stage.py stattdessen von der offenen Stage aus suchen.
+    # __file__ is not defined in the Script Editor (exec context) — find the root from the
+    # open stage instead, as in setup_stage.py.
     stage_file = Path(stage.GetRootLayer().realPath)
     for ancestor in [stage_file.parent, stage_file.parent.parent, stage_file.parent.parent.parent]:
         if (ancestor / "config" / "pib_hand_config_v4.py").is_file():

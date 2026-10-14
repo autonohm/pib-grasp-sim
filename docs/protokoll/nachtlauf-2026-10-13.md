@@ -1,11 +1,11 @@
 # Nachtlauf 2026-10-12/13 — Servo-Stall und Unruhe
 
-Stand 2026-10-13 mittags — **gelaufen** (23:13–10:23, alle Schritte rc = 0, HF-Backup fertig). Ergebnis unten (Entwurf, Urteil Leon).
-Ziel (Leon): die beiden Anforderungen angehen, die die echte Hardware betreffen —
+Stand 2026-10-13 mittags — **gelaufen** (23:13–10:23, alle Schritte rc = 0, HF-Backup fertig). Ergebnis unten (Entwurf, Urteil offen).
+Ziel: die beiden Anforderungen angehen, die die echte Hardware betreffen —
 **Servo-Stall** (Überlastschutz des ST3215 nach ~2 s über 80 % Blockiermoment, Wärme) und **Unruhe** (Verschleiß,
 Leitplanke). Grundsatz: volle Servoleistung, Verhalten über das Lernen steuern, nicht über Filter oder kleine Skala →
 **Eltern EXP-027** (Skala 0,1 für alle, `bounds_loss`, kein Filter, keine Begrenzung). Je Experiment genau eine Änderung,
-5 Seeds, 1024 Umgebungen × 300 Iterationen, eval-v2, Urteile als Entwurf (Leon).
+5 Seeds, 1024 Umgebungen × 300 Iterationen, eval-v2, Urteile als Entwurf.
 
 ## Warum diese Methoden
 
@@ -16,7 +16,7 @@ Leitplanke). Grundsatz: volle Servoleistung, Verhalten über das Lernen steuern,
   wird aber der Mittelwert. CAPS ersetzt den Filter durch Lernen.
 - **Stall → PPO-Lagrange mit PID-Regelung** (Ray, Achiam & Amodei 2019, Safety Gym; Stooke, Achiam & Abbeel, ICML 2020):
   Kosten c_t = Anteil der 7 Servos (ohne Handgelenk) mit |τ| ≥ 80 % Stall; Grenze d = 0,2 (Mittel über die Zeit;
-  **von Leon bestätigt**).
+  **bestätigt**).
   Strafe −λ·c_t, λ ≥ 0 regelt sich per PID auf J_c ≤ d. EXP-025 (feste Strafe −0,1) blieb wirkungslos — das Gewicht
   ist das Problem, und genau das stellt Lagrange selbst ein. Hängt nicht an den unbekannten Schutzwerten der echten
   Servos und hält sie auch kühl; kurze Spitzen mit vollem Moment bleiben erlaubt.
@@ -108,7 +108,7 @@ Fällt ein Experiment im Kurztest durch (NaN, Fehler), läuft die Kette mit dem 
 - Risiken: EXP-027 hat nur 2/5 erfolgreiche Seeds (Vergleich wenig trennscharf); Lagrange kann anfangs schwingen
   (PID-D-Anteil dämpft, Stooke 2020); CAPS zu stark → Policy träge, greift schlechter.
 
-## Ergebnis (Entwurf, 2026-10-13; Urteil Leon)
+## Ergebnis (Entwurf, 2026-10-13; Urteil offen)
 
 Nur erfolgreiche Seeds (wie Leistung und Index v3); Transport = Belastungstest 0,3 m mit 5 m/s², Mittel der erfolgreichen Seeds.
 
@@ -133,7 +133,7 @@ Nur erfolgreiche Seeds (wie Leistung und Index v3); Transport = Belastungstest 0
 - **Transport** (Kriterium ≥ 97 %): EXP-036 95 % (s42 99, s43 84, s44 99, s45 97) — knapp verfehlt durch einen Seed; der
   Top-Seed s42 liegt mit 99 % über EXP-024s Top-Seed (94 %). EXP-034 88 %, EXP-035 95 %.
 - **Kippen**: EXP-036 28°, EXP-024 13° — die kleine Skala/der Filter regularisieren weiter stärker gegen das Kippen (ADR-022).
-- **Vorschlag**: EXP-036 als Kandidat neue Basis neben EXP-024 (Videos `EXP-036_*/beste_videos/`, Leon). Nächster Schritt
+- **Vorschlag**: EXP-036 als Kandidat neue Basis neben EXP-024 (Videos `EXP-036_*/beste_videos/`). Nächster Schritt
   Überlastschutz: Grenze **je Servo** (7 Multiplikatoren, CMDP mit mehreren Nebenbedingungen) oder Kosten auf die Lauflänge
   > 2 s statt auf den Anteil — vorher prüfen, wie die Literatur das macht.
 

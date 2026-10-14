@@ -1,13 +1,13 @@
 """
-probe_neigung_oben.py — Neigung der Hand für „von oben“, bei der alle fünf Fingerspitzen gleich hoch über dem Tisch stehen
-(Leon, 2026-10-10: statt waagrechter Hand; Plan docs/plan-griff-von-oben.md).
+probe_neigung_oben.py — tilt of the hand for the "top" grasp at which all five fingertips are at the same height above the
+table (2026-10-10: instead of a horizontal hand; plan docs/protokoll/plan-griff-von-oben.md).
 
-Hand ohne Schwerkraft, Daumen-Rotator 90°, alle übrigen Gelenke 0 (offen). Je Fingerspitze die Punkte ihrer Meshes (Kollision
-und Optik, aus der USD im Link-Rahmen, mit der simulierten Lage des Links) relativ zum Hand-Root. Gesucht: Drehung um x (Kippen
-der Finger nach unten/oben) und um y (Rollen um die Fingerachse), bei der die tiefsten Punkte der fünf Spitzen am wenigsten
-streuen (Raster 0,5°). Dazu: Lage der Spitzen in der Tischebene (Objektmitte) und wie viel Platz zwischen Spitzenebene und
-Hand bleibt (tiefster Handpunkt außer den Spitzen über einer Kreisfläche um die Mitte) — das begrenzt die Objektgröße.
-Bericht: isaac_sim/tools/_probe_neigung_oben.txt
+Hand without gravity, thumb rotator 90°, all other joints 0 (open). Per fingertip the points of its meshes (collision
+and visual, from the USD in the link frame, with the simulated pose of the link) relative to the hand root. Sought: the
+rotation about x (tilting the fingers down/up) and about y (rolling about the finger axis) at which the lowest points of the
+five tips spread least (grid 0.5°). In addition: position of the tips in the table plane (object centre) and how much room
+remains between the tip plane and the hand (lowest hand point except the tips over a disc around the centre) — this limits
+the object size. Report: isaac_sim/tools/_probe_neigung_oben.txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/probe_neigung_oben.py --headless
 """
@@ -57,14 +57,14 @@ time = Usd.TimeCode.Default()
 
 
 def link_points(body: str) -> np.ndarray:
-    """Alle Mesh-Punkte unter dem Link-Prim, im Rahmen des Hand-Root mit der simulierten Lage des Links."""
+    """All mesh points under the link prim, in the hand root frame with the simulated pose of the link."""
     link = stage.GetPrimAtPath(f"/World/Hand/{body}")
     inv = UsdGeom.Xformable(link).ComputeLocalToWorldTransform(time).GetInverse()
     pts = []
     for prim in Usd.PrimRange(link, Usd.TraverseInstanceProxies()):
         if not prim.IsA(UsdGeom.Mesh):
             continue
-        rel = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(time) * inv        # Mesh → Link (statisch)
+        rel = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(time) * inv        # mesh → link (static)
         for q in UsdGeom.Mesh(prim).GetPointsAttr().Get(time) or []:
             v = rel.Transform(q)
             pts.append((v[0], v[1], v[2]))
@@ -131,7 +131,7 @@ plane = float(low_pts[:, 2].mean())
 cxy = low_pts[:, :2].mean(0)
 lines.append(f"Spitzenebene z {1000 * plane:+.0f} mm; Mitte der Spitzen (Objektmitte) x {1000 * cxy[0]:+.0f}  y {1000 * cxy[1]:+.0f}")
 lines.append(f"Abstand Daumenspitze ↔ Mittelfingerspitze in der Ebene {1000 * np.linalg.norm(low_pts[0, :2] - low_pts[2, :2]):.0f} mm")
-# Greifmitte: zwischen Daumenspitze und der Mitte der vier Fingerspitzen (dort steht das Objekt)
+# grasp centre: between the thumb tip and the middle of the four fingertips (the object stands there)
 gxy = (low_pts[0, :2] + low_pts[1:, :2].mean(0)) / 2
 lines.append(f"Greifmitte (zwischen Daumen und Fingern) x {1000 * gxy[0]:+.0f}  y {1000 * gxy[1]:+.0f}")
 O = others @ R.T
@@ -142,7 +142,7 @@ for rad in (0.0, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05
     lines.append(f"  Platz über der Spitzenebene, Kreis r = {1000 * rad:2.0f} mm um die Greifmitte: {1000 * h:4.0f} mm "
                  "(tiefster Handpunkt außer den Spitzen)")
 lines.append(f"Handfläche tiefster Punkt {1000 * (Pm[:, 2].min() - plane):+.0f} mm über der Spitzenebene")
-# Daumen beim Eindrehen: tiefster Punkt der Daumenspitze bei Rotator 0/30/60/90 (übrige Gelenke 0) relativ zur Spitzenebene
+# thumb while rotating in: lowest point of the thumb tip at rotator 0/30/60/90 (other joints 0) relative to the tip plane
 sweep = []
 for rot_deg in (0.0, 30.0, 60.0, 90.0):
     t[:, r.joint_names.index("thumb_left_rotator")] = math.radians(rot_deg)
@@ -153,7 +153,7 @@ for rot_deg in (0.0, 30.0, 60.0, 90.0):
         r.update(sim.get_physics_dt())
     sweep.append(f"{rot_deg:.0f}° {1000 * ((link_points(FINGERTIP_LINKS[0]) @ R.T)[:, 2].min() - plane):+.0f}")
 lines.append("Daumenspitze beim Eindrehen, tiefster Punkt ggü. Spitzenebene [mm]: " + "  ".join(sweep))
-# Finger beim Schließen (Daumen auf Rotator 90°): tiefster Punkt aller Fingerglieder ggü. der Spitzenebene je MCP-Winkel
+# fingers while closing (thumb at rotator 90°): lowest point of all finger links relative to the tip plane per MCP angle
 t[:, r.joint_names.index("thumb_left_rotator")] = math.radians(a.rotator)
 curl = []
 for deg in range(0, 91, 10):

@@ -1,11 +1,11 @@
 """
-analyse_reset.py — Was passiert in den ersten 0,1 s nach dem Reset? (Reset-Überlappung, Sprint 2026-10-09)
+analyse_reset.py — What happens in the first 0.1 s after the reset? (reset overlap, sprint 2026-10-09)
 
-Basisaufgabe (eval-v1) mit einem Katalogobjekt, Aktionen 0. Ein Kontaktsensor am Objekt mit Filter auf jeden
-Handkörper und den Tisch zeigt je Umgebung, welcher Körper das Objekt im ersten Physikschritt bzw. in den ersten
-0,1 s berührt und mit welcher Kraft — eine Überlappung beim Reset (Hand wird teleportiert) erscheint als große
-Kontaktkraft schon im ersten Schritt. Dazu: Verschiebung/Drehung des Objekts, Drift der Hand (Servo-Gelenke,
-Fingerspitzen) und die Startwinkel. Bericht: isaac_sim/tools/_analyse_reset_<objekt>[_offen].txt
+Base task (eval-v1) with a catalogue object, actions 0. A contact sensor on the object with a filter on every
+hand body and the table shows per environment which body touches the object in the first physics step or within the first
+0.1 s, and with what force — an overlap at reset (the hand is teleported) shows up as a large
+contact force already in the first step. In addition: displacement/rotation of the object, drift of the hand (servo joints,
+fingertips) and the start angles. Report: isaac_sim/tools/_analyse_reset_<objekt>[_offen].txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/analyse_reset.py --headless --objekt zylinder_d6 --num_envs 64
 """
@@ -64,7 +64,7 @@ if args.startpose == "eval_v1":
     r = cfg.events.reset_hand.params["ranges_deg"]
     r.update({j: (0.0, 15.0) for j in ("index_left_proximal", "middle_left_proximal", "ring_left_proximal",
                                        "pinky_left_proximal")}, wrist_left=(-10.0, 0.0))
-    if cfg.events.place_objects.params["lift"] == 0.0:       # YCB behält die Platzierung (feste Größe, Abstand)
+    if cfg.events.place_objects.params["lift"] == 0.0:       # YCB keeps its placement (fixed size, distance)
         cfg.events.place_objects = None
     stem += "_eval_v1"
 ranges = cfg.events.reset_hand.params["ranges_deg"]
@@ -75,7 +75,7 @@ cfg.scene.object.spawn.activate_contact_sensors = True
 cfg.scene.object_contact = ContactSensorCfg(
     prim_path="{ENV_REGEX_NS}/Object",
     filter_prim_paths_expr=[f"{{ENV_REGEX_NS}}/Robot/{b}" for b in BODIES] + ["{ENV_REGEX_NS}/Table"],
-    history_length=cfg.decimation)          # alle Physik-Unterschritte eines Policy-Schritts, nicht nur den letzten
+    history_length=cfg.decimation)          # all physics substeps of a policy step, not only the last one
 env = gym.make(TASK, cfg=cfg)
 u = env.unwrapped
 obj, robot, sensor = u.scene["object"], u.scene["robot"], u.scene["object_contact"]
@@ -88,7 +88,7 @@ tips = [robot.body_names.index(b) for b in ("urdf_thumb_tip", "urdf_finger_tip",
 
 import re  # noqa: E402
 import isaaclab.sim as sim_utils  # noqa: E402
-scale = torch.ones(u.num_envs)                               # zufällige Objektgröße (object_scale, prestartup)
+scale = torch.ones(u.num_envs)                               # random object scale (object_scale, prestartup)
 for path in sim_utils.find_matching_prim_paths(obj.cfg.prim_path):
     a = u.scene.stage.GetPrimAtPath(path).GetAttribute("xformOp:scale")
     if a and a.Get() is not None:
@@ -108,7 +108,7 @@ act = torch.zeros(u.num_envs, u.action_manager.total_action_dim, device=u.device
 with torch.inference_mode():
     for k in range(steps):
         u.step(act)
-        f = sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)   # (N, Filter), max über Unterschritte
+        f = sensor.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)   # (N, filters), max over substeps
         if k == 0:
             first = f.clone()
         peak = torch.maximum(peak, f)

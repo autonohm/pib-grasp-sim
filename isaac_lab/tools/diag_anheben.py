@@ -1,14 +1,14 @@
 """
-diag_anheben.py — Diagnose: Warum heben die Policies das Objekt vor dem Absenken an? (2026-10-08)
+diag_anheben.py — diagnostics: why do the policies lift the object before the table lowering? (2026-10-08)
 
-Hypothese: Der Annäherungsterm (fingertips_to_object = Dexsuite object_ee_distance, größter Abstand
-Fingerspitze ↔ Objektmitte) belohnt bei fester Hand, die Objektmitte zwischen Daumen (oben) und kleinen
-Finger zu schieben → Anheben. Die Policy läuft bis kurz vor dem Absenken; dann wird für die tatsächlichen
-Fingerspitzen der Term über einer gedachten Höhenverschiebung der Objektmitte ausgewertet (rein
-geometrisch, keine Physik) und das Optimum mit der tatsächlichen Höhe verglichen.
+Hypothesis: with a fixed hand, the approach term (fingertips_to_object = Dexsuite object_ee_distance, largest distance
+fingertip ↔ object centre) rewards pushing the object centre between the thumb (top) and the little
+finger → lifting. The policy runs until shortly before the lowering; then the term is evaluated for the actual
+fingertips over an imagined height shift of the object centre (purely
+geometric, no physics) and the optimum is compared with the actual height.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/diag_anheben.py --headless --policy <run>/exported/policy.pt
-Bericht: isaac_sim/tools/_diag_anheben.txt (angehängt je Aufruf)
+Report: isaac_sim/tools/_diag_anheben.txt (appended per call)
 """
 import argparse
 import os
@@ -42,7 +42,7 @@ u = env.unwrapped
 policy = torch.jit.load(args.policy, map_location=u.device).eval()
 robot, obj = u.scene["robot"], u.scene["object"]
 tip_ids = [robot.body_names.index(n) for n in mdp.FINGERTIP_LINKS]
-STD, W = 0.4, 1.0                     # wie RewardsCfg.fingertips_to_object
+STD, W = 0.4, 1.0                     # like RewardsCfg.fingertips_to_object
 
 obs, _ = env.reset(seed=1000)
 z0 = obj.data.root_pos_w[:, 2].clone()
@@ -54,18 +54,18 @@ with torch.inference_mode():
         alive &= ~(term | trunc)
     tips = robot.data.body_pos_w[:, tip_ids]                       # (N, 5, 3)
     c = obj.data.root_pos_w                                         # (N, 3)
-    lift = (c[:, 2] - z0)                                           # tatsächliche Höhe ggü. Start [m]
-    dz = torch.linspace(-0.10, 0.10, 401, device=u.device)         # gedachte Verschiebung der Mitte
+    lift = (c[:, 2] - z0)                                           # actual height vs. start [m]
+    dz = torch.linspace(-0.10, 0.10, 401, device=u.device)         # imagined shift of the centre
     shifted = c[:, None, :].repeat(1, len(dz), 1)
     shifted[:, :, 2] += dz[None, :]
     dist = torch.norm(tips[:, None, :, :] - shifted[:, :, None, :], dim=-1).max(dim=-1).values   # (N, D)
     r = W * (1 - torch.tanh(dist / STD))
-    best = dz[r.argmax(dim=1)]                                      # Verschiebung zum Optimum
+    best = dz[r.argmax(dim=1)]                                      # shift to the optimum
     i0 = (dz.abs()).argmin()
     r_now = r[:, i0]
-    # Wert, wenn die Mitte auf Starthöhe stünde (Objekt auf dem Tisch)
+    # value if the centre were at the start height (object on the table)
     on_table = torch.stack([r[k, (dz - (-lift[k])).abs().argmin()] for k in range(u.num_envs)])
-    far = (tips[:, :, 2] - c[:, None, 2])                           # Höhe der Fingerspitzen relativ zur Mitte
+    far = (tips[:, :, 2] - c[:, None, 2])                           # height of the fingertips relative to the centre
     a = alive
     lines = [
         f"== {args.policy} | Objekt {args.objekt} | t = {args.t} s | {int(a.sum())}/{u.num_envs} Episoden laufen",
@@ -80,7 +80,7 @@ with torch.inference_mode():
             f"{n}={100 * ((torch.norm(tips - c[:, None, :], dim=-1).argmax(dim=1) == k)[a].float().mean()):.0f}%"
             for k, n in enumerate(["Daumen", "Zeige", "Mittel", "Ring", "klein"])),
     ]
-    # Hypothese 2: Anheben als Vorbereitung — Nachrutschen nach dem Absenken je Episode gegen die Höhe davor
+    # Hypothesis 2: lifting as preparation — slipping after the lowering per episode against the height before
     z_pre = c[:, 2].clone()
     sag = torch.zeros(u.num_envs, device=u.device)
     alive2 = alive.clone()

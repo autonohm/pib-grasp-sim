@@ -92,7 +92,7 @@ training:
 fenstertest: false              # ersetzt durch tools/analyse_reset.py auf der Trainingsszene (HeavyMulti)
 # Szenenprüfung 2026-10-09 (tools/analyse_reset.py --objekt multi, 256 Starts): 1/256 Handkontakt (Daumenspitze in
 # Opposition, Rotator 83°, an der Ecke eines vergrößerten, um −14° gedrehten Quaders, 1,3 N, ~6 mm) — bewusst
-# belassen (Starts in Opposition bleiben, Leon); Bewertungsszenen 0/256 auf allen 8 Objekten.
+# belassen (Starts in Opposition bleiben); Bewertungsszenen 0/256 auf allen 8 Objekten.
 # --- automatisch (experiments.py run) ---
 commit: 99ad99b
 laeufe:
@@ -110,7 +110,7 @@ laeufe:
 ergebnis: '10 Seeds (5 im Nachtlauf nachtrainiert): 5/10 greifen, Leistung 86 % [81–89];
   die übrigen lernen nie zu greifen.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf (von Leon zu bestätigen): Mit sauberem Reset hängt das Entdecken
+schluss: 'Entwurf (zu bestätigen): Mit sauberem Reset hängt das Entdecken
   des Griffs am Zufall (kein Signal fürs Zugreifen, ADR-022) → EXP-019. Als Basis
   für EXP-019–021 genutzt.'
 nachtrag:

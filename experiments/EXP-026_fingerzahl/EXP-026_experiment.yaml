@@ -81,7 +81,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf, Leon schläft)
+fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf)
 
 # --- automatisch (experiments.py run) ---
 commit: 3adf87d

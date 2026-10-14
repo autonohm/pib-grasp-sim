@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-test_client_pickup.py — Pickup-Demo für pib ros2_control-Stack.
+test_client_pickup.py — pickup demo for the pib ros2_control stack.
 
-Führt die physikalisch verifizierte Dose-Greif-Sequenz aus:
-  1. T-Pose (neutral)
-  2. Approach — rechter Arm über die Dose, Daumen opponiert
-  3. Grasp   — alle Finger schließen (33.3°)
-  4. Lift    — Ellbogen hebt die Dose an
+Runs the physically verified can grasp sequence:
+  1. T pose (neutral)
+  2. Approach — right arm above the can, thumb in opposition
+  3. Grasp   — all fingers close (33.3°)
+  4. Lift    — the elbow lifts the can
 
-Winkel werden hier nach Radiant konvertiert; die Vorzeichen-Invertierung passiert im
-Action Graph (Script Node zwischen ROS2SubscribeJointState und IsaacArticulationController).
+Angles are converted to radians here; the sign inversion used to happen in the
+Action Graph (script node between ROS2SubscribeJointState and IsaacArticulationController,
+obsolete since ADR-007).
 
-Voraussetzung:
-  1. Isaac Sim läuft (USD mit Action Graph geladen, start.py ausgeführt, Play gedrückt)
+Prerequisites:
+  1. Isaac Sim is running (USD with Action Graph loaded, start.py executed, Play pressed)
   2. ros2 launch pib_bringup pib_sim.launch.py
 
 Start:
@@ -33,12 +34,12 @@ def _r(deg: float) -> float:
     return math.radians(deg)
 
 
-# ── Gelenke die sich in der Pickup-Sequenz bewegen (25 von 44 DOFs) ──────────
+# ── Joints that move in the pickup sequence (25 of 44 DOFs) ──────────────────
 PICKUP_JOINTS = [
     # Linker Arm — Haltepose
     "dof_shoulder_vertical_left", "dof_shoulder_horizontal_left",
     "dof_upper_arm_left", "dof_elbow_left", "dof_forearm_left",
-    # Rechter Arm — über Dose
+    # right arm — above the can
     "dof_shoulder_vertical_right", "dof_shoulder_horizontal_right",
     "dof_elbow_right", "dof_forearm_right", "dof_wrist_right",
     # Rechte Hand
@@ -49,19 +50,19 @@ PICKUP_JOINTS = [
     "dof_pinky_right_proximal",  "dof_pinky_right_distal",  "dof_pinky_right_tip",
 ]
 
-_G = 33.3   # Greifwinkel (Onshape-Konvention, physikalisch verifiziert)
+_G = 33.3   # grasp angle (Onshape convention, physically verified)
 _OPEN = 0.0
-_THUMB_OPP = 90.0  # Daumen opponiert für Zylindergriff
+_THUMB_OPP = 90.0  # thumb in opposition for the cylinder grasp
 
 
 def _make_pickup_trajectory():
     """
-    4 Waypoints, physikalisch verifizierte Pickup-Sequenz (Onshape-Konvention → rad).
+    4 waypoints, physically verified pickup sequence (Onshape convention → rad).
 
-    Step 1 neutral  → t=0.0s  T-Pose, alle 0°
-    Step 2 approach → t=2.0s  Arm positioniert, Hand offen, Daumen opponiert
-    Step 3 grasp    → t=3.5s  Finger schließen auf 33.3°
-    Step 4 lift     → t=5.5s  Ellbogen hebt, Dose angehoben
+    Step 1 neutral  → t=0.0s  T pose, all 0°
+    Step 2 approach → t=2.0s  arm positioned, hand open, thumb in opposition
+    Step 3 grasp    → t=3.5s  fingers close to 33.3°
+    Step 4 lift     → t=5.5s  elbow lifts, can lifted
     """
     def pt(positions_deg, sec):
         return JointTrajectoryPoint(
@@ -72,18 +73,18 @@ def _make_pickup_trajectory():
     # Step 1 — T-Pose
     neutral = [0.0] * len(PICKUP_JOINTS)
 
-    # Step 2 — Approach (aus _PICKUP_APPROACH nach _isaac()-Negation)
+    # Step 2 — approach (from _PICKUP_APPROACH after _isaac() negation)
     approach = [
         90.0, 90.0, 0.1, -45.0, -0.2,          # linker Arm
         62.5, 90.0, 17.7, 1.4, 4.0,             # rechter Arm
-        _THUMB_OPP, _OPEN, _OPEN,               # Daumen opponiert, Hand offen
+        _THUMB_OPP, _OPEN, _OPEN,               # thumb in opposition, hand open
         _OPEN, _OPEN, _OPEN,                    # Zeigefinger
         _OPEN, _OPEN, _OPEN,                    # Mittelfinger
         _OPEN, _OPEN, _OPEN,                    # Ringfinger
         _OPEN, _OPEN, _OPEN,                    # Kleinfinger
     ]
 
-    # Step 3 — Grasp: Arme wie Approach, alle Finger auf _G
+    # Step 3 — grasp: arms as in approach, all fingers to _G
     grasp = [
         90.0, 90.0, 0.1, -45.0, -0.2,
         62.5, 90.0, 17.7, 1.4, 4.0,
@@ -94,10 +95,10 @@ def _make_pickup_trajectory():
         _G, _G, _G,
     ]
 
-    # Step 4 — Lift: elbow_right auf 55.4° (index 7), Finger bleiben geschlossen
+    # Step 4 — lift: elbow_right to 55.4° (index 7), fingers stay closed
     lift = [
         90.0, 90.0, 0.1, -45.0, -0.2,
-        62.5, 90.0, 55.4, 1.4, 4.0,    # elbow_right 17.7 → 55.4 hebt die Dose
+        62.5, 90.0, 55.4, 1.4, 4.0,    # elbow_right 17.7 → 55.4 lifts the can
         _THUMB_OPP, _G, _G,
         _G, _G, _G,
         _G, _G, _G,
@@ -161,23 +162,23 @@ class PibPickupClient(Node):
         handle.get_result_async().add_done_callback(self._on_result)
 
     def _on_feedback(self, feedback_msg):
-        """Zeigt Ist- vs. Soll-Position der wichtigsten Gelenke pro Sekunde."""
+        """Shows actual vs. target position of the most important joints every second."""
         fb = feedback_msg.feedback
         if not fb.actual.positions or not fb.desired.positions:
             return
 
         t = fb.actual.time_from_start.sec + fb.actual.time_from_start.nanosec * 1e-9
-        # Nur ~1× pro Sekunde loggen (Feedback kommt mit 50 Hz)
+        # log only ~1× per second (feedback arrives at 50 Hz)
         if not hasattr(self, "_last_fb_t"):
             self._last_fb_t = -1.0
         if t - self._last_fb_t < 0.9:
             return
         self._last_fb_t = t
 
-        # Schlüsselgelenke: Ellbogen (Arm-Fortschritt) + ein Finger (Greif-Fortschritt)
+        # key joints: elbow (arm progress) + one finger (grasp progress)
         tracked = {
             "elbow_right":         7,   # Arm angehoben?
-            "thumb_right_rotator": 10,  # Daumen opponiert?
+            "thumb_right_rotator": 10,  # thumb in opposition?
             "index_right_proximal":13,  # Finger geschlossen?
         }
         parts = []

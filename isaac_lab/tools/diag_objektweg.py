@@ -1,11 +1,11 @@
 """
-diag_objektweg.py — Wohin bewegen Policies das Objekt? (2026-10-10: „Objekt wandert Richtung Unterarm“)
+diag_objektweg.py — Where do policies move the object? (2026-10-10: "object wanders towards the forearm")
 
-Basisaufgabe, deterministisch, 64 Umgebungen, Seed 1000; je Policy und Objekt die mittlere Verschiebung des Objekts ggü.
-t = 0,1 s in Weltkoordinaten (+x = Richtung Handfläche, +y = Richtung Unterarm/Handgelenk, z = Höhe), die Änderung des
-Abstands zum Unterarmansatz (urdf_elbow_lower — das maß der fehlerhafte Annäherungsterm bis EXP-018) und die
-Unterarmdrehung; nur Episoden, in denen das Objekt bis zum Ende gehalten wurde. Kontrolle ohne Belohnung: Regel
-„alle schließen“ (wie EXP-014). Bericht: isaac_sim/tools/_diag_objektweg_<objekt>.txt
+Base task, deterministic, 64 environments, seed 1000; per policy and object the mean displacement of the object vs.
+t = 0.1 s in world coordinates (+x = towards the palm, +y = towards the forearm/wrist, z = height), the change of the
+distance to the forearm base (urdf_elbow_lower — that is what the faulty approach term measured until EXP-018) and the
+forearm rotation; only episodes in which the object was held until the end. Control without reward: rule
+"close all" (like EXP-014). Report: isaac_sim/tools/_diag_objektweg_<objekt>.txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/diag_objektweg.py --headless \
       --policy EXP-018=<run>/exported/policy.pt EXP-022=<run>/exported/policy.pt:1.0 ...   (:1.0 = action_clip)
@@ -43,11 +43,11 @@ for _sfx, _f in (("", "Z"), ("_2", "M"), ("_3", "R"), ("_4", "K")):
     for _seg, _n in (("proximal", "Grund"), ("distal", "Mitte"), ("tip", "Spitze")):
         SHORT[f"urdf_finger_{_seg}{_sfx}"] = f"{_f}-{_n}"
 
-MARKS = [0.1, 1.0, 2.0, 2.5, 4.3]          # s: Start, Greifen, vor dem Absenken, Tisch unten, Ende
+MARKS = [0.1, 1.0, 2.0, 2.5, 4.3]          # s: start, grasp, before lowering, table down, end
 
 
 def rule_policy(u):
-    """Regel „alle schließen“ wie EXP-014 (schliessen 0,2, Rotator 90° bis 0,4 s, Unterarm/Handgelenk halten)."""
+    """Rule "close all" like EXP-014 (schliessen 0.2, rotator 90° until 0.4 s, hold forearm/wrist)."""
     robot = u.scene["robot"]
     ids = [robot.joint_names.index(n) for n in SERVO_JOINTS]
     scale = torch.tensor([0.03, 0.03] + [0.1] * 6, device=u.device)
@@ -93,7 +93,7 @@ if True:
         name, path, clip = spec[0], spec[1], float(spec[2] or 0)
         policy = rule_policy(u) if path is None else torch.jit.load(path, map_location=u.device).eval()
         rec = {}
-        with torch.inference_mode():                 # auch reset: Tensoren aus inference_mode nicht außerhalb ändern
+        with torch.inference_mode():                 # reset too: do not modify tensors from inference_mode outside of it
             obs, _ = env.reset(seed=1000)
             alive = torch.ones(u.num_envs, dtype=torch.bool, device=u.device)
             for k in range(1, int(u.max_episode_length)):
@@ -101,7 +101,7 @@ if True:
                 if clip > 0:
                     a = a.clamp(-clip, clip)
                 obs, _, term, trunc, _ = env.step(a)
-                alive &= ~term                       # gefallen/instabil; Zeitende am Schluss zählt als gehalten
+                alive &= ~term                       # dropped/unstable; a timeout at the end counts as held
                 if k in steps:
                     p = obj.data.root_pos_w - u.scene.env_origins
                     d_elbow = (obj.data.root_pos_w - robot.data.body_pos_w[:, elbow]).norm(dim=-1)
@@ -115,7 +115,7 @@ if True:
             de = 1000 * (e - e0)[m].mean() if m.any() else torch.tensor(0.0)
             cells.append(f"{dp[0]:+6.1f}/{dp[1]:+6.1f}/{dp[2]:+6.1f} {de:+6.1f}")
         sens = u.scene["object_contact"]
-        force = sens.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)[:, :len(BODIES)]   # (N, Körper)
+        force = sens.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)[:, :len(BODIES)]   # (N, bodies)
         share = ((force > 1.0)[m].float().mean(0) if m.any() else torch.zeros(len(BODIES)))
         mean_f = (force[m].mean(0) if m.any() else torch.zeros(len(BODIES)))
         top = sorted(range(len(BODIES)), key=lambda b: -mean_f[b].item())[:6]

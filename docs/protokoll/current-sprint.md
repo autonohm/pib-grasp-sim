@@ -113,7 +113,7 @@ weiter oben in dieser Session):
 - [x] **`colcon build` erfolgreich** — `ros2_ws/install/` enthält `pib_description_v5`/
       `pib_bringup` aktuell (verifiziert diese Session, war zuvor als ungetestet vermerkt)
 - [x] **Action Graph für v5 fertig verkabelt** (war hier fälschlich noch als Blocker
-      vermerkt — laut `docs/handoff.md` vom 2026-09-10 bereits erledigt, diese Session per
+      vermerkt — laut `docs/protokoll/handoff.md` vom 2026-09-10 bereits erledigt, diese Session per
       `inspect_action_graph.py` gegen die echte Stage verifiziert: `targetPrim` zeigt
       korrekt auf `root_joint`)
 - [x] Pickup-/Putdown-Demo für v5 als Regressionscheck — am 2026-09-10 end-to-end
@@ -160,7 +160,7 @@ Tuning-Reihe (Inspire Hand) und bewährten Projekten. Plan (Reihenfolge nach NVI
       `maxDepenetrationVelocity`, Solver-Iterationen (Mimic-Compliance und
       `solveArticulationContactLast` gibt es in 5.1 nicht)
 - [x] **6. Validierung** — Tischtest bestanden (Ellbogen gibt nach statt Finger-Stall),
-      Pickup v5: Dose gegriffen, Arm hält sie nur knapp (realistisch laut Leon),
+      Pickup v5: Dose gegriffen, Arm hält sie nur knapp (realistisch laut dem Autor),
       `test_client_mimic_v5` unverändert bestanden (Δ ≤ 0,2°; Daumen/Zeigefinger blockieren
       sich bei ~70°, übrige Finger ~88,5° — Self-Collision), `audit_asset.py` ohne Warnung.
       Putdown v5 am 2026-10-04 erneut bestanden (mit Handgelenk-Pleuel und Filtered Pairs)
@@ -192,7 +192,7 @@ linken Hand. Meilensteine: M1 Policy greift in der Sim, M2 läuft quantisiert au
       hält viele Dosen — dreht dafür aber den Unterarm, bis die Dose auf der Handfläche liegt
 ### Plan ab 2026-10-06 (Bewertung von `docs/archiv/rl-greifen-poc-prompt.md`)
 
-Entscheidungen (Leon, 2026-10-06):
+Entscheidungen (2026-10-06):
 - Unterarm bleibt im Aktionsraum — stattdessen Aufrecht-Belohnung + Abbruch bei Kippwinkel
 - Griffarten für den PoC: **Kraftgriff aufrecht** (Milchpackung, Becher, Flasche) und
   **Hakengriff** (Tasche vom Gast übernehmen) — Stütz-/Randgriff, Besteck vorerst nicht
@@ -201,7 +201,7 @@ Entscheidungen (Leon, 2026-10-06):
   Griffart als One-Hot statt Spezialisten + Destillation (nur falls das scheitert) —
   **abgelöst am 2026-10-07**, siehe unten
 
-Entscheidungen (Leon, 2026-10-07) — Greif-Architektur (`docs/architecture.md` → „Ziel-Architektur
+Entscheidungen (2026-10-07) — Greif-Architektur (`docs/architecture.md` → „Ziel-Architektur
 Greifen“):
 - Zweistufig wie Stand der Technik (GR00T System 2/1, DexGraspVLA, GRIT): oben wählt ein Planer
   Objektkategorie → Startpose + Greifart (zuerst Regeltabelle), der Arm fährt die Vorgreifpose an,
@@ -264,14 +264,14 @@ Unterarm 90°, Stall-Anteil 99,6 %).
 - [x] EXP-001 trainiert: 0 % gehalten (Finger gespreizt) — ebenso EXP-002 (1500 It.) und EXP-003
       (Halten × Aufrecht ohne Abbruch). Ursache: Belohnung (ADR-017)
 - [x] **EXP-004 Belohnungssatz wie Dexsuite: Aufgabenerfolg 77 % (≤ 45°), Haltequote 90 %,
-      Kippwinkel 27°** — neue Baseline. Anforderung für den Zylinder ≤ 45° (Leon)
+      Kippwinkel 27°** — neue Baseline. Anforderung für den Zylinder ≤ 45°
 - [x] Fingernutzung: EXP-004 greift mit genau 2 Fingern. EXP-005 (Kontakt nach Fingerzahl) 2,6,
       EXP-006 (Masse 0,04–0,4 kg) 3,0 Finger, EXP-007 (1500 It.) 2,3 — Aufgabenerfolg-IQM aller
       vier 81–83 %, kein messbarer Unterschied; Kippwinkel/Unterarm bei 005/006 schlechter
 - [x] Seed 43 scheitert in jedem Experiment (14–56 %, Griff mit dem kleinen Finger) → Standard
       jetzt **5 Seeds**, Bericht mit IQM und Fehlschlagquote (README)
-- [ ] Kraft/Stall (Griffkraft 58 N, Stall 99,7 %) — Kraftstrafe vorerst bewusst nicht (Leon)
-- Entschieden (Leon, 2026-10-07): Reibung bleibt (Fingerinnenseiten **und** Handfläche real aus
+- [ ] Kraft/Stall (Griffkraft 58 N, Stall 99,7 %) — Kraftstrafe vorerst bewusst nicht
+- Entschieden (2026-10-07): Reibung bleibt (Fingerinnenseiten **und** Handfläche real aus
   TPU, Sim mit 0,5–1,0 eher konservativ); FSR real ebenfalls bis 20 N → Beobachtung passt;
   Handgelenkwinkel nicht in die Bewertung
 - [x] **Reset-Überlappung behoben** (2026-10-09, ADR-021, `tools/analyse_reset.py`): die Hand steckte beim Reset in
@@ -292,8 +292,8 @@ Unterarm 90°, Stall-Anteil 99,6 %).
 - [ ] Auswertung „FSR-Kraft über Masse“ (passt die Policy die Kraft an?)
 - [ ] erst wenn das nicht reicht: längerer Verlauf (10–15 Schritte), später LSTM
 
-**Stufe 4 — andere Objekte** ← **aktuell** (Leon, 2026-10-07: Fokus von der Belohnung auf die Objekte)
-Plan (Leon, 2026-10-07): Objektkatalog in `env_cfg.py` (Standard `zylinder_d6` = bisherige Szene),
+**Stufe 4 — andere Objekte** ← **aktuell** (2026-10-07: Fokus von der Belohnung auf die Objekte)
+Plan (2026-10-07): Objektkatalog in `env_cfg.py` (Standard `zylinder_d6` = bisherige Szene),
 Abstand Handfläche ↔ **Objektoberfläche** konstant 3,5 cm, Quader mit einer Fläche zur Hand
 (Drehung ±15° statt beliebig), Masse wie Training; Kugel gehört zu Stufe 4b (seitlich liegt sie
 unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitzen 2,5–16,5 cm über dem Tisch).
@@ -320,7 +320,7 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
 - [x] **EXP-012 Belohnung wie Dexsuite** (Annäherung Handfläche + Spitzen, Position 3D zur Startposition): Anheben
       weg, Kippen halbiert, aber Unruhe 2,8 und 2/5 Seeds greifen nicht — kein Unterschied in der Leistung
 - [x] **Auswertung v2** (ADR-019): Leistung (erfolgreiche Seeds) und Zuverlässigkeit getrennt; Leaderboard nach
-      **Leistung** sortiert (Leon: eine brauchbare Policy je Greifart genügt)
+      **Leistung** sortiert (eine brauchbare Policy je Greifart genügt)
 - [x] **EXP-013 Objektvielfalt** (18 Formen, `HeavyMulti-v0`; Startbeugung Finger/Handgelenk verkleinert, sonst
       1/3 Überlappungen — `tools/check_multi.py`): Leistung 77 %, beste Testobjekte (Flasche 84, Saft 67 %);
       Quader 57 % (kaum besser), 3/5 Seeds
@@ -336,14 +336,14 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
 - [ ] Machbarkeit mit realistischer Masse — kommt über YCB (unten)
 - [ ] M2-Kette: int8 QDQ mit Sim-Kalibrierdaten, int8 vs. float in der Sim
 
-**Plan ab 2026-10-09** (Leon: nichts überstürzen; Prio 1 und 2, RoboCup@Home als Ziel)
+**Plan ab 2026-10-09** (nichts überstürzen; Prio 1 und 2, RoboCup@Home als Ziel)
 - [x] **Prio 1 — YCB-Testobjekte** (2026-10-09): 003 Cracker 411 g, 004 Zucker 514 g, 006 Senf 603 g mit echter
       Masse als Testobjekte (Wrapper-USD aufrecht, schmale Seite zur Hand, Ruhelage gemessen, Reibung wie alle);
       Fenstertest EXP-013 s42 (eval-v2, 48 Episoden): Cracker 88 %, Zucker 98 %, Senf 90 % — hält trotz Masse über dem
       Training, weil sie immer voll zudrückt (80–90 N, Stall 100 %). Videos `videos/isaac_lab_ycb_*`
 - [x] Reset-Überlappung → eval-v2 (oben, ADR-021)
 
-**Ablauf ab 2026-10-09 abends** (Leon: Nachbewertung nur, was Entscheidungen trägt)
+**Ablauf ab 2026-10-09 abends** (Nachbewertung nur, was Entscheidungen trägt)
 1. [x] **Nachbewertung eval-v2** (EXP-013/014/015/017): RL 83–86 %, Regeln 68–69 %, Quader RL 78–80 % (v1 57–64) —
        der Quader-Engpass war die Szene; RL gesichert besser, am deutlichsten auf YCB
 2. [x] **Entscheidung A**: Eltern EXP-013 (EXP-017 nicht gesichert besser, auf YCB schlechter, unruhiger, teurer)
@@ -353,7 +353,7 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
 5. [x] **Nachtlauf 2026-10-09/10**: EXP-018 (10 Seeds) 5/10 greifen; **EXP-019** Fortschritt je Fingerspitze **10/10**
        (gesichert zuverlässiger), mehr Unterarm/Kippen; EXP-020 ±1 allein unruhiger; EXP-021 Critic kein Unterschied;
        **EXP-022** (Fortschritt + ±1) **5/5, 83 %, Leitplanken eingehalten, Unruhe 0,36** (ADR-022, Ergebnis)
-5b. [ ] **Entscheidung (Leon)**: EXP-022 als neue Basis, wenn die besten Videos (`EXP-022_*/beste_videos/`) gut aussehen
+5b. [ ] **Entscheidung**: EXP-022 als neue Basis, wenn die besten Videos (`EXP-022_*/beste_videos/`) gut aussehen
 5c. [x] **Objektweg** (Befund 2026-10-10, `tools/diag_objektweg.py`): alle Policies der Linie mit 18 Formen (EXP-013,
        017, 018–022) ziehen das Objekt beim Zugreifen ~13 cm in der Tischebene Richtung Unterarm (Faust einrollen, Objekt
        zwischen Daumen- und Fingerspitzen vor dem Handballen); nur mit dem Zylinder trainiert 3–7 cm, Regel 4 cm. Nicht
@@ -367,9 +367,9 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        Optional später: Strafe auf Objektgeschwindigkeit wie RobustDexGrasp (−15·‖v‖², dämpft auch Vollgas-Zudrücken)
        **Ergebnis (Entwurf)**: Leistung 87 % (kein Unterschied), 5/5; Objektweg Ø 6 im Mittel 112 → 75 mm (je Seed
        144/37/73/73/47, s42 zieht weiter), aber **Leitplanke Unruhe verletzt** (1,65 statt 0,36; s42/45/46 1,5–3,9) →
-       so nicht als Basis; Urteil und Videos s43 vs. s42: Leon
-5e. [ ] **Griff von oben planen** (Stufe 4b, Leon 2026-10-10) — Plan: `docs/plan-griff-von-oben.md` (2026-10-10, offene
-       Fragen an Leon), Code: `pib_grasp/env_cfg_oben.py`, `tools/probe_oben.py`, `tools/machbarkeit_oben.py`. Setup
+       so nicht als Basis; Urteil und Videos s43 vs. s42: der Autor
+5e. [ ] **Griff von oben planen** (Stufe 4b, der Autor 2026-10-10) — Plan: `docs/protokoll/plan-griff-von-oben.md` (2026-10-10, offene
+       Fragen an den Autor), Code: `pib_grasp/env_cfg_oben.py`, `tools/probe_oben.py`, `tools/machbarkeit_oben.py`. Setup
        (Handpose von oben, Tisch, Objekte Apfel/Kugeln —
        Kugeln als `SphereCfg`, YCB-Apfel fehlt in Isaac Sim 5.1; YCB 005 Suppendose; Anforderung ohne Kippwinkel,
        Erfolg/„Griff steht“) mit der Wissenschaft abgleichen (Dexsuite, DexPBT, UniDexGrasp++, HORA; Vorgreifpose
@@ -377,7 +377,7 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        **Stand 2026-10-10**: Szene gebaut (Tasks `Oben-v0`/`ObenMulti-v0`, `eval_policy --greifart oben`, Leaderboard je
        Greifart), Geometrie gemessen, Raster: 3,5 cm Abstand, Mitte (−0,01, −0,33); Regel: Dose 75 %, Kugel Ø 7 64,5 %
        (13 % Startfehler, Kugeln rollen); kleine/flache Objekte mit waagrechter Hand nicht greifbar. Offene Fragen im Plan
-5f. [x] **Nachtlauf 2026-10-11** (je eine Änderung ggü. EXP-022, 5 Seeds; Berichte als Entwurf, Urteil Leon):
+5f. [x] **Nachtlauf 2026-10-11** (je eine Änderung ggü. EXP-022, 5 Seeds; Berichte als Entwurf, Urteil offen):
        **EXP-024 Aktionsfilter** (gleitender Mittelwert α 0,3 wie Isaac Lab ShadowHand-OpenAI): 87 %, 5/5, **Platz 1**, Unruhe an
        den Servos halbiert (0,17), Kippen 13°, Unterarm 11°, Griffkraft 78 N, weniger Stall je Servo → Kandidat neue Basis
        (Firmware braucht denselben Filter). **EXP-025 Moment-Strafe** (−0,1): kein Effekt auf Stall (96,5 %), Kippen-Leitplanke
@@ -385,9 +385,9 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        zusätzlichen Finger (3,3), unruhiger → verworfen. Neue Kennzahl Stall je Servo (eval_policy, beschreibend).
        **int8 EXP-023 s43** (`docs/int8/EXP-023_s43.md`): alle Schichten auf der NPU, 71 kB, int8 ggü. float −1,4 PP (nicht
        gesichert). **Durchsatz**: 1024/2048/4096 Umgebungen → 19,9k/26,8k/56,4k Schritte/s (`experiments/_bench.json`).
-       **Startpose von oben** (`docs/startpose-oben/ergebnis.md`): 20° gekippt, Rotator 75°, Höhe je Objekt → Regel 90–100 %
+       **Startpose von oben** (`docs/protokoll/startpose-oben/ergebnis.md`): 20° gekippt, Rotator 75°, Höhe je Objekt → Regel 90–100 %
        auf allen Objekten inkl. Kugel Ø 5 und Schachtel (Plan, Abschnitt „Ergebnis der Suche“)
-5g. [x] **Nachtlauf 2026-10-12** (Plan `docs/nachtlauf-2026-10-12.md`; Berichte als Entwurf, Urteil Leon): **Leaderboard v3**
+5g. [x] **Nachtlauf 2026-10-12** (Plan `docs/protokoll/nachtlauf-2026-10-12.md`; Berichte als Entwurf, Urteil offen): **Leaderboard v3**
        (Wünschbarkeitsindex über Leistung, Robust = Störbedingung, Unruhe, Schwingen, Objektweg, Kippen, Unterarm, Servo-Last;
        „oben“ ohne Kippwinkel) → seitlich **EXP-024 Filter 0,53 ★** vor Regel EXP-014 0,43. **Aktionsraum wie Dexsuite**
        (bounds_loss in rsl_rl, Skala 0,1 für alle): EXP-027 80 %, 2/5, Kippen 44°, Unterarm 51°; EXP-031 (Actor 512-256-128)
@@ -396,42 +396,42 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        Regularisierer gegen das Kippen; Leistung nirgends gesichert verschieden (ADR-022, Nachtrag). **Von oben**: Regel EXP-028
        100 %, Robust 99 %, Index 1,00; Spezialisten EXP-029/030 99/100 %, drehen aber den Unterarm auf 90° und kippen das
        Objekt (Belohnung ohne Orientierung) → mit guter Vorgreifpose genügt von oben eine Regel
-       **Index überarbeitet** (Leon, 2026-10-12 nachmittags): alle Größen nur über die erfolgreichen Seeds (vorher nur die
+       **Index überarbeitet** (2026-10-12 nachmittags): alle Größen nur über die erfolgreichen Seeds (vorher nur die
        Leistung — ein gescheiterter Seed zog z. B. EXP-027 von 0,45 auf 0,06), Kippen inakzeptabel erst bei 45° (= Anforderung),
        Objektweg bei 150 mm, Unterarm nur zur Info, Untergrenze je Größe 0,1 statt 0,01; neue Spalte **Top** = Index des besten
        Seeds (Einsatz-Kandidat, der in den Videos). Seitlich: EXP-024 0,64 (Top 0,79) vor Regel 0,55, EXP-022 0,49, EXP-027 0,45
-5h. [ ] **Kippen seitlich über Kosten statt Skala** (Leon wählt, Eltern EXP-033): (1) `joint_deviation_l1` auf Unterarm/
+5h. [ ] **Kippen seitlich über Kosten statt Skala** (der Autor wählt, Eltern EXP-033): (1) `joint_deviation_l1` auf Unterarm/
        Handgelenk (Isaac Lab H1/G1), (2) Kippstrafe ab t = 0, (3) CaT (Chane-Sane et al. 2024); Gewicht per `reward_diag`.
        Grundsatzfrage: Unterarm/Handgelenk aus dem Aktionsraum (Arm hält die Vorgreifpose) — 2026-10-06 „Unterarm bleibt“
-5i. [x] **Nachtlauf 2026-10-13** (Plan + Ergebnis `docs/nachtlauf-2026-10-13.md`; Eltern EXP-027, Entwürfe, Urteil Leon):
+5i. [x] **Nachtlauf 2026-10-13** (Plan + Ergebnis `docs/protokoll/nachtlauf-2026-10-13.md`; Eltern EXP-027, Entwürfe, Urteil offen):
        **EXP-034 CAPS** Unruhe 0,06 ohne Filter, Leistung gleich, Transport 88 %; **EXP-035 PID-Lagrange** auf Stall-Anteil ≤ 20 %:
        Servo-Last 13 %, Griffkraft 57 N, aber Last auf einem Servo gesammelt (Schutz > 2 s 87 %), 2/5; **EXP-036 CAPS + Lagrange**
        **Index 0,66 = Platz 1** seitlich (EXP-024 0,64), Unruhe 0,04, Servo-Last 11 %, 4/5, Transport 95 % (Kriterium 97 %
-       knapp verfehlt), Kippen 28° → Kandidat neue Basis neben EXP-024 (Videos: Leon); **EXP-037 Servo-Last als Beobachtung**
+       knapp verfehlt), Kippen 28° → Kandidat neue Basis neben EXP-024 (Videos sichten); **EXP-037 Servo-Last als Beobachtung**
        gesichert schlechter → verworfen. Nächster Schritt Überlastschutz: Grenze je Servo oder Kosten auf die Stall-Lauflänge
-5j. [x] **Nachtlauf 2026-10-13/14** (Plan + Ergebnis `docs/nachtlauf-2026-10-14.md`, Diagnose `tools/diag_stall.py`; Eltern
-       EXP-036, Entwürfe, Urteil Leon): Stall wie am echten Servo (8 Servos inkl. Handgelenk über das Pleuel, kein Drücken am
+5j. [x] **Nachtlauf 2026-10-13/14** (Plan + Ergebnis `docs/protokoll/nachtlauf-2026-10-14.md`, Diagnose `tools/diag_stall.py`; Eltern
+       EXP-036, Entwürfe, Urteil offen): Stall wie am echten Servo (8 Servos inkl. Handgelenk über das Pleuel, kein Drücken am
        Anschlag) als neue Kennzahl **Servo-Last real**, Index darauf umgestellt (alle 24 nachbewertet) → seitlich **EXP-024 0,70**
        vor EXP-036 0,66. **EXP-038** Kosten wie real: keine Wirkung (13 %), 3/5. **EXP-039** Grenze je Servo allein: Schutz 83 %,
        Transport 61 %. **EXP-040** Grenze je Servo + Fingerzahl: **Schutz > 2 s 21 %** (EXP-036 85 %), Servo-Last 5 %, 4,1 Finger,
        aber Rampe 71 statt 108 m/s², Transport 83 %, 2/5 — Zielkonflikt Servo-Schonung ↔ Griffreserve; Top s42 (94 %, Schutz 12 %).
        **EXP-041** Fingerzahl allein: Schutz 87 % (Kontrolle). Häufigste Fehlerart der neuen Läufe: Kippen > 45°
-5k. [ ] **Repo abgabebereit für künftige pib-Studierende** — Plan `docs/plan-abgabe.md`, Entwürfe `docs/abgabe/` (Entscheidungen Leon)
+5k. [ ] **Repo abgabebereit für künftige pib-Studierende** — Plan `docs/protokoll/plan-abgabe.md`, Entwürfe `docs/repo-karte.md`, `docs/glossar.md` (Entscheidungen des Autors)
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“
        (ändert die PPO-Batchgröße). Nicht parallel trainieren (8 GB VRAM)
 7. [ ] danach: Trainingsdauer neu prüfen (300 vs. 1500 It. auf der besten Basis), dann Unruhe (Strafen-Curriculum wie
        Lift, Aktionsfilter wie DeXtreme) auf echter Aufwandsstrafe; Bedingung **„rutschig“**; **M2-Kette**
-8. [ ] später: **Kraft dosieren** (Leon: hinten angestellt), Griff „von oben“, längerer Beobachtungsverlauf (HORA)
-- später (Prio 3–6, Leon 2026-10-09): Servo-Messung/Systemidentifikation mit LeRobot-Werkzeugen (Feetech STS3215),
+8. [ ] später: **Kraft dosieren** (hinten angestellt), Griff „von oben“, längerer Beobachtungsverlauf (HORA)
+- später (Prio 3–6, der Autor 2026-10-09): Servo-Messung/Systemidentifikation mit LeRobot-Werkzeugen (Feetech STS3215),
   Regelrate und Verzögerung wie real; Greif-Ablauf (Romano 2011: schließen → halten mit Rutscherkennung → ablegen,
   „Griff steht“, Ablegen als Fähigkeit); Lehrer–Schüler/RMA (HORA) für den blinden Actor; int8 im Sim-Loop;
   Curriculum zuverlässiger (Start mit Teil-Schwerkraft oder 4096 Umgebungen)
 - Andere Greifarten: eigene Szene, eigenes Objekt-Benchmark (YCB-Testobjekte), eigene Regel-Baseline, eigene
   Leaderboard-Tabelle; das beste seitliche Rezept ist der Startpunkt für „von oben“
 
-**Stufe 4b — Startpose „von oben“** — danach (Leon, 2026-10-07): runde/kleine Objekte (Obst) von oben
+**Stufe 4b — Startpose „von oben“** — danach (2026-10-07): runde/kleine Objekte (Obst) von oben
 greifen statt seitlich — Anfahrrichtung je Objektkategorie (wie Greifplaner, z. B. GraspGen).
 Objekt hängt zwischen den Fingern (keine Handflächenstütze), Anforderung ohne Kippwinkel.
 Der blinde Actor sieht die Handausrichtung nicht → **eigener Spezialist je Startpose** (beide
@@ -439,7 +439,7 @@ passen auf den Nucleo), später ggf. Startpose als One-Hot-Eingang (GRIT).
 - [ ] Szene „von oben“ (Hand gedreht, Tisch/Objekt angepasst), Machbarkeitstest Kugel/kleiner Zylinder
 - [ ] Spezialist mit Dexsuite-Belohnung, Bedingung ohne Kippanforderung
 
-**Stufe 5 — Hakengriff (Tasche)** — **hinten angestellt** (Leon, 2026-10-07): eigene Startpose
+**Stufe 5 — Hakengriff (Tasche)** — **hinten angestellt** (2026-10-07): eigene Startpose
 (von oben), Henkel als starrer Körper; voraussichtlich eigener Spezialist (Bewegung grundverschieden:
 Finger um den Henkel, Daumen fast passiv)
 
@@ -457,9 +457,9 @@ ggf. adaptive Kopplung
 
 ---
 
-## Abgabe / Veröffentlichung ← demnächst (Leon, 2026-10-12)
+## Abgabe / Veröffentlichung ← demnächst (2026-10-12)
 
-**Ziel**: Repo abgabebereit und für die Nachwelt nutzbar machen — englisch, Leon nur als Autor genannt.
+**Ziel**: Repo abgabebereit und für die Nachwelt nutzbar machen — englisch, Autor nur im README/CITATION genannt.
 Vorher Stand der Präsentation taggen (z. B. `v0.1-praesentation`), damit Umbauten nichts Belegtes zerstören.
 - [ ] Empfänger, Frist und Sichtbarkeit klären (Hochschule, pib-Team, öffentlich auf GitHub/HF?)
 - [ ] Lizenzen prüfen: eigener Code (z. B. BSD-3 wie Isaac Lab), pib-CAD/Meshes (Lizenz von pib/isento), YCB-Modelle,
@@ -467,7 +467,7 @@ Vorher Stand der Präsentation taggen (z. B. `v0.1-praesentation`), damit Umbaut
 - [ ] Englisch: README, Code-Kommentare/Docstrings, Doku (architecture, ADRs, conventions); Experiment-Berichte ggf. als
       historische Protokolle auf Deutsch lassen (mit Hinweis) oder automatisch übersetzen; Bezeichner nur umbenennen, wenn
       danach alle Prüfskripte und ein Kurztraining wieder laufen
-- [ ] Name: „Leon“ in Doku/Entscheidungen neutralisieren („decided“, „author“), Autor in README, `CITATION.cff`,
+- [x] Name in Doku/Entscheidungen neutralisieren („decided“, „author“), Autor in README, `CITATION.cff`,
       `pyproject`/Metadaten; Git-Historie nicht umschreiben (Commit-Autoren bleiben)
 - [ ] Aufräumen: absolute Pfade (`/home/leon`, u. a. `isaac_sim/autostart.py`, `README.md`, `.claude/settings.json`,
       Ergebnis-JSONs), `CLAUDE.md`/`.claude/` (Assistenten-Konfiguration) raus oder als `CONTRIBUTING`-Notiz umschreiben,

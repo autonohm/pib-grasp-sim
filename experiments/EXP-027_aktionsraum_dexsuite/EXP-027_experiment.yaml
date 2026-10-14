@@ -6,7 +6,7 @@ eltern: EXP-024
 status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Die bisherigen Rezepte beschneiden die Servos zur Laufzeit (Begrenzung
-  ±1, Filter) bzw. künstlich (Skala 0,03 für Unterarm/Handgelenk ≈ 34 % Moment, docs/pruefung-aktionsweg.md).
+  ±1, Filter) bzw. künstlich (Skala 0,03 für Unterarm/Handgelenk ≈ 34 % Moment, docs/protokoll/pruefung-aktionsweg.md).
   Mit dem Aktionsraum wie das Vorbild (Dexsuite: Skala 0,1 für alle Gelenke; rl_games
   bounds_loss 1e-4, Grenze 1,1 statt Abschneiden) behält die Hand ihr volles Potential
   und das Netz lernt, es zu nutzen: Leistung mindestens wie die Eltern, Index im Leaderboard

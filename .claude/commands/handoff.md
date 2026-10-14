@@ -1,4 +1,4 @@
-Schreibe einen Handoff-Eintrag in `docs/handoff.md`. Ersetze den gesamten Inhalt mit folgendem Format:
+Schreibe einen Handoff-Eintrag in `docs/protokoll/handoff.md`. Ersetze den gesamten Inhalt mit folgendem Format:
 
 ```
 # Handoff

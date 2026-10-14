@@ -1,13 +1,13 @@
 """
-isaac_sim/autostart.py — Automatischer Startup für Isaac Sim.
+isaac_sim/autostart.py — automatic startup for Isaac Sim.
 
-Wird via --exec gestartet (kein Script Editor nötig):
-  ~/isaacsim/isaac-sim.sh --exec /home/leon/repos/pib-hand-sim/isaac_sim/autostart.py
+Started via --exec (no Script Editor needed):
+  ~/isaacsim/isaac-sim.sh --exec <repo>/isaac_sim/autostart.py
 
-Ablauf (vollautomatisch):
-  1. USD laden (enthält den ROS2-Action-Graph — kein pib_bridge.py mehr nötig)
-  2. start.py ausführen (Drives, Limits, T-Pose)
-  3. Simulation starten (Play) — Action Graph läuft ab hier automatisch mit
+Sequence (fully automatic):
+  1. load the USD (contains the ROS 2 Action Graph — no pib_bridge.py needed any more)
+  2. run start.py (drives, limits, T pose)
+  3. start the simulation (Play) — the Action Graph runs along from here on
 """
 import sys
 import os
@@ -68,11 +68,11 @@ async def _main() -> None:
     await app.next_update_async()
     _log("[autostart] USD geladen.")
 
-    # ── 2. start.py ausführen (Drives, Limits, T-Pose) ───────────────────────
+    # ── 2. run start.py (drives, limits, T pose) ─────────────────────────────
     _log("[autostart] Führe start.py aus...")
     start = _load_mod("start", os.path.join(root, "isaac_sim", "start.py"))
-    # start.py ist ein async-Skript → nutzt ensure_future intern
-    # Wir warten einige Frames damit configure_* abgeschlossen ist
+    # start.py is an async script → uses ensure_future internally
+    # we wait a few frames so that configure_* has finished
     for _ in range(10):
         await app.next_update_async()
     _log("[autostart] start.py abgeschlossen.")

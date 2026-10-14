@@ -1,32 +1,32 @@
 """
-flip_joint_sign.py — Dreht die Vorzeichen-Konvention aller PhysicsRevoluteJoint-
-Prims in der aktuell offenen Stage um, ohne die physische Pose zu verändern.
+flip_joint_sign.py — flips the sign convention of all PhysicsRevoluteJoint
+prims in the currently open stage without changing the physical pose.
 
-Hintergrund: Onshape und Isaacs importierte Gelenkachsen sind vorzeicheninvertiert
-(JOINT_SIGN=-1). Bisher kompensiert durch einen Script Node im Action Graph +
-gespiegelte Limits in setup_stage.py. Dieses Skript behebt die Ursache direkt am
-Gelenk-Prim, unabhängig vom Importweg (Onshape-Importer, nicht URDF-Import).
+Background: Onshape and Isaac's imported joint axes have inverted signs
+(JOINT_SIGN=-1). Previously compensated by a script node in the Action Graph +
+mirrored limits in setup_stage.py. This script fixes the cause directly at the
+joint prim, independent of the import path (Onshape importer, not URDF import).
 
-Mechanik: Ein Revolute Joint misst seinen Winkel aus der relativen Orientierung
-von localRot0 (Body0-Seite) zu localRot1 (Body1-Seite) um die gemeinsame Achse.
-Dreht man BEIDE Seiten um dieselbe 180°-Rotation um eine zur Gelenkachse senk-
-rechte Achse, bleibt die Weltausrichtung der Achse unverändert (kein Snap), aber
-der gemessene Winkel kehrt sein Vorzeichen um (Rotationskonjugation F⁻¹MF erhält
-den Winkel, spiegelt nur die Achse — bei gleichem Winkel um gespiegelte Achse
-ist das exakt das Vorzeichen-Gegenteil um die Original-Achse).
+Mechanics: a revolute joint measures its angle from the relative orientation
+of localRot0 (body0 side) to localRot1 (body1 side) about the common axis.
+Rotating BOTH sides by the same 180° rotation about an axis perpendicular to the
+joint axis leaves the world orientation of the axis unchanged (no snap), but
+the measured angle flips its sign (rotation conjugation F⁻¹MF preserves
+the angle and only mirrors the axis — the same angle about the mirrored axis
+is exactly the opposite sign about the original axis).
 
-Limits werden passend mitgedreht: neu_lower = -alt_upper, neu_upper = -alt_lower.
+Limits are flipped accordingly: new_lower = -old_upper, new_upper = -old_lower.
 
-WICHTIG:
-  - Vor dem Ausführen: Simulation stoppen (nicht während Play laufen lassen).
-  - Danach NICHT einfach start.py erneut ausführen, bevor setup_stage.py/
-    config/pib_hand_config_v4.py angepasst sind (siehe Begleit-Änderungen) —
-    sonst überschreibt set_joint_limits() die neuen Limits wieder mit den
-    alten gespiegelten Werten.
-  - Erst nach visueller Bestätigung (Play, ein Gelenk auf positiven Wert
-    fahren, Richtung prüfen) mit Ctrl+S speichern.
+IMPORTANT:
+  - Before running: stop the simulation (do not run during Play).
+  - Afterwards do NOT simply run start.py again before setup_stage.py/
+    config/pib_hand_config_v4.py have been adapted (see accompanying changes) —
+    otherwise set_joint_limits() overwrites the new limits with the
+    old mirrored values.
+  - Save with Ctrl+S only after visual confirmation (Play, move one joint to a
+    positive value, check the direction).
 
-Im Script Editor ausführen.
+Run in the Script Editor.
 """
 import omni.usd
 from pxr import Gf
@@ -41,7 +41,7 @@ _AXIS_VEC = {
 
 
 def _perpendicular(axis_vec: Gf.Vec3d) -> Gf.Vec3d:
-    """Beliebiger Einheitsvektor senkrecht zu axis_vec."""
+    """Any unit vector perpendicular to axis_vec."""
     ref = Gf.Vec3d(0, 0, 1) if abs(axis_vec[2]) < 0.9 else Gf.Vec3d(0, 1, 0)
     return (axis_vec ^ ref).GetNormalized()  # Kreuzprodukt-Operator (pxr.Gf.Vec3d)
 

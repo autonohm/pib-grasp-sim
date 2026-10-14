@@ -1,15 +1,15 @@
 """
-check_hand_asset.py — Prüft die Hand-USD in Isaac Lab, bevor darauf trainiert wird.
+check_hand_asset.py — checks the hand USD in Isaac Lab before training on it.
 
-  1. USD auf der Platte: Mimic Joints eingebrannt? Gelenk-Frames gleich wie im v5-
-     Vollroboter (dann gilt dessen verifizierte Vorzeichen-Konvention auch hier)?
-  2. Isaac Lab (GPU): Folgen PIP/DIP/IP dem MCP (PhysX Mimic aus der USD)?
-     Liefern die Kontaktsensoren an den 5 Fingerspitzen Werte?
+  1. USD on disk: mimic joints baked in? Joint frames the same as in the v5
+     full robot (then its verified sign convention applies here too)?
+  2. Isaac Lab (GPU): do PIP/DIP/IP follow the MCP (PhysX mimic from the USD)?
+     Do the contact sensors on the 5 fingertips deliver values?
 
-Aufruf (ohne aktive Projekt-.venv):
-  ~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py            # mit Fenster, Echtzeit
+Call (without an active project .venv):
+  ~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py            # with window, real time
   ~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py --headless
-Bericht zusätzlich in isaac_sim/tools/_check_hand_asset_lab.txt.
+Report additionally in isaac_sim/tools/_check_hand_asset_lab.txt.
 """
 import argparse
 
@@ -48,7 +48,7 @@ def _revolute_joints(stage) -> dict:
             if p.GetTypeName() == "PhysicsRevoluteJoint" or p.HasAPI(UsdPhysics.RevoluteJoint)}
 
 
-# ── 1. USD auf der Platte ─────────────────────────────────────────────────────
+# ── 1. USD on disk ────────────────────────────────────────────────────────────
 log("── 1. USD auf der Platte ──")
 hand = Usd.Stage.Open(USD_PATH)
 v5 = Usd.Stage.Open(V5_USD)
@@ -68,7 +68,7 @@ for name, prim in sorted(hand_joints.items()):
         a, b = prim.GetAttribute(attr).Get(), other.GetAttribute(attr).Get()
         if attr == "physics:axis":
             same = a == b
-        else:   # Quaternion: q und -q sind dieselbe Rotation
+        else:   # quaternion: q and -q are the same rotation
             dot = abs(sum(x * y for x, y in zip((a.GetReal(), *a.GetImaginary()),
                                                  (b.GetReal(), *b.GetImaginary()))))
             same = dot > 0.9999
@@ -123,7 +123,7 @@ def run_phase(label: str, mcp_deg: float, seconds: float = 1.5) -> None:
         robot.update(sim.get_physics_dt())
         if contact is not None:
             contact.update(sim.get_physics_dt())
-        if not args_cli.headless:   # mit Fenster in Echtzeit, zum Zuschauen
+        if not args_cli.headless:   # with window in real time, to watch
             time.sleep(max(0.0, sim.get_physics_dt() - (time.time() - t0)))
 
     q = torch.rad2deg(robot.data.joint_pos[0]).tolist()
@@ -167,7 +167,7 @@ if not args_cli.headless:
     print("Fenster bleibt offen — zum Beenden schließen.", flush=True)
     while simulation_app.is_running():
         simulation_app.update()
-# simulation_app.close() blieb headless minutenlang hängen (2026-10-04) — Bericht ist
-# geschrieben, Prozess hart beenden.
+# simulation_app.close() hung for minutes headless (2026-10-04) — the report is
+# written, kill the process hard.
 import os  # noqa: E402
 os._exit(0)

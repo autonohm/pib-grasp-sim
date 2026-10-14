@@ -1,9 +1,9 @@
 """
-mdp.py — Eigene MDP-Terme der pib-Greifaufgabe (zusätzlich zu isaaclab.envs.mdp).
+mdp.py — custom MDP terms of the pib grasping task (in addition to isaaclab.envs.mdp).
 
-Aufbau nach Isaac Labs Dexsuite (manipulation/dexsuite/mdp), angepasst an die pib-Hand:
-Fingerspitzen-Kräfte in fester Reihenfolge (wie die echten FSR), "Tisch absenken" als
-Erfolgstest statt Zielpose-Kommando.
+Structured after Isaac Lab's Dexsuite (manipulation/dexsuite/mdp), adapted to the pib hand:
+fingertip forces in a fixed order (like the real FSRs), "lower the table" as the
+success test instead of a goal-pose command.
 """
 from __future__ import annotations
 
@@ -23,12 +23,12 @@ from isaaclab.utils import configclass
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
-# Feste FSR-Reihenfolge (auch für die Firmware): Daumen, Zeige, Mittel, Ring, klein.
-# Link-Namen aus pib_hand_left_urdf_v5/robot.urdf (finger_tip = Zeige, _2 = Mittel,
-# _3 = Ring, _4 = klein). Der ContactSensor liefert sie in anderer Reihenfolge.
+# Fixed FSR order (also for the firmware): thumb, index, middle, ring, little.
+# Link names from pib_hand_left_urdf_v5/robot.urdf (finger_tip = index, _2 = middle,
+# _3 = ring, _4 = little). The ContactSensor returns them in a different order.
 FINGERTIP_LINKS = ["urdf_thumb_tip", "urdf_finger_tip", "urdf_finger_tip_2", "urdf_finger_tip_3", "urdf_finger_tip_4"]
-# Ein ContactSensor je Fingerspitze (wie Dexsuite): Isaac Labs Objekt-Filter funktioniert
-# nur, wenn ein Sensor genau einen Prim abdeckt (ContactSensorCfg.filter_prim_paths_expr).
+# One ContactSensor per fingertip (like Dexsuite): Isaac Lab's object filter only works
+# if a sensor covers exactly one prim (ContactSensorCfg.filter_prim_paths_expr).
 FINGERTIP_SENSORS = ["fsr_thumb", "fsr_index", "fsr_middle", "fsr_ring", "fsr_pinky"]
 
 
@@ -43,11 +43,11 @@ def episode_time(env: ManagerBasedRLEnv) -> torch.Tensor:
 # ── Aktion ────────────────────────────────────────────────────────────────────
 
 class FilteredRelativeJointPositionAction(RelativeJointPositionAction):
-    """Relative Gelenkposition wie Dexsuite, die Aktion vorher mit einem gleitenden Mittelwert geglättet (EXP-024):
-    a_f ← α·a + (1 − α)·a_f, Sollwert = q + Skala·a_f. Vorbild Isaac Lab ShadowHand-OpenAI (act_moving_average = 0.3,
-    DeXtreme-Linie) — dort auf den Gelenk-Sollwerten, hier auf der relativen Aktion, weil der Sollwert jeden Schritt aus
-    der aktuellen Stellung neu entsteht. Die Firmware muss denselben Filter (gleiches α, 60 Hz) vor die Servos setzen.
-    filtered_actions = das, was die Servos tatsächlich bekommen (Kennzahl „Unruhe wirksam“)."""
+    """Relative joint position like Dexsuite, with the action smoothed by a moving average first (EXP-024):
+    a_f ← α·a + (1 − α)·a_f, target = q + scale·a_f. Reference: Isaac Lab ShadowHand-OpenAI (act_moving_average = 0.3,
+    DeXtreme line) — there on the joint targets, here on the relative action, because the target is recomputed from the
+    current position every step. The firmware must apply the same filter (same α, 60 Hz) in front of the servos.
+    filtered_actions = what the servos actually receive (metric "Unruhe wirksam")."""
 
     cfg: FilteredRelativeJointPositionActionCfg
 
@@ -78,17 +78,17 @@ class FilteredRelativeJointPositionActionCfg(RelativeJointPositionActionCfg):
     """Gewicht der neuen Aktion (1 = kein Filter)."""
 
 
-# ── Beobachtungen ─────────────────────────────────────────────────────────────
+# ── Observations ──────────────────────────────────────────────────────────────
 
 def fingertip_forces(env: ManagerBasedRLEnv) -> torch.Tensor:
-    """Betrag der Gesamtkontaktkraft je Fingerspitze [N], FSR-Reihenfolge. Alle Kontakte
-    (auch Finger-Finger), wie ein echter FSR. Clip über ObsTerm(clip=...)."""
+    """Magnitude of the total contact force per fingertip [N], FSR order. All contacts
+    (including finger-finger), like a real FSR. Clipping via ObsTerm(clip=...)."""
     return torch.stack([s.data.net_forces_w[:, 0].norm(dim=-1) for s in _sensors(env)], dim=-1)
 
 
 def fingertip_object_forces(env: ManagerBasedRLEnv) -> torch.Tensor:
-    """Kontaktkraft je Fingerspitze nur mit dem Objekt [N] (privilegiert, Critic/Reward)."""
-    # force_matrix_w: (N, Körper=1, Filter=1, 3)
+    """Contact force per fingertip with the object only [N] (privileged, critic/reward)."""
+    # force_matrix_w: (N, bodies=1, filters=1, 3)
     return torch.stack([s.data.force_matrix_w[:, 0, 0].norm(dim=-1) for s in _sensors(env)], dim=-1)
 
 
@@ -102,7 +102,7 @@ def object_pos_in_root(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = Scene
 
 def object_quat_in_root(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
                         object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Objektorientierung (w, x, y, z) im Hand-Root-Frame (Dexsuite: object_quat_b), privilegiert."""
+    """Object orientation (w, x, y, z) in the hand root frame (Dexsuite: object_quat_b), privileged."""
     from isaaclab.utils.math import quat_inv, quat_mul
     robot: Articulation = env.scene[robot_cfg.name]
     obj: RigidObject = env.scene[object_cfg.name]
@@ -110,7 +110,7 @@ def object_quat_in_root(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = Scen
 
 
 def object_tilt(env: ManagerBasedRLEnv, object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Kippwinkel [rad] zwischen Objekt-z-Achse (Zylinderachse) und Welt-z."""
+    """Tilt angle [rad] between the object z axis (cylinder axis) and world z."""
     from isaaclab.utils.math import quat_apply
     obj: RigidObject = env.scene[object_cfg.name]
     z = torch.zeros_like(obj.data.root_pos_w)
@@ -124,9 +124,9 @@ def object_lin_vel(env: ManagerBasedRLEnv, object_cfg: SceneEntityCfg = SceneEnt
 
 
 def object_properties(env: ManagerBasedRLEnv, object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Privilegiert (nur Critic, EXP-021; wie HORA und Dexsuite, deren Critic Masse/Reibung/Form kennt): halbe Tiefe,
-    halbe Breite, Höhe [m] (Bounding Box inkl. Zufallsgröße), Masse [kg], Haft- und Gleitreibung. Beim ersten Aufruf
-    nach den Startup-Events gelesen (ändern sich danach nicht); davor Nullen (Formbestimmung des Observation-Managers)."""
+    """Privileged (critic only, EXP-021; like HORA and Dexsuite, whose critic knows mass/friction/shape): half depth,
+    half width, height [m] (bounding box incl. random scale), mass [kg], static and dynamic friction. Read on the first
+    call after the startup events (they do not change afterwards); zeros before (shape inference of the observation manager)."""
     props = getattr(env, "_pib_object_props", None)
     if props is not None:
         return props
@@ -141,7 +141,7 @@ def object_properties(env: ManagerBasedRLEnv, object_cfg: SceneEntityCfg = Scene
 
 
 def phase(env: ManagerBasedRLEnv, drop_start_s: float) -> torch.Tensor:
-    """Episodenzeit relativ zum Tisch-Absenken (privilegiert, nur Critic)."""
+    """Episode time relative to the table lowering (privileged, critic only)."""
     return (episode_time(env) - drop_start_s).unsqueeze(-1)
 
 
@@ -149,9 +149,9 @@ def phase(env: ManagerBasedRLEnv, drop_start_s: float) -> torch.Tensor:
 
 def lower_table(env: ManagerBasedRLEnv, env_ids: torch.Tensor, drop_start_s: float, drop_speed: float,
                 drop_depth: float, table_cfg: SceneEntityCfg = SceneEntityCfg("table")) -> None:
-    """Kinematischen Tisch ab drop_start_s mit drop_speed [m/s] um drop_depth [m] absenken.
-    Physikalisch gleichwertig zum Anheben der Hand (später: der Arm hebt), ohne die
-    feste Basis der Artikulation zu bewegen."""
+    """Lower the kinematic table from drop_start_s at drop_speed [m/s] by drop_depth [m].
+    Physically equivalent to lifting the hand (later: the arm lifts), without moving the
+    fixed base of the articulation."""
     table: RigidObject = env.scene[table_cfg.name]
     t = episode_time(env)[env_ids]
     dz = ((t - drop_start_s) * drop_speed).clamp(0.0, drop_depth)
@@ -161,8 +161,8 @@ def lower_table(env: ManagerBasedRLEnv, env_ids: torch.Tensor, drop_start_s: flo
     table.write_root_pose_to_sim(pose, env_ids=env_ids)
 
 
-# Mimic-Kopplung der linken Hand (ADR-011, isaac_sim/setup_stage.py → MIMIC_JOINTS):
-# Folgegelenk -> Referenz, gearing -1 = gleicher Winkel. Reihenfolge: PIP vor DIP.
+# Mimic coupling of the left hand (ADR-011, isaac_sim/setup_stage.py → MIMIC_JOINTS):
+# follower -> reference, gearing -1 = same angle. Order: PIP before DIP.
 MIMIC_LEFT = [(f"{f}_left_distal", f"{f}_left_proximal") for f in ("index", "middle", "ring", "pinky")] + \
              [(f"{f}_left_tip", f"{f}_left_distal") for f in ("index", "middle", "ring", "pinky")] + \
              [("thumb_left_tip", "thumb_left_proximal")]
@@ -170,9 +170,9 @@ MIMIC_LEFT = [(f"{f}_left_distal", f"{f}_left_proximal") for f in ("index", "mid
 
 def reset_hand_joints(env: ManagerBasedRLEnv, env_ids: torch.Tensor, ranges_deg: dict[str, tuple[float, float]],
                       asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> None:
-    """Servo-Gelenke beim Reset gleichverteilt in ranges_deg setzen (Dexsuite: reset_joints_by_offset),
-    Folgegelenke passend zur Mimic-Kopplung — sonst startet die Zwangsbedingung mit einem Sprung.
-    Sollwerte = Startstellung, damit die Antriebe nicht zurückziehen."""
+    """Set the servo joints uniformly within ranges_deg on reset (Dexsuite: reset_joints_by_offset),
+    followers consistent with the mimic coupling — otherwise the constraint starts with a jump.
+    Targets = start position, so the drives do not pull back."""
     import math
     robot: Articulation = env.scene[asset_cfg.name]
     q = robot.data.default_joint_pos[env_ids].clone()
@@ -188,16 +188,16 @@ def reset_hand_joints(env: ManagerBasedRLEnv, env_ids: torch.Tensor, ranges_deg:
 def place_objects_by_size(env: ManagerBasedRLEnv, env_ids: torch.Tensor | None, hand_x: float, palm_gap: float,
                           table_top_z: float, lift: float = 0.0, root_height: float | None = None,
                           object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> None:
-    """Startup: Startlage je Umgebung aus der Bounding Box des gespawnten Objekts (USD, inkl. zufälliger Größe) —
-    Oberfläche palm_gap vor der Handfläche, Boden lift über der Tischplatte. root_height: gemessene Ruhelage
-    (Höhe des Ursprungs über der Tischplatte, tools/ruhelage_objekt.py) statt Bounding Box + lift."""
+    """Startup: start pose per environment from the bounding box of the spawned object (USD, incl. random scale) —
+    surface palm_gap in front of the palm, bottom lift above the table top. root_height: measured rest pose
+    (height of the origin above the table top, tools/ruhelage_objekt.py) instead of bounding box + lift."""
     import re
     import isaaclab.sim as sim_utils
     from pxr import Usd, UsdGeom
     obj: RigidObject = env.scene[object_cfg.name]
     cache = UsdGeom.BBoxCache(Usd.TimeCode.Default(), [UsdGeom.Tokens.default_])
     stage = env.scene.stage
-    # Grundriss je Umgebung für reset_object_gap_aware (halbe Tiefe/Breite, eckig 1 / rund 0) und Höhe [m]
+    # Footprint per environment for reset_object_gap_aware (half depth/width, angular 1 / round 0) and height [m]
     env.pib_object_footprint = torch.zeros(env.num_envs, 4, device=env.device)
     for path in sim_utils.find_matching_prim_paths(obj.cfg.prim_path):
         idx = int(re.search(r"env_(\d+)", path).group(1))
@@ -212,10 +212,10 @@ def place_objects_by_size(env: ManagerBasedRLEnv, env_ids: torch.Tensor | None, 
 
 def tip_height_for_object(kind: str, size: tuple[float, float, float], sphere_offset: float, block_offset: float,
                           min_tip_height: float) -> float:
-    """Höhe der tiefsten Fingerspitze über dem Tisch [m] für ein Objekt unter der Hand „von oben“ — Regel aus der
-    Startpose-Suche (docs/startpose-oben/ergebnis.md, 48 Episoden je Höhe nachgeprüft: Kugel Ø 5/7/9 → 10/15/30 mm, Dose
-    10 cm → 60 mm, Schachtel 4 cm → 10–15 mm): Kugeln max(min, Ø − sphere_offset), sonst max(min, Höhe − block_offset).
-    kind: kugel, zylinder oder quader; size = Bounding Box (x, y, z)."""
+    """Height of the lowest fingertip above the table [m] for an object below the hand ("top grasp") — rule from the
+    start-pose search (docs/protokoll/startpose-oben/ergebnis.md, re-checked with 48 episodes per height: sphere Ø 5/7/9 →
+    10/15/30 mm, can 10 cm → 60 mm, small box 4 cm → 10–15 mm): spheres max(min, Ø − sphere_offset), otherwise
+    max(min, height − block_offset). kind: kugel, zylinder or quader; size = bounding box (x, y, z)."""
     if kind == "kugel":
         return max(min_tip_height, size[2] - sphere_offset)
     return max(min_tip_height, size[2] - block_offset)
@@ -226,12 +226,13 @@ def place_objects_from_above(env: ManagerBasedRLEnv, env_ids: torch.Tensor | Non
                              height_jitter: float, table_thickness: float, lift: float = 0.0,
                              object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
                              table_cfg: SceneEntityCfg = SceneEntityCfg("table")) -> None:
-    """Startup, Greifart „von oben“ (env_cfg_oben, Pose aus der Startpose-Suche): je Umgebung aus Bounding Box und Form des
-    gespawnten Objekts (inkl. Zufallsgröße) die Höhe der tiefsten Fingerspitze über dem Tisch (tip_height_for_object), dazu
-    eine feste Streuung je Umgebung ±height_jitter (ungenaue Vorgreifpose); Objekt in der Greifmitte center_xy auf dem
-    Tisch, Tischplatte = tip_low_z − Höhe (− lift: YCB fällt kurz auf den Tisch). Die Hand ist fest — Objekt und Tisch
-    werden gesetzt; lower_table und reset_scene_to_default nutzen die geänderte Standardlage. Höhe je Umgebung in
-    env.pib_tip_height (Diagnose). Grundriss für reset_object_gap_aware ohne Eckkorrektur (eckig = 0)."""
+    """Startup, grasp type "top" (env_cfg_oben, pose from the start-pose search): per environment, from bounding box and
+    shape of the spawned object (incl. random scale), the height of the lowest fingertip above the table
+    (tip_height_for_object), plus a fixed spread per environment ±height_jitter (inaccurate pre-grasp pose); object at the
+    grasp centre center_xy on the table, table top = tip_low_z − height (− lift: YCB drops briefly onto the table). The
+    hand is fixed — object and table are placed; lower_table and reset_scene_to_default use the changed default pose.
+    Height per environment in env.pib_tip_height (diagnostics). Footprint for reset_object_gap_aware without corner
+    correction (angular = 0)."""
     import re
     import isaaclab.sim as sim_utils
     from pxr import Usd, UsdGeom
@@ -255,7 +256,7 @@ def place_objects_from_above(env: ManagerBasedRLEnv, env_ids: torch.Tensor | Non
         top = tip_low_z - h                                           # Tischplatte
         obj.data.default_root_state[idx, 0] = center_xy[0]
         obj.data.default_root_state[idx, 1] = center_xy[1]
-        obj.data.default_root_state[idx, 2] = top + lift + size[2] / 2  # Ursprung = Boxmitte (auch YCB)
+        obj.data.default_root_state[idx, 2] = top + lift + size[2] / 2  # origin = box centre (also YCB)
         table.data.default_root_state[idx, 0] = center_xy[0]
         table.data.default_root_state[idx, 1] = center_xy[1]
         table.data.default_root_state[idx, 2] = top - table_thickness / 2
@@ -264,11 +265,11 @@ def place_objects_from_above(env: ManagerBasedRLEnv, env_ids: torch.Tensor | Non
 def reset_object_gap_aware(env: ManagerBasedRLEnv, env_ids: torch.Tensor, pose_range: dict[str, tuple[float, float]],
                            velocity_range: dict[str, tuple[float, float]],
                            asset_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> None:
-    """Wie Isaac Labs reset_root_state_uniform, aber der Abstand zur Handfläche gilt nach der Gierdrehung: ein eckiges
-    Objekt wird um a·|cos θ| + b·|sin θ| − a von der Hand weggerückt (a, b = halbe Tiefe/Breite), damit seine nächste
-    Ecke so weit vor der Handfläche liegt wie die Vorderfläche ohne Drehung — wie ein Greifplaner die Vorgreifpose
-    setzen würde. Runde Objekte unverändert. Ohne Grundriss (place_objects_by_size) wie das Original.
-    Vorher berührte die Ecke eines um 10–15° gedrehten Quaders beim Reset die Finger (tools/analyse_reset.py)."""
+    """Like Isaac Lab's reset_root_state_uniform, but the distance to the palm holds after the yaw rotation: an angular
+    object is moved away from the hand by a·|cos θ| + b·|sin θ| − a (a, b = half depth/width), so that its nearest
+    corner lies as far in front of the palm as the front face without rotation — as a grasp planner would set the
+    pre-grasp pose. Round objects unchanged. Without a footprint (place_objects_by_size) like the original.
+    Before this, the corner of a box rotated by 10–15° touched the fingers at reset (tools/analyse_reset.py)."""
     from isaaclab.utils import math as math_utils
     asset: RigidObject = env.scene[asset_cfg.name]
     root_states = asset.data.default_root_state[env_ids].clone()
@@ -280,7 +281,7 @@ def reset_object_gap_aware(env: ManagerBasedRLEnv, env_ids: torch.Tensor, pose_r
     if footprint is not None:
         a, b, square = footprint[env_ids, :3].unbind(-1)
         yaw = rand[:, 5]
-        positions[:, 0] -= square * (a * yaw.cos().abs() + b * yaw.sin().abs() - a)   # Objekt liegt bei −x der Hand
+        positions[:, 0] -= square * (a * yaw.cos().abs() + b * yaw.sin().abs() - a)   # object lies at −x of the hand
     orientations = math_utils.quat_mul(root_states[:, 3:7],
                                        math_utils.quat_from_euler_xyz(rand[:, 3], rand[:, 4], rand[:, 5]))
     vranges = torch.tensor([velocity_range.get(k, (0.0, 0.0)) for k in ("x", "y", "z", "roll", "pitch", "yaw")],
@@ -292,10 +293,10 @@ def reset_object_gap_aware(env: ManagerBasedRLEnv, env_ids: torch.Tensor, pose_r
 
 
 class GraspDifficultyScheduler(ManagerTermBase):
-    """Curriculum wie Dexsuites DifficultyScheduler (adr_curriculum.py), mit unserem Erfolgskriterium statt des
-    Zielkommandos: je Umgebung Schwierigkeit +1 nach einer erfolgreichen Episode (bis zum Zeitende gehalten,
-    Kippwinkel ≤ max_kipp_deg), sonst −1; difficulty_frac = Mittel / max_difficulty steuert über
-    initial_final_interpolate_fn Schwerkraft und Beobachtungsrauschen (EXP-017)."""
+    """Curriculum like Dexsuite's DifficultyScheduler (adr_curriculum.py), with our success criterion instead of the
+    goal command: per environment difficulty +1 after a successful episode (held until timeout,
+    tilt ≤ max_kipp_deg), otherwise −1; difficulty_frac = mean / max_difficulty drives gravity and observation
+    noise via initial_final_interpolate_fn (EXP-017)."""
 
     def __init__(self, cfg, env):
         super().__init__(cfg, env)
@@ -308,17 +309,17 @@ class GraspDifficultyScheduler(ManagerTermBase):
         ok = env.termination_manager.time_outs[env_ids] & (object_tilt(env)[env_ids] <= math.radians(max_kipp_deg))
         self.current[env_ids] = torch.where(ok, self.current[env_ids] + 1, self.current[env_ids] - 1).clamp(
             min=min_difficulty, max=max_difficulty)
-        # Tensor wie bei Dexsuite: initial_final_interpolate_fn ruft .item() auf den interpolierten Werten auf
+        # tensor as in Dexsuite: initial_final_interpolate_fn calls .item() on the interpolated values
         self.difficulty_frac = self.current.mean() / max(max_difficulty, 1)
         return self.difficulty_frac
 
 
-# ── Belohnungen ───────────────────────────────────────────────────────────────
+# ── Rewards ───────────────────────────────────────────────────────────────────
 
 def fingertips_to_object(env: ManagerBasedRLEnv, std: float,
                          robot_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names=FINGERTIP_LINKS),
                          object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Annäherung: 1 − tanh(größter Abstand Fingerspitze↔Objekt / std) (Dexsuite: object_ee_distance)."""
+    """Approach: 1 − tanh(largest fingertip↔object distance / std) (Dexsuite: object_ee_distance)."""
     robot: Articulation = env.scene[robot_cfg.name]
     obj: RigidObject = env.scene[object_cfg.name]
     tips = robot.data.body_pos_w[:, robot_cfg.body_ids]
@@ -327,18 +328,18 @@ def fingertips_to_object(env: ManagerBasedRLEnv, std: float,
 
 
 class FingertipProgress(ManagerTermBase):
-    """Annäherung wie NVIDIA AllegroKuka/DexPBT (IsaacGymEnvs allegro_kuka_base.py; Petrenko et al. 2023): je
-    Fingerspitze nur der Fortschritt zur Objektmitte, Σ max(kleinster bisheriger Abstand − aktueller, 0) — bloßes
-    Nahesein bringt nichts (nicht ausnutzbar), dass die Spitzen die Mitte hoher Objekte nie erreichen, stört nicht.
-    Nur in der Greifphase (vor dem Absenken; AllegroKuka: bis das Objekt angehoben ist). EXP-019, ersetzt
-    fingertips_to_object (maß alle Handkörper, für 3–4 cm Fingerweg ohnehin zu flach — ADR-022)."""
+    """Approach like NVIDIA AllegroKuka/DexPBT (IsaacGymEnvs allegro_kuka_base.py; Petrenko et al. 2023): per
+    fingertip only the progress towards the object centre, Σ max(smallest distance so far − current, 0) — merely
+    being close earns nothing (not exploitable), and that the tips never reach the centre of tall objects does not
+    matter. Only in the grasp phase (before the table lowering; AllegroKuka: until the object is lifted). EXP-019,
+    replaces fingertips_to_object (measured all hand bodies, and too flat for 3–4 cm of finger travel anyway — ADR-022)."""
 
     def __init__(self, cfg, env: ManagerBasedRLEnv):
         super().__init__(cfg, env)
         self.robot: Articulation = env.scene["robot"]
         self.obj: RigidObject = env.scene["object"]
         self.tip_ids = [self.robot.body_names.index(n) for n in FINGERTIP_LINKS]
-        self.closest = torch.full((env.num_envs, len(self.tip_ids)), -1.0, device=env.device)   # −1: neu setzen
+        self.closest = torch.full((env.num_envs, len(self.tip_ids)), -1.0, device=env.device)   # −1: set anew
 
     def reset(self, env_ids=None):
         self.closest[slice(None) if env_ids is None else env_ids] = -1.0
@@ -352,15 +353,15 @@ class FingertipProgress(ManagerTermBase):
 
 
 def thumb_opposition_contact(env: ManagerBasedRLEnv, threshold: float) -> torch.Tensor:
-    """1, wenn Daumen und mindestens ein Finger das Objekt berühren (Dexsuite: contacts)."""
+    """1 if the thumb and at least one finger touch the object (Dexsuite: contacts)."""
     f = fingertip_object_forces(env)
     return ((f[:, 0] > threshold) & (f[:, 1:] > threshold).any(dim=-1)).float()
 
 
 def object_sink(env: ManagerBasedRLEnv, drop_start_s: float,
                 object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Absinken [m] gegenüber der Höhe beim Beginn des Absenkens (bis dahin mitgeführt, danach
-    eingefroren). Nicht gegen die Standardhöhe: mit ±10 % Größe steht die Dose bis 7,5 mm tiefer."""
+    """Sinking [m] relative to the height at the start of the table lowering (tracked until then, frozen
+    afterwards). Not against the default height: with ±10 % scale the can stands up to 7.5 mm lower."""
     obj: RigidObject = env.scene[object_cfg.name]
     z = obj.data.root_pos_w[:, 2]
     if getattr(env, "_pib_z_ref", None) is None or env._pib_z_ref.shape != z.shape:
@@ -371,54 +372,54 @@ def object_sink(env: ManagerBasedRLEnv, drop_start_s: float,
 
 
 def fingers_in_contact(env: ManagerBasedRLEnv, threshold: float) -> torch.Tensor:
-    """Anteil der vier Finger mit Objektkontakt, nur bei Daumenkontakt: (Finger > threshold) / 4 ·
-    𝟙[Daumen > threshold] ∈ [0, 1]. Belohnt Kraftgriff statt Pinzettengriff (EXP-005)."""
+    """Fraction of the four fingers in contact with the object, only with thumb contact: (finger > threshold) / 4 ·
+    𝟙[thumb > threshold] ∈ [0, 1]. Rewards a power grasp instead of a pinch grasp (EXP-005)."""
     f = fingertip_object_forces(env)
     return (f[:, 1:] > threshold).float().mean(dim=-1) * (f[:, 0] > threshold).float()
 
 
 def object_held(env: ManagerBasedRLEnv, drop_start_s: float, std: float,
                 object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Ab dem Tisch-Absenken: 1 − tanh(Absinken des Objekts / std). Vorher 0 — solange das
-    Objekt auf dem Tisch steht, gibt es nichts zu verdienen."""
+    """From the table lowering on: 1 − tanh(object sinking / std). Before that 0 — while the
+    object stands on the table there is nothing to earn."""
     active = (episode_time(env) >= drop_start_s).float()
     return active * (1.0 - torch.tanh(object_sink(env, drop_start_s, object_cfg) / std))
 
 
 def held_in_grasp(env: ManagerBasedRLEnv, drop_start_s: float, std: float, threshold: float) -> torch.Tensor:
-    """Dicht, ab dem Absenken: Halten × Gegengriff (Dexsuite position_command_error_tanh, × contacts)."""
+    """Dense, from the lowering on: held × opposition (Dexsuite position_command_error_tanh, × contacts)."""
     return object_held(env, drop_start_s, std) * thumb_opposition_contact(env, threshold)
 
 
 def upright_in_grasp(env: ManagerBasedRLEnv, drop_start_s: float, rot_std: float, threshold: float) -> torch.Tensor:
-    """Dicht, ab dem Absenken: (1 − tanh(Kippwinkel/rot_std)) × Gegengriff (Dexsuite
-    orientation_command_error_tanh, × contacts). Erst ab dem Absenken — auf dem Tisch steht die
-    Dose von selbst aufrecht, sonst gäbe es die Belohnung fürs bloße Antippen."""
+    """Dense, from the table lowering on: (1 − tanh(tilt/rot_std)) × opposition (Dexsuite
+    orientation_command_error_tanh, × contacts). Only from the lowering on — on the table the
+    can stands upright by itself, otherwise merely touching it would be rewarded."""
     active = (episode_time(env) >= drop_start_s).float()
     return active * (1.0 - torch.tanh(object_tilt(env) / rot_std)) * thumb_opposition_contact(env, threshold)
 
 
 def object_held_upright(env: ManagerBasedRLEnv, drop_start_s: float, std: float, rot_std: float,
                         object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Halten × aufrecht (Dexsuite success_reward: (1 − tanh(Fehler/pos_std))·(1 − tanh(Winkel/rot_std))).
-    Gekippt halten bringt fast nichts, ohne die Episode abzubrechen — das Greifen bleibt erkundbar."""
+    """Held × upright (Dexsuite success_reward: (1 − tanh(error/pos_std))·(1 − tanh(angle/rot_std))).
+    Holding it tilted earns almost nothing without terminating the episode — grasping stays explorable."""
     return object_held(env, drop_start_s, std, object_cfg) * (1.0 - torch.tanh(object_tilt(env, object_cfg) / rot_std))
 
 
 def object_upright(env: ManagerBasedRLEnv, drop_start_s: float, std: float) -> torch.Tensor:
-    """Ab dem Tisch-Absenken: 1 − tanh(Kippwinkel / std). Vorher 0 — auf dem Tisch steht die
-    Dose ohnehin aufrecht, die Belohnung gäbe es dort ohne Zutun."""
+    """From the table lowering on: 1 − tanh(tilt / std). Before that 0 — on the table the
+    can stands upright anyway, the reward would come for free there."""
     active = (episode_time(env) >= drop_start_s).float()
     return active * (1.0 - torch.tanh(object_tilt(env) / std))
 
 
-# ── Positionsterme wie Dexsuite (EXP-012): Ziel = Startposition des Objekts ────────────────
+# ── Position terms like Dexsuite (EXP-012): target = start position of the object ────────────────
 
 def object_start_distance(env: ManagerBasedRLEnv, ref_s: float,
                           object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """3D-Abstand [m] des Objekts zu seiner Startposition (bis ref_s mitgeführt, dann eingefroren: Objekt
-    abgesetzt, Größe eingeschwungen). Gegenstück zu Dexsuites Zielposition (Kommando relativ zur
-    Roboterbasis): die Hand ist fest, das Objekt soll bleiben, wo der Arm es gegriffen hat."""
+    """3D distance [m] of the object to its start position (tracked until ref_s, then frozen: object
+    settled, scale settled). Counterpart of Dexsuite's target position (command relative to the
+    robot base): the hand is fixed, the object should stay where the arm grasped it."""
     obj: RigidObject = env.scene[object_cfg.name]
     pos = obj.data.root_pos_w
     if getattr(env, "_pib_start_pos", None) is None or env._pib_start_pos.shape != pos.shape:
@@ -430,15 +431,15 @@ def object_start_distance(env: ManagerBasedRLEnv, ref_s: float,
 
 def position_tracking_start(env: ManagerBasedRLEnv, drop_start_s: float, std: float, threshold: float,
                             ref_s: float) -> torch.Tensor:
-    """Dexsuite position_command_error_tanh: (1 − tanh(‖p − p_Ziel‖/std)) × Gegengriff, ab dem Absenken."""
+    """Dexsuite position_command_error_tanh: (1 − tanh(‖p − p_target‖/std)) × opposition, from the lowering on."""
     active = (episode_time(env) >= drop_start_s).float()
     return active * (1.0 - torch.tanh(object_start_distance(env, ref_s) / std)) * thumb_opposition_contact(env, threshold)
 
 
 def success_start(env: ManagerBasedRLEnv, drop_start_s: float, pos_std: float, rot_std: float,
                   ref_s: float) -> torch.Tensor:
-    """Dexsuite success_reward: (1 − tanh(‖p − p_Ziel‖/pos_std)) · (1 − tanh(Kippwinkel/rot_std)), ab dem
-    Absenken. Orientierung als Kippwinkel (Anforderung aufrecht, kein Gierziel)."""
+    """Dexsuite success_reward: (1 − tanh(‖p − p_target‖/pos_std)) · (1 − tanh(tilt/rot_std)), from the
+    lowering on. Orientation as tilt angle (requirement upright, no yaw target)."""
     active = (episode_time(env) >= drop_start_s).float()
     return (active * (1.0 - torch.tanh(object_start_distance(env, ref_s) / pos_std))
             * (1.0 - torch.tanh(object_tilt(env) / rot_std)))
@@ -446,10 +447,10 @@ def success_start(env: ManagerBasedRLEnv, drop_start_s: float, pos_std: float, r
 
 def object_xy_displacement(env: ManagerBasedRLEnv, ref_s: float, max_dist: float = 0.2,
                            object_cfg: SceneEntityCfg = SceneEntityCfg("object")) -> torch.Tensor:
-    """Verschiebung [m] der Objektmitte in der Tischebene ggü. der Startlage (bis ref_s mitgeführt, dann
-    eingefroren), gekappt bei max_dist. Als Strafe über die ganze Episode wie Cross-Embodiment Dexterous Grasping
-    (Yuan et al. 2024: r = −0,3·‖xy − xy_Start‖); z bleibt beim Halteterm. EXP-023: die Policies zogen das Objekt
-    ~13 cm Richtung Unterarm (tools/diag_objektweg.py), nichts in der Belohnung hielt die Lage in der Tischebene."""
+    """Displacement [m] of the object centre in the table plane relative to the start pose (tracked until ref_s, then
+    frozen), clipped at max_dist. As a penalty over the whole episode like Cross-Embodiment Dexterous Grasping
+    (Yuan et al. 2024: r = −0.3·‖xy − xy_start‖); z stays with the hold term. EXP-023: the policies pulled the object
+    ~13 cm towards the forearm (tools/diag_objektweg.py); nothing in the reward kept the pose in the table plane."""
     obj: RigidObject = env.scene[object_cfg.name]
     xy = obj.data.root_pos_w[:, :2]
     if getattr(env, "_pib_start_xy", None) is None or env._pib_start_xy.shape != xy.shape:
@@ -460,20 +461,20 @@ def object_xy_displacement(env: ManagerBasedRLEnv, ref_s: float, max_dist: float
 
 
 def servo_torque_l2(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Tensor:
-    """Σ (Moment / Stall-Moment)² der Servos in asset_cfg (EXP-025): 0 = kraftlos, ≈ Zahl der Servos bei Dauer-Stall.
-    Wie die Moment-Strafe von HORA (Qi et al. 2022) und Isaac Labs joint_torques_l2, aber je Gelenk auf das Stall-Moment
-    normiert (Servos verschieden stark). applied_torque = PD-Moment nach Begrenzung — dieselbe Größe wie die Leitplanke
-    Stall-Anteil (eval_policy). Gelenke nur über params (SceneEntityCfg wird nur dort aufgelöst, ADR-017)."""
+    """Σ (torque / stall torque)² of the servos in asset_cfg (EXP-025): 0 = no force, ≈ number of servos at permanent stall.
+    Like HORA's torque penalty (Qi et al. 2022) and Isaac Lab's joint_torques_l2, but normalised per joint by the stall
+    torque (servos differ in strength). applied_torque = PD torque after clipping — the same quantity as the stall-share
+    guardrail (eval_policy). Joints only via params (SceneEntityCfg is only resolved there, ADR-017)."""
     robot: Articulation = env.scene[asset_cfg.name]
     tau = robot.data.applied_torque[:, asset_cfg.joint_ids] / robot.data.joint_effort_limits[:, asset_cfg.joint_ids]
     return torch.sum(torch.square(tau), dim=1)
 
 
 def servo_effort_limit(robot: Articulation, ids: list) -> torch.Tensor:
-    """Stall-Moment je Gelenk in `ids` (N, len(ids)) am Gelenk. Gestängegetriebene Gelenke (Handgelenk-Pleuel,
-    RemotizedPDActuator, ADR-014): winkelabhängig 2,94 Nm × Übersetzung n(θ) aus der Tabelle des Aktuators — dort steht
-    joint_effort_limits auf Isaac Labs Standard 1e9 (explizite Aktuatoren), |τ|/Grenze wäre immer ≈ 0. So ist |τ|/Grenze
-    für alle Servos dieselbe Größe: Moment am Servo / Stall-Moment."""
+    """Stall torque per joint in `ids` (N, len(ids)) at the joint. Linkage-driven joints (wrist linkage,
+    RemotizedPDActuator, ADR-014): angle-dependent 2.94 Nm × transmission n(θ) from the actuator's table — there
+    joint_effort_limits holds Isaac Lab's default 1e9 (explicit actuators), so |τ|/limit would always be ≈ 0. This way
+    |τ|/limit is the same quantity for all servos: torque at the servo / stall torque."""
     lim = robot.data.joint_effort_limits[:, ids].clone()
     for act in robot.actuators.values():
         if not hasattr(act, "_torque_limit"):
@@ -488,12 +489,12 @@ def servo_effort_limit(robot: Articulation, ids: list) -> torch.Tensor:
 
 def servo_stall(robot: Articulation, ids: list, fraction: float, tendon: torch.Tensor | None = None,
                 firmware_limits: bool = False, limit_tol_deg: float = 1.0) -> torch.Tensor:
-    """Stall je Servo (N, len(ids)) als bool: |τ| ≥ fraction · Stall-Moment (PD-Schätzung applied_torque, Grenze aus
-    servo_effort_limit). Wie am echten Servo (Nachtlauf 2026-10-14): `firmware_limits` = kein Stall ≤ limit_tol_deg vor
-    der Gelenkgrenze in Momentrichtung (die Firmware kappt das Ziel, der Servo drückt nicht gegen den Anschlag).
-    `tendon` (bool je Servo, optional) = nur τ > 0 zählt (Sehne zieht nur) — im Training bewusst nicht genutzt: die Sim
-    kann Finger aktiv öffnen, real nur die Feder; ohne Kosten würde die Policy diese Kraft frei nutzen.
-    Gemeinsam für StallLagrange (Training) und eval_policy (Kennzahl „Servo-Last real“)."""
+    """Stall per servo (N, len(ids)) as bool: |τ| ≥ fraction · stall torque (PD estimate applied_torque, limit from
+    servo_effort_limit). As on the real servo (night run 2026-10-14): `firmware_limits` = no stall within limit_tol_deg
+    of the joint limit in the torque direction (the firmware clips the target, the servo does not push against the stop).
+    `tendon` (bool per servo, optional) = only τ > 0 counts (tendon can only pull) — deliberately not used in training:
+    the sim can actively open fingers, the real hand only via the spring; without a cost the policy would use this force freely.
+    Shared by StallLagrange (training) and eval_policy (metric "Servo-Last real")."""
     tau = robot.data.applied_torque[:, ids]
     stall = tau.abs() >= fraction * servo_effort_limit(robot, ids)
     if tendon is not None:
@@ -507,23 +508,23 @@ def servo_stall(robot: Articulation, ids: list, fraction: float, tendon: torch.T
 
 
 class StallLagrange(ManagerTermBase):
-    """Grenze auf den Servo-Stall per PID-Lagrange (Nachtlauf 2026-10-13, EXP-035 ff.; Ray, Achiam & Amodei 2019, Safety
-    Gym; Stooke, Achiam & Abbeel 2020, PID Lagrangian). Kosten c_t = Anteil der Servos in `joint_names` mit
-    |τ| ≥ `fraction` · Stall-Moment (dieselbe Größe wie applied_torque in eval_policy). Ziel J_c = Mittel von c_t ≤ `limit`.
-    Der Term liefert λ · c_t (Gewicht im RewTerm −1 → Strafe −λ · c_t je s); λ ≥ 0 regelt sich einmal je Rollout
-    (`steps_per_update` Aufrufe = num_steps_per_env) nach Stooke 2020, Algorithmus 2:
-        e = J_c − d,  I ← max(0, I + K_I·e),  λ = max(0, K_P·e + I + K_D·max(0, J_c − J_c,vorher))
-    J_c = Mittel von c_t über den Rollout (alle Umgebungen), für P- und D-Anteil zusätzlich geglättet (EMA α).
-    Vereinfachung ggü. Safety Gym: kein eigener Kosten-Critic, die Strafe steht in der Belohnung (wie Lagrange-PPO
-    mit gemeinsamem Vorteil). λ, J_c und I gehen über extras["log"] ins TensorBoard (Lagrange/…).
+    """Limit on servo stall via PID Lagrangian (night run 2026-10-13, EXP-035 ff.; Ray, Achiam & Amodei 2019, Safety
+    Gym; Stooke, Achiam & Abbeel 2020, PID Lagrangian). Cost c_t = fraction of the servos in `joint_names` with
+    |τ| ≥ `fraction` · stall torque (the same quantity as applied_torque in eval_policy). Target J_c = mean of c_t ≤ `limit`.
+    The term returns λ · c_t (weight −1 in the RewTerm → penalty −λ · c_t per s); λ ≥ 0 is updated once per rollout
+    (`steps_per_update` calls = num_steps_per_env) after Stooke 2020, Algorithm 2:
+        e = J_c − d,  I ← max(0, I + K_I·e),  λ = max(0, K_P·e + I + K_D·max(0, J_c − J_c,prev))
+    J_c = mean of c_t over the rollout (all environments), additionally smoothed (EMA α) for the P and D parts.
+    Simplification compared with Safety Gym: no separate cost critic, the penalty is part of the reward (like Lagrangian
+    PPO with a shared advantage). λ, J_c and I go to TensorBoard via extras["log"] (Lagrange/…).
 
-    Nachtlauf 2026-10-14 (EXP-038 ff., docs/nachtlauf-2026-10-14.md), Stall wie am echten Servo (servo_stall):
-    - Handgelenk mit winkelabhängigem Stall-Moment (Pleuel) — `joint_names` dann alle 8 Servos.
-    - `firmware_limits`: kein Stall ≤ `limit_tol_deg` vor der Gelenkgrenze in Momentrichtung (die Firmware kappt das Ziel
-      auf die Grenze, der Servo drückt nicht gegen den Anschlag).
-    - `tendon_joints` (optional): nur Zug zählt — siehe servo_stall, warum nicht genutzt.
-    - `per_joint`: ein λ je Servo (CaT, Chane-Sane et al. 2024: Grenze je Gelenk), jeder Servo J_c,i ≤ `limit`;
-      Strafe (1/n)·Σ λ_i·c_i (gleiche Größenordnung wie mit einem λ)."""
+    Night run 2026-10-14 (EXP-038 ff., docs/protokoll/nachtlauf-2026-10-14.md), stall as on the real servo (servo_stall):
+    - wrist with angle-dependent stall torque (linkage) — `joint_names` then holds all 8 servos.
+    - `firmware_limits`: no stall within `limit_tol_deg` of the joint limit in the torque direction (the firmware clips
+      the target to the limit, the servo does not push against the stop).
+    - `tendon_joints` (optional): only pulling counts — see servo_stall for why it is not used.
+    - `per_joint`: one λ per servo (CaT, Chane-Sane et al. 2024: limit per joint), every servo J_c,i ≤ `limit`;
+      penalty (1/n)·Σ λ_i·c_i (same order of magnitude as with a single λ)."""
 
     def __init__(self, cfg, env: ManagerBasedRLEnv):
         super().__init__(cfg, env)
@@ -534,7 +535,7 @@ class StallLagrange(ManagerTermBase):
         tendon = set(p.get("tendon_joints") or [])
         self.tendon = torch.tensor([n in tendon for n in self.names], dtype=torch.bool, device=env.device)
         n = len(self.ids) if p.get("per_joint", False) else 1
-        # Reglerzustand auf der CPU (Logging in reset() ohne GPU-Synchronisierung), λ zusätzlich auf dem Gerät
+        # Controller state on the CPU (logging in reset() without GPU synchronisation), λ additionally on the device
         self.lam = torch.full((n,), float(p.get("lambda_init", 0.0)))
         self.lam_dev = self.lam.to(env.device)
         self.integral = self.lam.clone()
@@ -583,8 +584,8 @@ _SERVO_LOAD_IDS: dict = {}
 
 
 def servo_load(env: ManagerBasedRLEnv, joint_names: list) -> torch.Tensor:
-    """Servo-Last wie der „Present Load“ des ST3215 (EXP-037): |τ| / Stall-Moment je Servo in `joint_names`
-    (Reihenfolge = Aktionsraum), auf [0; 1,5] begrenzt. Reale Größe — die Firmware müsste sie mitlesen."""
+    """Servo load like the "Present Load" of the ST3215 (EXP-037): |τ| / stall torque per servo in `joint_names`
+    (order = action space), clipped to [0, 1.5]. A real quantity — the firmware would have to read it."""
     robot: Articulation = env.scene["robot"]
     key = tuple(joint_names)
     if key not in _SERVO_LOAD_IDS:
@@ -594,8 +595,8 @@ def servo_load(env: ManagerBasedRLEnv, joint_names: list) -> torch.Tensor:
 
 
 def excess_fingertip_force(env: ManagerBasedRLEnv, limit: float) -> torch.Tensor:
-    """Summe der Kraft über `limit` [N] an allen Fingerspitzen (gegen Zerquetschen und
-    unrealistisch hohe Kräfte, ADR-011: lineare Kopplung überschätzt die Spitzenkraft)."""
+    """Sum of the force above `limit` [N] over all fingertips (against crushing and
+    unrealistically high forces, ADR-011: the linear coupling overestimates the tip force)."""
     return (fingertip_forces(env) - limit).clamp(min=0.0).sum(dim=-1)
 
 
@@ -609,32 +610,32 @@ def object_dropped(env: ManagerBasedRLEnv, max_sink: float,
 
 
 def object_tilted(env: ManagerBasedRLEnv, max_tilt_deg: float) -> torch.Tensor:
-    """Abbruch, wenn das Objekt mehr als max_tilt_deg kippt (Muster: Isaac Lab
+    """Terminate when the object tilts by more than max_tilt_deg (pattern: Isaac Lab
     deploy/gear_assembly, reset_when_gear_orientation_exceeds_threshold)."""
     import math
     return object_tilt(env) > math.radians(max_tilt_deg)
 
 
 def abnormal_robot_state(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
-    """Gelenkgeschwindigkeit > 2× Limit — instabile Physik (Dexsuite: abnormal_robot_state)."""
+    """Joint velocity > 2× limit — unstable physics (Dexsuite: abnormal_robot_state)."""
     robot: Articulation = env.scene[asset_cfg.name]
     return (robot.data.joint_vel.abs() > (robot.data.joint_vel_limits * 2)).any(dim=1)
 
 
-# ── Armbewegung (Belastungstest, 2026-10-12) ──────────────────────────────────
-# Die Hand ist fest montiert. Eine Bewegung des ganzen Arms ist im Bezugssystem der Hand gleichwertig zu Scheinkräften
-# auf jeden Körper (Objekt und Handglieder, im Schwerpunkt):
-#   F = m·[−a_P + (Rᵀg − g) − α×r − ω×(ω×r) − 2·ω×v]
-# a_P = Beschleunigung des Drehpunkts, R = Drehung der Hand seit Bewegungsbeginn (Schwerkraft dreht relativ zur Hand),
-# ω/α um eine feste Achse n, r = Schwerpunkt − Drehpunkt, v = Geschwindigkeit im Handrahmen (Coriolis). Für reine
-# Translation exakt −m·a (Äquivalenzprinzip; DexGraspNet prüft Griffe genauso mit gedrehter Schwerkraft). Momente aus dem
-# ungleichmäßigen Feld vernachlässigt. Profile: Minimum-Jerk (Flash & Hogan 1985), Rampe bis zum Versagen (Grasp to Act
-# 2026, SoGraB), Drehen ±45° wie GRASPA. Drehpunkt = Hand-Root (Ellbogen, `elbow_lower`); Gieren um die senkrechte Achse
-# (Oberarm hängt senkrecht), Nicken um die waagrechte Achse quer zum Unterarm (Unterarm/Hand zeigen nach −y).
+# ── Arm motion (load test, 2026-10-12) ──────────────────────────────────────
+# The hand is mounted fixed. A motion of the whole arm is equivalent, in the hand's frame, to fictitious forces
+# on every body (object and hand links, at the centre of mass):
+# F = m·[−a_P + (Rᵀg − g) − α×r − ω×(ω×r) − 2·ω×v]
+# a_P = acceleration of the pivot, R = rotation of the hand since the motion started (gravity rotates relative to the hand),
+# ω/α about a fixed axis n, r = centre of mass − pivot, v = velocity in the hand frame (Coriolis). For pure
+# translation exactly −m·a (equivalence principle; DexGraspNet tests grasps the same way with rotated gravity). Torques
+# from the non-uniform field neglected. Profiles: minimum jerk (Flash & Hogan 1985), ramp until failure (Grasp to Act
+# 2026, SoGraB), rotation ±45° like GRASPA. Pivot = hand root (elbow, `elbow_lower`); yaw about the vertical axis
+# (upper arm hangs vertically), pitch about the horizontal axis across the forearm (forearm/hand point to −y).
 
-BEWEGUNG_START_S = 2.6          # Haltephase ab 2,5 s (Tisch unten), Episode 4,5 s
-RAMPE_S = 1.8                   # Rampe 0 → a_max bis kurz vor Episodenende
-TRANSPORT_M = 0.3               # Strecke der Transportbewegung
+BEWEGUNG_START_S = 2.6          # hold phase from 2.5 s (table down), episode 4.5 s
+RAMPE_S = 1.8                   # ramp 0 → a_max until shortly before the end of the episode
+TRANSPORT_M = 0.3               # distance of the transport motion
 DREH_RAD = 0.7853981633974483   # 45° (GRASPA)
 _ACHSEN6 = ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))
 BEWEGUNG_RICHTUNGEN = {"rampe": ("+x", "−x", "+y", "−y", "+z", "−z"), "transport": ("+x", "−x", "+y", "−y", "+z", "−z"),
@@ -642,8 +643,8 @@ BEWEGUNG_RICHTUNGEN = {"rampe": ("+x", "−x", "+y", "−y", "+z", "−z"), "tra
 
 
 def min_jerk(t: torch.Tensor, T: float):
-    """Minimum-Jerk-Profil auf Strecke 1: Weg s, Geschwindigkeit ṡ, Beschleunigung s̈ (0 vor dem Start, konstant 1 danach).
-    Spitzenbeschleunigung 10/√3/T² ≈ 5,77/T²."""
+    """Minimum-jerk profile over distance 1: position s, velocity ṡ, acceleration s̈ (0 before the start, constant 1 after).
+    Peak acceleration 10/√3/T² ≈ 5.77/T²."""
     x = (t / T).clamp(0.0, 1.0)
     s = x ** 3 * (10 - 15 * x + 6 * x ** 2)
     sd = 30 * x ** 2 * (1 - x) ** 2 / T
@@ -652,12 +653,12 @@ def min_jerk(t: torch.Tensor, T: float):
 
 
 def transport_dauer(a_max: float, strecke: float = TRANSPORT_M) -> float:
-    """Dauer T der Minimum-Jerk-Bewegung über `strecke` mit Spitzenbeschleunigung a_max."""
+    """Duration T of the minimum-jerk motion over `strecke` with peak acceleration a_max."""
     return (10 / 3 ** 0.5 * strecke / a_max) ** 0.5
 
 
 def _rotate(v: torch.Tensor, n: torch.Tensor, phi: torch.Tensor) -> torch.Tensor:
-    """Rodrigues: v (…, 3) um die Einheitsachse n (3,) um phi (…, 1) drehen."""
+    """Rodrigues: rotate v (…, 3) about the unit axis n (3,) by phi (…, 1)."""
     c, s = torch.cos(phi), torch.sin(phi)
     n = n.expand_as(v)
     return v * c + torch.cross(n, v, dim=-1) * s + n * (n * v).sum(-1, keepdim=True) * (1 - c)
@@ -665,16 +666,16 @@ def _rotate(v: torch.Tensor, n: torch.Tensor, phi: torch.Tensor) -> torch.Tensor
 
 def apply_arm_motion(env: ManagerBasedRLEnv, art: str, param: float, t: torch.Tensor,
                      start_s: float = BEWEGUNG_START_S) -> torch.Tensor:
-    """Scheinkräfte einer Armbewegung auf Objekt und Hand setzen (bleiben bis zum nächsten Aufruf gesetzt).
-    art: rampe (param = a_max [m/s²], linear in RAMPE_S), transport (param = a_max, Minimum-Jerk über TRANSPORT_M),
-    gieren/nicken (param = Dauer T [s] für 45°). Richtung je Umgebung `env_id % len(Richtungen)`, t = Episodenzeit zu
-    Beginn des Schritts.
-    Gibt den Betrag der Beschleunigung des Drehpunkts bzw. ω²·r am Objekt [m/s²] je Umgebung zurück (Grenzwert)."""
+    """Set the fictitious forces of an arm motion on object and hand (they stay set until the next call).
+    art: rampe (param = a_max [m/s²], linear over RAMPE_S), transport (param = a_max, minimum jerk over TRANSPORT_M),
+    gieren/nicken (param = duration T [s] for 45°). Direction per environment `env_id % len(directions)`, t = episode
+    time at the start of the step.
+    Returns the magnitude of the pivot acceleration or ω²·r at the object [m/s²] per environment (limit value)."""
     robot: Articulation = env.scene["robot"]
     obj: RigidObject = env.scene["object"]
     dev, N = env.device, env.num_envs
     k = torch.arange(N, device=dev) % len(BEWEGUNG_RICHTUNGEN[art])
-    tau = t + env.step_dt / 2 - start_s           # in der Mitte des Policy-Schritts (Kraft je Schritt konstant)
+    tau = t + env.step_dt / 2 - start_s           # in the middle of the policy step (force constant per step)
     g = torch.tensor((0.0, 0.0, -9.81), device=dev)
     bodies = [(obj, obj.data.body_com_pos_w, obj.data.body_com_lin_vel_w),
               (robot, robot.data.body_com_pos_w, robot.data.body_com_lin_vel_w)]
@@ -704,7 +705,7 @@ def apply_arm_motion(env: ManagerBasedRLEnv, art: str, param: float, t: torch.Te
                     - 2 * w[:, None, None] * torch.cross(nn, v, dim=-1))
         r_obj = obj.data.root_pos_w - pivot
         r_perp = (r_obj - n * (r_obj @ n)[:, None]).norm(dim=-1)
-        amag = torch.sqrt((al * r_perp) ** 2 + (w ** 2 * r_perp) ** 2)                  # Bahnbeschleunigung am Objekt
+        amag = torch.sqrt((al * r_perp) ** 2 + (w ** 2 * r_perp) ** 2)                  # path acceleration at the object
     else:
         raise ValueError(f"unbekannte Bewegung {art}")
     for asset, pos, vel in bodies:

@@ -30,7 +30,7 @@ laeufe:
 ergebnis: 'Aufgabenerfolg 0 %, Haltequote 0 % (3 Seeds). Training: 94 % gefallen,
   6 % gekippt, 0 % gehalten; Episoden enden beim Absenken. Video/Inferenz: die Finger
   spreizen sich, die Dose wird nicht berührt.'
-urteil: schlechter (Entwurf, von Leon zu bestätigen)
+urteil: schlechter (Entwurf, zu bestätigen)
 schluss: Hypothese widerlegt. Ursache laut EXP-003/004 vor allem die Belohnung (Annäherung
   std 0,1 ≈ 0, unbegrenzte Kraftstrafe > Annäherung → Berühren kostet), dazu der Kippabbruch
   ab Beginn. Strenge Orientierungsabbrüche nutzt NVIDIA nur, wenn das Objekt schon

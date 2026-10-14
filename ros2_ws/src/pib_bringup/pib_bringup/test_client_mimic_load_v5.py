@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
 """
-test_client_mimic_load_v5.py — Lasttest der Mimic Joints (v5): linke Hand fährt mit den Fingern
-gegen den Tisch. Replik des Tischtests aus der verworfenen Kraft-Rückwirkung (ADR-010,
-früher tendondrive/test_coupling_reflection.sh), jetzt mit Diagnose.
+test_client_mimic_load_v5.py — load test of the mimic joints (v5): the left hand moves its fingers
+against the table. Replica of the table test from the rejected force feedback (ADR-010,
+formerly tendondrive/test_coupling_reflection.sh), now with diagnostics.
 
-Ablauf:
-  1. Linker Arm in Testpose (Hand knapp über dem Tisch, Werte aus dem Physics Inspector):
+Sequence:
+  1. Left arm in the test pose (hand just above the table, values from the Physics Inspector):
      shoulder_vertical_left 1.4050, shoulder_horizontal_left 1.5708, upper_arm_left 0.1152,
-     elbow_left 0.4677, forearm_left 1.5708, wrist_left 0.0 rad (3 s). Pose wird gegengeprüft.
-  2. MCP des Zielfingers 0° → 90° in --close-time s (Standard 4 s), danach --hold s (Standard 3 s)
-     weiter auf 90° gehalten — die Fingerspitze drückt dabei gegen den Tisch.
-  3. Auswertung aus /pib/hw/joint_states (Roh-Zustand aus Isaac, inkl. Effort falls vorhanden).
+     elbow_left 0.4677, forearm_left 1.5708, wrist_left 0.0 rad (3 s). The pose is cross-checked.
+  2. MCP of the target finger 0° → 90° in --close-time s (default 4 s), then held at 90° for --hold s
+     (default 3 s) — the fingertip presses against the table meanwhile.
+  3. Evaluation from /pib/hw/joint_states (raw state from Isaac, incl. effort if available).
 
-Diagnose:
-  - Zeitverlauf alle 0,5 s: MCP/PIP/DIP-Ist, Δ zur Kopplung, MCP-Effort
-  - Gelenkbereich: PIP/DIP dürfen nicht aus [-5°, 95°] ausbrechen (alter Fehler: PIP -87,8°)
-  - Kopplung unter Last: |Δ PIP/DIP − MCP| am Ende ≤ --tol (Standard 3°)
-  - MCP-Effort max/final (falls Isaac Effort publiziert) gegen maxForce 2,94 Nm
-  - Chattern: Spannweite des MCP in den letzten 2 s (> 5° = kein Stall, sondern Schwingen),
-    max. Winkelgeschwindigkeit, Verletzung der MCP-Grenzen [0°, 90°]
-  - NaN in /pib/hw/joint_states = Simulation numerisch explodiert -> Abbruch (Stop -> Play)
+Diagnostics:
+  - time series every 0.5 s: MCP/PIP/DIP actual, Δ to the coupling, MCP effort
+  - joint range: PIP/DIP must not break out of [-5°, 95°] (old error: PIP -87.8°)
+  - coupling under load: |Δ PIP/DIP − MCP| at the end ≤ --tol (default 3°)
+  - MCP effort max/final (if Isaac publishes effort) against maxForce 2.94 Nm
+  - chatter: range of the MCP over the last 2 s (> 5° = no stall but oscillation),
+    max. angular velocity, violation of the MCP limits [0°, 90°]
+  - NaN in /pib/hw/joint_states = simulation exploded numerically -> abort (Stop -> Play)
 
-Alter Referenzwert (ohne Mimic, mit/ohne Rückwirkung): MCP blieb bei 82,7° stehen.
+Old reference value (without mimic, with/without feedback): the MCP stopped at 82.7°.
 
-Voraussetzung:
-  1. Isaac Sim läuft (pib_upperbody_v5.usd, start.py ausgeführt → Mimic Joints gesetzt, Play)
+Prerequisites:
+  1. Isaac Sim is running (pib_upperbody_v5.usd, start.py executed → mimic joints set, Play)
   2. ros2 launch pib_bringup pib_sim_v5.launch.py
 
 Start:
   ros2 run pib_bringup test_client_mimic_load_v5                      # index_left
-  ros2 run pib_bringup test_client_mimic_load_v5 --finger fingers_left # alle 4 Finger links
-  ros2 run pib_bringup test_client_mimic_load_v5 --skip-arm            # Arm schon in Pose
-  ros2 run pib_bringup test_client_mimic_load_v5 --reset               # danach zurück auf 0
-  ros2 run pib_bringup test_client_mimic_load_v5 --reset-only          # nur zurücksetzen
+  ros2 run pib_bringup test_client_mimic_load_v5 --finger fingers_left # all 4 fingers left
+  ros2 run pib_bringup test_client_mimic_load_v5 --skip-arm            # arm already in pose
+  ros2 run pib_bringup test_client_mimic_load_v5 --reset               # back to 0 afterwards
+  ros2 run pib_bringup test_client_mimic_load_v5 --reset-only          # reset only
 
-Exit-Code 0 = bestanden, 1 = Gelenkbereich/Kopplung verletzt, 2 = Goal fehlgeschlagen/keine Daten.
+Exit code 0 = passed, 1 = joint range/coupling violated, 2 = goal failed/no data.
 """
 import argparse
 import math
@@ -57,11 +57,11 @@ ARM_TOL_DEG = 2.0
 
 FINGERS_LEFT = ("index_left", "middle_left", "ring_left", "pinky_left")
 RANGE_MIN_DEG, RANGE_MAX_DEG = -5.0, 95.0
-STALL_MIN_DEG = 3.0          # MCP bleibt mindestens so weit vor dem Ziel stehen -> Ziel nicht erreicht
-CHATTER_WINDOW_S = 2.0       # Fenster am Ende für die Chatter-Auswertung
-CHATTER_MAX_DEG = 5.0        # Spannweite MCP im Fenster, ab der es kein Stall mehr ist
-MCP_LIMIT_DEG = (-1.0, 91.0) # MCP-Grenzen [0°, 90°] mit 1° Toleranz
-MCP_MAX_FORCE_NM = 2.94      # ST3215, siehe isaac_sim/setup_stage.py
+STALL_MIN_DEG = 3.0          # MCP stops at least this far short of the target -> target not reached
+CHATTER_WINDOW_S = 2.0       # window at the end for the chatter evaluation
+CHATTER_MAX_DEG = 5.0        # MCP range in the window above which it is no longer a stall
+MCP_LIMIT_DEG = (-1.0, 91.0) # MCP limits [0°, 90°] with 1° tolerance
+MCP_MAX_FORCE_NM = 2.94      # ST3215, see isaac_sim/setup_stage.py
 TOPIC = "/pib/hw/joint_states"
 
 
@@ -92,7 +92,7 @@ class PibMimicLoadTestV5(Node):
         self.rows.append((t, pos, eff, vel))
 
     def run_goal(self, names, waypoints, label, record=False) -> bool:
-        """waypoints: [(sec, [rad,...])]. Wartet auf das Ergebnis. Bei record=True: t=0 bei Goal-Annahme."""
+        """waypoints: [(sec, [rad,...])]. Waits for the result. With record=True: t=0 at goal acceptance."""
         self._ac.wait_for_server()
         goal = FollowJointTrajectory.Goal()
         goal.trajectory.joint_names = list(names)
@@ -236,7 +236,7 @@ def report(node: PibMimicLoadTestV5, fingers: list, target_deg: float, tol_deg: 
                                else "MCP erreicht das Ziel — kein Kontakt erkennbar (Handpose/Tischhöhe prüfen)"))
         failed |= not (in_range and coupled and steady and limit_viol == 0)
 
-    # Arm-Beteiligung: Bewegt sich der Arm, während die Finger gegen den Tisch drücken?
+    # Arm involvement: does the arm move while the fingers press against the table?
     print("\n=== Arm-Drift während der Fingerphase (Δ gegenüber Start der Phase) ===")
     first = rows[0][1]
     for name in ARM_JOINTS:
@@ -287,7 +287,7 @@ def main(args=None):
     if ns.reset_only:
         code = 0 if reset() else 2
     else:
-        node.settle(1.5)   # DDS-Discovery + erste joint_states abwarten
+        node.settle(1.5)   # wait for DDS discovery + the first joint_states
         if not node.latest:
             node.get_logger().error(f"Keine {TOPIC}-Daten — läuft Isaac (Play) und die Bridge?")
             sys.exit(2)

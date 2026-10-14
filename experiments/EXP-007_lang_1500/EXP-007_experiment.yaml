@@ -45,9 +45,9 @@ ergebnis: '5 Seeds: Aufgabenerfolg 78,0 % [49,6–94,9], IQM 90,7 %, Seeds 92/22
   %; Haltequote 92 %, Kippwinkel 22° (niedrigster), Finger 2,0 (Pinzettengriff), Unruhe
   1,58 (höchste). Leaderboard Platz 3 (IQM alle Objekte 63,7 %).'
 urteil: kein messbarer Unterschied zu EXP-004 am Zylinder; robuster als EXP-004, aber
-  unruhiger — bestätigt (Leon, 2026-10-08)
+  unruhiger — bestätigt (2026-10-08)
 schluss: Längeres Training stabilisiert die Seeds, ändert den Griff nicht (Pinzettengriff)
-  und macht die Bewegung unruhiger (Zappeln, Leon). Budget erst wieder erhöhen, wenn
+  und macht die Bewegung unruhiger (Zappeln). Budget erst wieder erhöhen, wenn
   die Aufgabe erweitert ist.
 commit_nachtrag: 73b412a
 nachtrag:

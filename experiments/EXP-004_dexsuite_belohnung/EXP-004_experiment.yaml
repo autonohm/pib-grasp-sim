@@ -55,8 +55,7 @@ ergebnis: '5 Seeds (45/46 nachgetragen 2026-10-07): Aufgabenerfolg 47,6 % [13,9�
   ein), Seed 46 hält zu 95 %, kippt die Dose aber mit dem Unterarm (56°, wie EXP-000).
   Haltequote 73 %, Kippwinkel 34°, Finger 2,0. Leaderboard: IQM über alle Objekte
   27,6 %, gesichert schlechter als Platz 1 (P = 0,83).'
-urteil: besser als EXP-000, aber instabil (2/5 Seeds scheitern) — bestätigt (Leon,
-  2026-10-08)
+urteil: besser als EXP-000, aber instabil (2/5 Seeds scheitern) — bestätigt (2026-10-08)
 schluss: 'Die Dexsuite-Belohnung war der Durchbruch (ADR-017), aber als Baseline zu
   instabil: mit 3 Seeds sah EXP-004 robust aus. Neue Baseline ist EXP-006.'
 commit_nachtrag: 73b412a

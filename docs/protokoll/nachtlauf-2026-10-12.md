@@ -1,11 +1,11 @@
-# Nachtlauf So 2026-10-11 22:00 → Mo 2026-10-12 14:00 (Plan, Leon freigegeben)
+# Nachtlauf So 2026-10-11 22:00 → Mo 2026-10-12 14:00 (Plan, vom Autor freigegeben)
 
-Leon ist bis Montag 14:00 weg und antwortet nicht. Präsentation der Projektarbeit am Donnerstag 2026-10-15 — Ziel: vorzeigbarer
+Der Autor ist bis Montag 14:00 weg und antwortet nicht. Präsentation der Projektarbeit am Donnerstag 2026-10-15 — Ziel: vorzeigbarer
 Stand für **seitlich** und **von oben**. Alles wie gewohnt sichern: Commit + Push (`origin/feature/rl-grasping`) +
 Hugging Face (`experiments.py done`). Sim-to-Real-Lücken werden nur in der Präsentation genannt, nicht behoben
-(`docs/pruefung-aktionsweg.md`).
+(`docs/protokoll/pruefung-aktionsweg.md`).
 
-## Grundsatz (Leon)
+## Grundsatz
 
 Die Servos behalten ihr volles Potential, das Netz lernt es vernünftig zu nutzen: echte Hardware-Grenzen in der Sim, alles
 andere über Kosten im Training — **keine Eingriffe zur Laufzeit** (kein Aktionsfilter, kein hartes Abschneiden), keine
@@ -34,7 +34,7 @@ Zielwerte des Index (0 = inakzeptabel, 1 = Ziel; aus gespeicherten Daten, späte
 | Objektweg | 100 mm | 35 mm |
 | Kippwinkel (Median) | 35° | 5° |
 | Unterarm (Median) | 45° | 5° |
-| Servo-Last (Stall je Servo, Mittel über 7 Servos) | **100 %** (Leon) | 20 % |
+| Servo-Last (Stall je Servo, Mittel über 7 Servos) | **100 %** | 20 % |
 
 Nur Info: Zuverlässigkeit (Seeds), Griffkraft, Finger am Objekt.
 
@@ -50,7 +50,7 @@ RL-Experiments mit dem höchsten Index; bei < 0,05 Abstand gewinnt das einfacher
   rl_games prüfen).
 - **EXP-027 „Aktionsraum wie Dexsuite“**: Skala 0,1 für **alle** 8 Servos, `bounds_loss` statt `clip_actions`, kein Filter.
 - **Von oben**: `env_cfg_oben.py` auf die gefundene Pose (20° um x, 0° um y, Rotator 75° fest beim Start, Höhe der tiefsten
-  Spitze je Objekt nach `docs/startpose-oben/ergebnis.md`), Vorgreifpose gestreut (Höhe ±5 mm, Lage ±10 mm, Kippung ±3°);
+  Spitze je Objekt nach `docs/protokoll/startpose-oben/ergebnis.md`), Vorgreifpose gestreut (Höhe ±5 mm, Lage ±10 mm, Kippung ±3°);
   `analyse_reset.py --greifart oben` (≥ 256 Starts); Objektkatalog/Benchmark „von oben“ prüfen.
 - `reward_diag` + Kurztest je neuem Task; Commit + Push + Backup vor dem Start.
 
@@ -69,7 +69,7 @@ Läuft die Zeit über 14:00, läuft das letzte Experiment weiter und wird im Han
 
 ## 5. Abschluss (bis 14:00)
 
-Beste Videos (seitlich + von oben), Leaderboard v3, Berichte als Entwurf (Urteile Leon), Handoff mit Zahlen für die Folien
+Beste Videos (seitlich + von oben), Leaderboard v3, Berichte als Entwurf (Urteile offen), Handoff mit Zahlen für die Folien
 (seitlich: bestes Rezept, Regel-Vergleich, int8; von oben: Startpose-Suche, Regel, Spezialist), Commit + Push + Backup.
 
 ## Arbeitsregeln für die Nacht

@@ -1,9 +1,9 @@
 # Nachtlauf 2026-10-13/14 — Servo-Stall wie am echten Servo, Fingereinsatz
 
-Stand 2026-10-14 mittags — **gelaufen 23:16–12:32**, Ergebnis unten (Entwürfe, Urteil Leon). Index steht jetzt auf „Servo-Last real“. Letzter Lauf vor der Präsentation
+Stand 2026-10-14 mittags — **gelaufen 23:16–12:32**, Ergebnis unten (Entwürfe, Urteil offen). Index steht jetzt auf „Servo-Last real“. Letzter Lauf vor der Präsentation
 (Do 2026-10-15); **EXP-036 bleibt Spitzenkandidat**, ein neues Experiment ersetzt es nur, wenn es gesichert besser ist und
 die Videos überzeugen. Eltern **EXP-036** (CAPS + PID-Lagrange), je Experiment genau eine Änderung zum Vorgänger, 5 Seeds,
-1024 Umgebungen × 300 Iterationen, eval-v2, Urteile als Entwurf (Leon). Stall-Grenze bleibt **20 %** (Leon).
+1024 Umgebungen × 300 Iterationen, eval-v2, Urteile als Entwurf. Stall-Grenze bleibt **20 %**.
 
 ## Ausgangslage
 
@@ -12,7 +12,7 @@ die Videos überzeugen. Eltern **EXP-036** (CAPS + PID-Lagrange), je Experiment 
 - Bisher gegen wenige Finger: EXP-005 und EXP-026 (Belohnung nach Fingerzahl) ohne Wirkung (2,9 bzw. 3,26 Finger), EXP-012/019
   (Annäherung aller Fingerspitzen) ebenso. Vermutung: Solange alle greifenden Servos im Stall stehen, bringt ein weiterer
   Finger nichts, und nichts bestraft das Sammeln der Last.
-- Hardware (Leon, 2026-10-13): **alle Hand-Servos außer Unterarm und Handgelenk ziehen über eine Sehne**, eine
+- Hardware (2026-10-13): **alle Hand-Servos außer Unterarm und Handgelenk ziehen über eine Sehne**, eine
   **Rückstellfeder** öffnet. „Auf“ heißt loslassen — Moment in Öffnungsrichtung gibt es real nicht. Firmware kann
   Winkelgrenzen setzen (kein Drücken am Anschlag). Übersetzung Servo ↔ Finger unbekannt (Sim: 1:1, keine Feder).
 
@@ -55,7 +55,7 @@ ohne Objektkontakt) → 18,8 %, davon die Hälfte Druck (Öffnen), Rest kurze Vo
 | 041 | 038 | + Fingerzahl ohne Grenze je Servo — Kontrolle zu 040 (2 × 2 mit 038/039) | Ohne Grenze je Servo wirkt die Fingerzahl nicht (wie EXP-026) | ~2 h |
 
 Danach (nur Bewertung): neue Kennzahl „Servo-Last real“ für **alle** Policies der Leaderboards v3 nachholen (24, Hauptbedingung,
-`eval --neu --bedingung haupt`, ~80 min) — erst dann stellt der Index auf sie um (Leon: ja), Belastungstest 038–041, beste
+`eval --neu --bedingung haupt`, ~80 min) — erst dann stellt der Index auf sie um (ja), Belastungstest 038–041, beste
 Videos 038–041 (`medien --beste`, YCB erst nach der Wahl), `done` mit HF-Backup. Gesamt ≈ 11,5 h: Start ~23:45 → Ende ~11:15.
 Fällt ein Kurztest durch, läuft die Kette weiter.
 
@@ -63,7 +63,7 @@ Fällt ein Kurztest durch, läuft die Kette weiter.
 nicht unter 0,5 ganz unten), Unruhe ≤ 0,1, Transport ≥ 95 %. EXP-039: kein Servo über 30 % (wie real, Haltephase), Schutz
 > 2 s ≤ 50 %. EXP-040: Fingerzahl ≥ 4. Index nur zur Info.
 
-## Ergebnis (2026-10-14, Entwürfe — Urteil Leon)
+## Ergebnis (2026-10-14, Entwürfe — Urteil offen)
 
 Kette vollständig: 4 × 5 Seeds trainiert und bewertet, Nachbewertung der Hauptbedingung für alle 24 Policies, Belastungstest,
 beste Videos, `done` mit HF-Backup. Werte über die erfolgreichen Seeds (wie Leaderboard v3), Finger = Hauptbedingung, Haltephase.
@@ -89,7 +89,7 @@ Gescheiterte Seeds halten fast alle, kippen aber über 45°.
    95 %. Zielkonflikt Servo-Schonung ↔ Halten bei bewegtem Arm — die Grenze 20 % bei 80 % Moment ist ein Parameter, kein
    Naturgesetz (Überlastschutz real ungeprüft, M3).
 4. **Top-Seed EXP-040 s42**: Ø 6 94 %, Servo-Last 3 %, max. ein Servo 14 % der Haltephase, Schutz 12 %, Kippen 22°, Unruhe
-   0,02 — erster Seed, der ruhig, kühl und erfolgreich zugleich ist (Videos: Leon).
+   0,02 — erster Seed, der ruhig, kühl und erfolgreich zugleich ist (Videos sichten).
 5. **Index auf Servo-Last real umgestellt** (Nachbewertung aller 24): Seitlich jetzt **EXP-024 0,70** vor EXP-036 0,66 (bisher
    0,64 / 0,66) — EXP-024 wurde von der alten Messung bestraft (Rotator am Anschlag, Mittelfinger am offenen Anschlag), real
    21 % statt 43 %; Schutz > 2 s bleibt 100 % (Zeigefinger zieht die ganze Haltephase). Für die Präsentation: EXP-024 und
@@ -101,7 +101,7 @@ die Lauflänge statt den Anteil (misst direkt den Überlastschutz), mehr Seeds f
 
 ## Prüfung vor dem Start (2026-10-13 abends)
 
-Vor dem Start noch einmal gegen das Gelernte und die Literatur geprüft (Leon: „so wie es gescheit ist“). Zwei Korrekturen,
+Vor dem Start noch einmal gegen das Gelernte und die Literatur geprüft („so wie es gescheit ist“). Zwei Korrekturen,
 der Rest bleibt:
 
 1. **Handgelenk gehört dazu (8 statt 7 Servos).** Es fehlte seit eval-v1 (2026-10-06) nur aus einem technischen Grund: Das

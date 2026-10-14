@@ -1,4 +1,4 @@
-Gib einen kurzen Zwischenstand dieser Session aus — NICHT in docs/handoff.md schreiben, nur anzeigen:
+Gib einen kurzen Zwischenstand dieser Session aus — NICHT in docs/protokoll/handoff.md schreiben, nur anzeigen:
 
 **Erledigt:** [Was wurde in dieser Session fertig]
 **In Arbeit:** [Woran du gerade bist]

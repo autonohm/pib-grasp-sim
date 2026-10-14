@@ -1,16 +1,16 @@
 """
-pib_hand_left_v5_cfg.py — Isaac-Lab-Asset der realen linken pib-v5-Hand (Unterarm + Hand).
+pib_hand_left_v5_cfg.py — Isaac Lab asset of the real left pib v5 hand (forearm + hand).
 
-USD: isaac_sim/usd/pib_hand_left_v5.usd (aus pib_hand_left_urdf_v5/, Mimic Joints, Limits
-und Self-Collision per isaac_sim/tools/bake_hand_asset_v5.py eingebrannt). Basis
-(urdf_elbow_lower) fest.
+USD: isaac_sim/usd/pib_hand_left_v5.usd (from pib_hand_left_urdf_v5/, mimic joints, limits
+and self-collision baked in via isaac_sim/tools/bake_hand_asset_v5.py). Base
+(urdf_elbow_lower) fixed.
 
-Aktuatoren aus config/pib_hand_config_v5.py (servo_actuator, Einheiten rad) — dieselbe
-Quelle wie isaac_sim/setup_stage.py, kein Abschreiben. Das Handgelenk (Pleuel) nutzt
-NVIDIAs RemotizedPDActuatorCfg (Muster: Spot-Knie, isaaclab_assets/robots/spot.py) mit
-winkelabhängigem Maximalmoment aus wrist_lookup_table(); die übrigen Servos implizit.
-Die 9 Folgegelenke (PIP/DIP/IP) sind passiv (Stiffness/Damping 0, ADR-011); ihre Stellung ergibt die PhysX-Mimic-
-Zwangsbedingung aus der USD. Isaac Lab selbst kennt keine Mimic Joints.
+Actuators from config/pib_hand_config_v5.py (servo_actuator, units rad) — the same
+source as isaac_sim/setup_stage.py, no copying. The wrist (linkage) uses
+NVIDIA's RemotizedPDActuatorCfg (pattern: Spot knee, isaaclab_assets/robots/spot.py) with an
+angle-dependent maximum torque from wrist_lookup_table(); the other servos are implicit.
+The 9 followers (PIP/DIP/IP) are passive (stiffness/damping 0, ADR-011); their position results from the PhysX mimic
+constraint in the USD. Isaac Lab itself has no notion of mimic joints.
 """
 import importlib.util
 from pathlib import Path
@@ -52,8 +52,8 @@ PIB_HAND_LEFT_V5_CFG = ArticulationCfg(
             velocity_limit_sim={n: a["max_velocity_rad"] for n, a in _servo.items()},
             armature={n: a["armature"] for n, a in _servo.items()},
         ),
-        # Handgelenk hinter dem Pleuel: Moment winkelabhängig (Totlagen gekappt bei 12 Nm),
-        # PD explizit im Isaac-Lab-Schritt. Verzögerung vorerst 0 (Spot: 0–4 Schritte).
+        # wrist behind the linkage: angle-dependent torque (dead points clipped at 12 Nm),
+        # PD explicit in the Isaac Lab step. Delay 0 for now (Spot: 0–4 steps).
         "wrist": RemotizedPDActuatorCfg(
             joint_names_expr=[WRIST_JOINT],
             joint_parameter_lookup=cfg_v5.wrist_lookup_table(),

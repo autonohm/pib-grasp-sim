@@ -1,9 +1,10 @@
 """
-probe_oben.py — Geometrie der Hand in der Pose „von oben“ (Handfläche unten, Unterarm waagrecht; Plan: docs/plan-griff-
-von-oben.md, Schritt 1). Ohne Schwerkraft, ohne Objekt: Hand-Root wie in env_cfg_oben (Drehung keine, Höhe HAND_POS),
-alle vier Finger-MCPs gemeinsam 0–90°, Daumen bei Rotator 0/45/90° und Daumen-MCP 0–90°. Je Stellung die Lage der
-Fingerspitzen-Links (Gelenkrahmen, nicht die Oberfläche) relativ zum Hand-Root: tiefster Punkt (z) und wo er liegt
-(x quer, y längs) — daraus Vorgreifabstand und Objektlage für den Machbarkeitstest. Bericht: isaac_sim/tools/_probe_oben.txt
+probe_oben.py — geometry of the hand in the "top" pose (palm down, forearm horizontal; plan:
+docs/protokoll/plan-griff-von-oben.md, step 1). Without gravity, without an object: hand root as in env_cfg_oben (no
+rotation, height HAND_POS), all four finger MCPs together 0–90°, thumb at rotator 0/45/90° and thumb MCP 0–90°. Per
+position the pose of the fingertip links (joint frames, not the surface) relative to the hand root: lowest point (z) and
+where it lies (x across, y along) — from that the pre-grasp distance and object position for the feasibility test.
+Report: isaac_sim/tools/_probe_oben.txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/probe_oben.py --headless
 """
@@ -28,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # isaac_lab/
 from pib_hand_left_v5_cfg import PIB_HAND_LEFT_V5_CFG  # noqa: E402
 from pib_grasp.mdp import FINGERTIP_LINKS  # noqa: E402
 
-HAND_POS, HAND_ROT = (0.0, 0.0, 0.5), (1.0, 0.0, 0.0, 0.0)       # wie env_cfg_oben (HAND_POS, HAND_ROT_OBEN)
+HAND_POS, HAND_ROT = (0.0, 0.0, 0.5), (1.0, 0.0, 0.0, 0.0)       # as in env_cfg_oben (HAND_POS, HAND_ROT_OBEN)
 LINKS = ["urdf_palm_left", "urdf_thumb_rotator_left", "urdf_thumb_proximal"] + FINGERTIP_LINKS
 NAMES = ["Handfläche", "D-Rotator", "D-Grund", "D-Spitze", "Zeige", "Mittel", "Ring", "Klein"]
 
@@ -45,7 +46,7 @@ def settle(finger_deg: float, thumb_deg: float, rot_deg: float) -> torch.Tensor:
         t[:, r.joint_names.index(f"{f}_left_proximal")] = math.radians(finger_deg)
     t[:, r.joint_names.index("thumb_left_proximal")] = math.radians(thumb_deg)
     t[:, r.joint_names.index("thumb_left_rotator")] = math.radians(rot_deg)
-    for _ in range(240):                                  # 2 s: Servos (270 °/s) erreichen jede Stellung
+    for _ in range(240):                                  # 2 s: the servos (270 °/s) reach any position
         r.set_joint_position_target(t)
         r.write_data_to_sim()
         sim.step()

@@ -130,7 +130,7 @@ cd ~/repos/pib-hand-sim
 ~/IsaacLab/isaaclab.sh -p isaac_lab/play.py --task Pib-Grasp-Hand-Left-Play-v0 --num_envs 16 --real-time
 tensorboard --logdir logs/rsl_rl                                          # http://localhost:6006
 ```
-- Tests und Vorführungen mit Fenster (Leon schaut zu); headless nur fürs Training.
+- Tests und Vorführungen mit Fenster (zum Zuschauen); headless nur fürs Training.
 - **Experimente** (ADR-016, `experiments/README.md`) — Training und Bewertung über das Framework,
   Orchestrierung mit System-Python bei aktiver conda-Umgebung:
   ```bash
@@ -243,4 +243,4 @@ Referenzimplementierung (nicht mehr im Baum, Git-Historie): `isaac_sim/tools/fin
 in Commit `1d0cd9c` (auch auf `feature/rl-grasping`).
 
 ## Commit-Konventionen
-- Keine automatischen Commits — Leon schaut erst drüber
+- Keine automatischen Commits — erst nach Durchsicht

@@ -1,8 +1,7 @@
 # Plan: Repo abgabebereit — damit andere pib-Studierende hier weiterarbeiten können
 
-Stand 2026-10-13 nachts — **Entwurf**, Entscheidungen offen (unten). Grundlage: Checkliste `docs/current-sprint.md` →
-„Abgabe / Veröffentlichung“ (Leon, 2026-10-12: englisch, Leon nur als Autor, Präsentationsstand vorher taggen). Neu gewichtet
-(Leon, 2026-10-13): **Zielgruppe sind Studierende, die später am pib weiterarbeiten** — sie brauchen zuerst einen Einstieg,
+Stand 2026-10-14 — Phase 1 und 2 großteils erledigt (unten). Grundlage: Checkliste `docs/protokoll/current-sprint.md` →
+„Abgabe / Veröffentlichung“ (2026-10-12: englisch, Autor nur im README/CITATION, Präsentationsstand vorher taggen). Neu gewichtet (2026-10-13): **Zielgruppe sind Studierende, die später am pib weiterarbeiten** — sie brauchen zuerst einen Einstieg,
 der funktioniert, und eine ehrliche Karte, was fertig, was Altlast und was offen ist. Veröffentlichung (Lizenz, DOI) folgt daraus.
 
 ## Leitlinien
@@ -31,16 +30,16 @@ der funktioniert, und eine ehrliche Karte, was fertig, was Altlast und was offen
 | Lizenzen | keine `LICENSE` für den eigenen Code; nur `ros2_ws/src/topic_based_ros2_control/LICENSE` (Fremdpaket). pib-CAD/Meshes (Onshape, isento) im Repo — Lizenz online nicht gefunden. YCB nur referenziert (Isaac-Nucleus), nicht im Repo (YCB selbst CC BY 4.0). Teile von `mdp.py` aus Isaac Lab Dexsuite abgeleitet (BSD-3) | Weitergabe rechtlich ungeklärt |
 | Geheimnisse | Suche über die ganze Historie nach HF-/GitHub-/OpenAI-/AWS-Token: nichts gefunden (`gitleaks` nicht installiert — vor Veröffentlichung nachholen) | — |
 | Größe | `.git` 288 MB; größte Dateien: USD 34 MB (2×), STL bis 21 MB (v4-Meshes), Hand-USD 17 MB | Klon dauert, ok |
-| Assistent | `CLAUDE.md`, `.claude/commands/` (handoff/resume/checkpoint) — auf Leon zugeschnitten | für Studierende mit KI-Assistent eigentlich nützlich, wenn verallgemeinert |
+| Assistent | `CLAUDE.md`, `.claude/commands/` (handoff/resume/checkpoint) — auf den Autor zugeschnitten | für Studierende mit KI-Assistent eigentlich nützlich, wenn verallgemeinert |
 | Tests | kein Test-Framework; Prüfskripte und Kurztest in `experiments.py run` | kein „funktioniert mein Setup?“ |
 
 ## Plan in Phasen
 
 ### Phase 0 — jetzt, während die GPU rechnet (nur Doku, nichts unter `isaac_lab/` oder `experiments/`)
 - [x] Bestandsaufnahme (oben), Versionen gesammelt (`pip freeze` liegt im Scratchpad, 414 Pakete)
-- [x] Entwürfe unter `docs/abgabe/` (ersetzen noch nichts, englisch): `repo-map.md` (jede Datei mit Status), `glossar.md` (DE → EN)
-- [ ] Gliederung README/Getting Started (nach der Sprachentscheidung)
-- [ ] Entscheidungen mit Leon (unten)
+- [x] Entwürfe Repo-Karte und Glossar (jetzt `docs/repo-karte.md`, `docs/glossar.md`)
+- [x] Gliederung README/Getting Started
+- [x] Entscheidungen (unten)
 
 ### Phase 1 — Einstieg (nach dem Nachtlauf, nach Tag `v0.1-praesentation`; ~1 Tag)
 1. **Branch**: `feature/rl-grasping` nach `main` (Merge, kein Force-Push), GitHub-Standardbranch `main`; übrige Branches als
@@ -63,13 +62,13 @@ der funktioniert, und eine ehrliche Karte, was fertig, was Altlast und was offen
 
 ### Phase 2 — Aufräumen ohne Verhaltensänderung (~½ Tag)
 - Absolute Pfade: `autostart.py` relativ zum Skript; USD-Verweise prüfen (Layer/Asset-Pfad, ggf. relativ neu speichern — im
-  GUI, Leon), Doku-Beispiele mit `$REPO`.
+  GUI), Doku-Beispiele mit `$REPO`.
 - Arbeitsnotizen trennen: `handoff.md`, `current-sprint.md`, `nachtlauf-*`, `plan-*` → `docs/protokoll/` (Tagebuch des
   Projekts, unverändert); an ihre Stelle `docs/status.md` (eine Seite: Stand, Ergebnisse, Grenzen).
 - `experiments/README.md`: Abschnitt „Dein erstes Experiment“ (new → YAML ausfüllen → run → Bericht lesen → done).
 - `CLAUDE.md`/`.claude/`: verallgemeinern zu `AGENTS.md` (Regeln für KI-Assistenten: API-Regeln, Einheiten, Experiment-
   Pflicht — die sind für jeden wertvoll) oder entfernen; Persönliches raus.
-- Name: „Leon“ in Doku/Entscheidungen neutral („entschieden“), Autor im README und `CITATION.cff`.
+- Name in Doku/Entscheidungen neutral („entschieden“), Autor im README und `CITATION.cff`.
 
 ### Phase 3 — Prüfbar machen (~½ Tag)
 - `scripts/selbsttest.sh`: Asset-Prüfung, Training 2 Iterationen × 64 Umgebungen, Bewertung 16 Episoden, Leaderboard-Bau —
@@ -87,14 +86,25 @@ der funktioniert, und eine ehrliche Karte, was fertig, was Altlast und was offen
 - Dateien verschieben/umbenennen im Code (`isaac_lab/`, `isaac_sim/`). Stattdessen Repo-Karte.
 - v4 löschen — nur als Altlast markieren (läuft parallel, ADR/README).
 
-## Offene Entscheidungen (Leon)
+## Entscheidungen (2026-10-14)
 
-1. **Sprache**: Vorschlag *Einstieg englisch* (README, Getting Started, Repo-Karte, Weitermachen, Hardware-Annahmen, Glossar),
-   *Tiefe bleibt deutsch* (ADRs, Berichte, Code-Kommentare) mit Hinweis. Wenn die Studierenden sicher deutschsprachig sind
-   (Hochschule, pib-Community in Nürnberg): Einstieg zweisprachig oder deutsch?
-2. **Branch**: `feature/rl-grasping` → `main` mergen und Standardbranch? Was ist mit `feature/ros2-control` (Team-Integration)?
-3. **Lizenz** eigener Code (MIT, BSD-3 wie Isaac Lab, Apache-2.0) — und die pib-CAD-Lizenz bei isento erfragen (Meshes/URDF
-   aus deren Onshape liegen im Repo).
-4. **Policies**: HF-Repo öffentlich machen oder nur die besten als GitHub-Release-Asset?
-5. **KI-Assistenten-Dateien**: zu `AGENTS.md` verallgemeinern oder entfernen?
-6. **Empfänger/Frist**: Wer bekommt die Abgabe (Hochschule, pib-Team), bis wann, öffentlich oder privat?
+1. **Sprache**: Doku deutsch, Code-Kommentare/Docstrings englisch. Bezeichner, CLI-Optionen, JSON-Schlüssel und Ausgaben der
+   Werkzeuge bleiben (Berichte verweisen darauf) — Glossar `docs/glossar.md`.
+2. **Branch**: `feature/rl-grasping` → `main` (Fast-Forward, erledigt 2026-10-14).
+3. **Lizenz**: Platzhalter (`LICENSE`), Vorschlag BSD-3; pib-CAD-Lizenz bei isento erfragen.
+4. **Policies**: die 5 besten aus verschiedenen Experimenten als Release-Assets (`v0.1-praesentation`), HF-Repo bleibt privat.
+5. **KI-Assistent**: Persönliches raus, `AGENTS.md` allgemein, `CLAUDE.md` bindet es ein.
+6. **Ziel-Repo**: vermutlich ein GitHub-Team von isento oder der Hochschule (noch offen) — keine festen Repo-URLs in Code/Doku
+   außer README/Release/CITATION.
+
+## Stand 2026-10-14
+
+Erledigt: Tag + Release `v0.1-praesentation` (5 Policies: EXP-024 s44, 036 s42, 034 s42, 035 s44, 038 s42), `main` =
+`feature/rl-grasping`, README neu, `docs/getting-started.md`, `docs/repo-karte.md`, `docs/glossar.md`, `docs/weitermachen.md`,
+`docs/hardware-annahmen.md`, Arbeitsnotizen nach `docs/protokoll/`, `AGENTS.md`, `LICENSE` (Platzhalter), `THIRD_PARTY.md`,
+`CITATION.cff` (Nachname offen), Name aus Doku/Code/Paketdateien (Autor nur README/CITATION), Code-Kommentare und Docstrings
+englisch (52 Dateien; per AST geprüft: Code unverändert bis auf zwei gewollte Stellen).
+
+Offen (nach der Präsentation, braucht Isaac): Selbsttest-Skript und Durchlauf der Anleitung auf frischem Klon, absolute Pfade
+in drei USD-Metadaten (GUI), „Dein erstes Experiment“ in `experiments/README.md`, Leaderboard als CSV/HTML, `gitleaks`,
+Lizenzentscheidung, Umzug ins Ziel-Repo (Release-Links im README anpassen).

@@ -295,7 +295,7 @@ Alternative (Fixed Tendon) kann die nichtlineare Geometrie nicht exakt genug abb
   für `left` und `right` symmetrisch) — nicht separat verifiziert, da real aktuell nur die
   **linke** Hand als Hardware-Prototyp existiert.
 - Kontaktsensor-Erweiterung (restliche 9 Fingerspitzen, ADR-008-Muster) und
-  `config/pib_hand_config_v5.py` bleiben offen, siehe `docs/current-sprint.md`.
+  `config/pib_hand_config_v5.py` bleiben offen, siehe `docs/protokoll/current-sprint.md`.
 - RL-Grasping-Vorhaben (Isaac Lab) auf neuem Branch `feature/rl-grasping` — Aktionsraum
   dort **muss** die 8 realen Servo-DOFs sein, PIP/DIP/IP intern über dieselbe `FourBar`-
   Formel berechnet (nicht lernbar), sonst lernt die Policy real unerreichbare Posen.
@@ -441,7 +441,7 @@ und Geschwindigkeitslimit). Mit dem Rezept liegt ω_n·Δt für alle umgestellte
 - Mit dem Servo-Arm (2,94 Nm Ellbogen/Oberarm, 9,32 Nm Schulter) ist jetzt der Arm das
   schwächste Glied: Beim Tischtest drückt der Finger die Hand weg (Ellbogen gibt ~5° nach)
   statt am Tisch zu stallen; bei der Pickup-Demo hält der ausgestreckte Arm die Dose nur
-  knapp und hängt sichtbar durch — laut Leon realistisch im Vergleich zum Laborroboter.
+  knapp und hängt sichtbar durch — nach Einschätzung des Autors realistisch im Vergleich zum Laborroboter.
 - Stellschraube, falls das Durchhängen stört: `SERVO_SATURATION_ERROR_DEG` (5°; SO-ARM100
   nutzt effektiv 0,5–2°) — kleinere Werte erhöhen ω_n·Δt, danach Audit erneut prüfen.
 - Die Experiment-Schalter der Fehlersuche (`SERVO_*_ENABLED`, `FOLLOWER_*`,
@@ -456,7 +456,7 @@ Fingerspitzen hieße das 20 Graph-Knoten und 10 Topics ohne gemeinsamen Zeitstem
 RL-Policy (und später die echte Hand) braucht pro Schritt **einen** Kraftvektor zu einem
 Zeitpunkt; wie der echte FSR-Treiber publiziert, ist offen — das Format soll generisch sein.
 
-**Entscheidung**: Nur native Nodes (Leon gegen einen Script Node), in `/Graph/ROS_JointStates`:
+**Entscheidung**: Nur native Nodes (bewusst kein Script Node), in `/Graph/ROS_JointStates`:
 
 | Knoten | Typ | Aufgabe |
 |---|---|---|
@@ -534,7 +534,7 @@ USDs ohne Neuimport nachgezogen. Übersetzung analytisch (`config/pib_hand_confi
   (`TRANSMISSIONS` → `servo_actuator()`).
 - **Isaac Lab**: NVIDIAs `RemotizedPDActuatorCfg` (Referenz: Spot-Knie,
   `isaaclab_assets/robots/spot.py`) mit Tabelle Winkel → Moment (`wrist_lookup_table()`),
-  nahe den Totlagen bei 12 Nm gekappt (Leon).
+  nahe den Totlagen bei 12 Nm gekappt.
 
 **Begründung**: NVIDIA-Muster für gestängegetriebene Gelenke; ein geschlossenes Viergelenk
 in PhysX (Gelenk außerhalb der Artikulation) wäre weniger stabil und vom URDF-Import nicht
@@ -672,7 +672,7 @@ Kraftstrafe, kein Kippabbruch. Anforderung der Bedingung: Kippwinkel ≤ 45° (v
 - EXP-004: Aufgabenerfolg 77 % [56–89] (Seeds 88/56/88), Haltequote 90 %, Kippwinkel 27°,
   Unterarm 26° — der blinde Actor lernt aufrechtes Halten in 300 Iterationen.
 - Offen: Zweifinger-Pinzettengriff (Daumen + ein Finger; der Gegengriff-Term verlangt nur das,
-  wie bei Dexsuite), Griffkraft/Stall hoch (Kraftstrafe vorerst bewusst nicht, Leon), Seed-Streuung.
+  wie bei Dexsuite), Griffkraft/Stall hoch (Kraftstrafe vorerst bewusst nicht), Seed-Streuung.
 - Ein Fehler im Halteterm behoben: Absinken gegen die Höhe beim Absenken statt Standardhöhe
   (±10 % Größe → bis 7,5 mm Versatz).
 - Arbeitsregel: zuerst das NVIDIA-Rezept vollständig, eigene Terme nur einzeln und begründet;
@@ -693,7 +693,7 @@ Kraftstrafe, kein Kippabbruch. Anforderung der Bedingung: Kippwinkel ≤ 45° (v
 Objekt noch die Handausrichtung — ein einziges Netz kann nicht wissen, ob es seitlich an einer Milchpackung
 oder von oben an einem Apfel greifen soll. Offen war: regelbasiert Spezialisten wählen oder ein Netz für alles?
 
-**Entscheidung** (Leon, 2026-10-07): zweistufig. Oben wählt ein Planer (zuerst Regeltabelle, später gelernt,
+**Entscheidung** (2026-10-07): zweistufig. Oben wählt ein Planer (zuerst Regeltabelle, später gelernt,
 z. B. VLM/GraspGen) Objektkategorie → Startpose + Greifart, der Arm (IK-Team) fährt die Vorgreifpose an, unten
 schließt die Hand-Policy reflexartig. **Ein Spezialist je Greifart**, der alle Objekte seiner Kategorie über
 Tasten abdeckt: Kraftgriff seitlich (Milch, Becher, Flasche), Griff von oben (Obst); Hakengriff (Tasche)
@@ -728,8 +728,7 @@ beste Seed als Einsatz-Kandidat. Je Policy/Seed/Objekt Verlauf über die Episode
 
 **Begründung**: Agarwal et al. 2021 (rliable, *Deep RL at the Edge of the Statistical Precipice*): IQM über
 Aufgaben × Läufe mit stratifiziertem Bootstrap und P(X > Y) statt Mittelwert und Rangfolge allein; Ergebnis je
-Objekt bleibt sichtbar (YCB-Protokolle). Einzige Stelle, an der über Bedingungen zusammengefasst wird
-(Leon, 2026-10-08).
+Objekt bleibt sichtbar (YCB-Protokolle). Einzige Stelle, an der über Bedingungen zusammengefasst wird (2026-10-08).
 
 **Konsequenzen**:
 - EXP-006 ist Platz 1 und neue Baseline; EXP-005/007/011 statistisch gleichauf, EXP-004 gesichert schlechter.
@@ -751,7 +750,7 @@ Objekt bleibt sichtbar (YCB-Protokolle). Einzige Stelle, an der über Bedingunge
 **Problem**: Ob RL überhaupt mehr leistet als ein programmierter Griff, war offen; der Machbarkeitstest
 (2026-10-04: Daumen auf 90°, dann zu → 14–15/16) deutete an, dass eine einfache Regel stark ist.
 
-**Entscheidung** (Leon, 2026-10-08): Regelbasierte Griffe als eigene Experimente im selben Aktionsraum, mit
+**Entscheidung** (2026-10-08): Regelbasierte Griffe als eigene Experimente im selben Aktionsraum, mit
 denselben Sensoren und demselben Protokoll wie die Policies (`eval_policy.py --regel`, `experiments.py` →
 `run_rule`): „alle schließen“ (Heuristik, wie Chen et al. 2022) und „schließen bis Kontakt“ (taktiler Reflex,
 Hsiao et al. 2010). Parameter per kleinem Raster mit eigenem Bewertungs-Seed (2000) gewählt, final eval-v1 —
@@ -781,7 +780,7 @@ und Spitzen der Finger, vor allem bei Handgelenkbeugung. Zusätzlich ignorierte 
 die gescannten YCB-Objekte setzten/kippten nach dem Spawn. Der Startfehler von eval-v1 (fällt in 0,1 s) sah davon fast
 nichts. Der „Quader-Engpass“ von RL und Regel (52–64 %) ist vermutlich zu einem guten Teil dieser Szenenfehler.
 
-**Entscheidung** (Leon, 2026-10-09): sauberer Start als Standard in Training und Bewertung:
+**Entscheidung** (2026-10-09): sauberer Start als Standard in Training und Bewertung:
 - Startpose fast offen: Finger und Daumen-MCP 0–4°, Handgelenk −1–0° (Rotator weiter 0–90°, Starts in Opposition
   bleiben) — wie eine Vorgreifpose; schrittweise gefunden (Handgelenk −3° und Daumen-MCP 15° berührten noch).
 - Platzierung je Umgebung aus der tatsächlichen (skalierten) Bounding Box (`mdp.place_objects_by_size`, Standard).
@@ -790,7 +789,7 @@ nichts. Der „Quader-Engpass“ von RL und Regel (52–64 %) ist vermutlich zu 
 - Neues Protokoll **eval-v2** (= eval-v1 mit diesem Reset). Experimente tragen ihr Protokoll, bewertet wird nur unter
   dem aktuellen, verglichen nur innerhalb eines Protokolls; `experiments.py umstellen` hebt ältere Experimente an.
   Leaderboard je Protokoll eine Tabelle (eval-v1 als Historie).
-- Nachbewertet werden nur die Experimente, die Entscheidungen tragen (Leon: alles nachzubewerten wäre zu viel):
+- Nachbewertet werden nur die Experimente, die Entscheidungen tragen (alles nachzubewerten wäre zu viel):
   EXP-013, EXP-017 (Eltern-Kandidaten), EXP-014/015 (Regel-Baselines).
 
 **Begründung**: Eine Bewertung, bei der das Objekt in einem Großteil der Starts weggestoßen wird, misst die Szene,
@@ -832,7 +831,7 @@ Ziel trägt, mit ~200-fachem Trainingsbudget — für eine feste Hand in Vorgrei
    umgekippte 15-cm-Zylinder brechen nicht ab (Mitte sinkt nur 4,5 cm < 5 cm).
 Richtig umgesetzt: Mimic, Servo-/Pleuel-Modell, Kontaktsensoren, Gegengriff, Kontakt-Gates, Randomisierung, Protokoll.
 
-**Entscheidung** (Leon, 2026-10-09): je eine Änderung, Eltern EXP-018 (auf 10 Seeds erweitert):
+**Entscheidung** (2026-10-09): je eine Änderung, Eltern EXP-018 (auf 10 Seeds erweitert):
 - EXP-019 Annäherung je Fingerspitze **nur als Fortschritt** wie NVIDIA AllegroKuka/DexPBT (`mdp.FingertipProgress`:
   Σ max(kleinster bisheriger Abstand zur Objektmitte − aktueller, 0), nur vor dem Absenken, Gewicht 500 nach
   `reward_diag`), 10 Seeds.
@@ -854,7 +853,7 @@ Vorbildern; die Korrekturen übernehmen jeweils das bewährte Gegenstück (DexPB
 - **Ergebnis Nachtlauf 2026-10-09/10** (eval-v2, EXP-018 auf 10 Seeds): EXP-018 5/10 Seeds greifen; EXP-019 (Fortschritt)
   **10/10** (gesichert zuverlässiger), aber mehr Unterarm/Kippen/Unruhe; EXP-020 (±1 allein) Unruhe wirksam höher;
   EXP-021 (Critic) kein Unterschied; **EXP-022 (Fortschritt + ±1) 5/5, 83 %, alle Leitplanken eingehalten, Unruhe 0,36**
-  → Kandidat für die neue Basis (Leon prüft die Videos). Griffkraft bleibt überall maximal (Stall ~100 %).
+  → Kandidat für die neue Basis (Videos sichten). Griffkraft bleibt überall maximal (Stall ~100 %).
 - **Befund Objektweg (2026-10-10, `tools/diag_objektweg.py`)**: Die Linie mit 18 Formen (EXP-013, 017, 018–022) zieht das
   Objekt beim Zugreifen ~13 cm in der Tischebene Richtung Unterarm (Finger rollen mit Vollgas zur Faust ein, Objekt endet
   zwischen Daumen- und Fingerspitzen vor dem Handballen; Unterarm/Handfläche tragen es nicht); nur mit dem Zylinder
@@ -863,7 +862,7 @@ Vorbildern; die Korrekturen übernehmen jeweils das bewährte Gegenstück (DexPB
   Policy, die nichts verhindert: unsere Haltebelohnung misst nur z, Dexsuite den 3D-Abstand zum Ziel; die Literatur
   bestraft die Verschiebung ausdrücklich (Cross-Embodiment Dexterous Grasping: −0,3·‖xy − xy_Start‖; RobustDexGrasp:
   Objektgeschwindigkeit und Verschiebung). → EXP-023 (Strafe auf die Verschiebung in der Tischebene), Leitplanke Objektweg.
-- **Nachtrag 2026-10-12 — Aktionsraum als Regularisierer** (Nachtlauf, EXP-027–033; Entwurf, Urteil Leon): Den Aktionsraum
+- **Nachtrag 2026-10-12 — Aktionsraum als Regularisierer** (Nachtlauf, EXP-027–033; Entwurf, Urteil offen): Den Aktionsraum
   vollständig wie Dexsuite zu machen (bounds_loss über rsl_rl, Skala 0,1 für alle 8 Servos, keine Begrenzung/kein Filter;
   EXP-027) ließ die Leistung gleich (80 %, nicht gesichert verschieden), aber die Dose kippt 44° statt 13° (EXP-024) und
   der Unterarm dreht 51°. Ursachenklärung: EXP-031 (großes Netz) und EXP-032 (dazu 8× Budget) kippen weiter (41°/30°);
@@ -874,7 +873,7 @@ Vorbildern; die Korrekturen übernehmen jeweils das bewährte Gegenstück (DexPB
   das Rauschen geht ungekappt an die Servos. Folgen: (1) Der Aktionsraum ist Teil des Rezepts; Vergleiche innerhalb
   EXP-004–026 bleiben gültig (gleicher Aktionsraum), EXP-027 änderte drei Dinge zugleich. (2) Die Skala ist Teil der
   Schnittstelle Policy ↔ Firmware, und ihre Wirkung auf der echten Hand hängt an der nicht gemessenen Servo-Steifigkeit
-  (M3). (3) Leon will die volle Servo-Leistung behalten und das Verhalten über Kosten steuern → Kandidaten
+  (M3). (3) Entscheidung: die volle Servo-Leistung behalten und das Verhalten über Kosten steuern → Kandidaten
   `joint_deviation_l1`, Kippstrafe ab t = 0, CaT (current-sprint 5h).
 
 ---

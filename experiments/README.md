@@ -54,13 +54,13 @@ Tag am Trainings-Commit.
 
 | # | Schritt | Wer | Werkzeug |
 |---|---|---|---|
-| 1 | **Planen**: Hypothese, genau eine Änderung zu den Eltern, Bedingungen | Leon (Claude entwirft) | `experiments.py new` |
-| 2 | **Prüfen**: Kurztest headless (Absturz, NaN, Abbruchquoten, VRAM); Fenstertest nur bei geänderter Szene/Belohnung/Abbruch | automatisch + Leon | `experiments.py run` |
+| 1 | **Planen**: Hypothese, genau eine Änderung zu den Eltern, Bedingungen | Mensch (Assistent entwirft) | `experiments.py new` |
+| 2 | **Prüfen**: Kurztest headless (Absturz, NaN, Abbruchquoten, VRAM); Fenstertest nur bei geänderter Szene/Belohnung/Abbruch | automatisch + Mensch | `experiments.py run` |
 | 3 | **Trainieren**: alle Seeds, Metadaten werden gesichert | automatisch | `experiments.py run` |
 | 4 | **Evaluieren**: festes Protokoll (unten), letzter Checkpoint | automatisch | `experiments.py run` → `eval_policy.py` |
-| 5 | **Sichten**: Video, Auffälligkeiten | automatisch aufgenommen, Leon schaut | `videos/` im Laufordner |
-| 6 | **Bewerten**: Vergleich mit den Eltern, Urteilsvorschlag nach Regel, Trainingsverlauf | automatisch, Leon bestätigt | `EXP-NNN_results.json`, `EXP-NNN_<kurzname>.md`, `diagramme/` |
-| 7 | **Dokumentieren & Entscheiden**: Schluss, nächstes Experiment; Policies sichern | Leon (Claude schlägt vor) | `experiments.py done` (sichert automatisch) |
+| 5 | **Sichten**: Video, Auffälligkeiten | automatisch aufgenommen, Mensch schaut | `videos/` im Laufordner |
+| 6 | **Bewerten**: Vergleich mit den Eltern, Urteilsvorschlag nach Regel, Trainingsverlauf | automatisch, Mensch bestätigt | `EXP-NNN_results.json`, `EXP-NNN_<kurzname>.md`, `diagramme/` |
+| 7 | **Dokumentieren & Entscheiden**: Schluss, nächstes Experiment; Policies sichern | Mensch (Assistent schlägt vor) | `experiments.py done` (sichert automatisch) |
 
 Befehle (conda-Umgebung `env_isaaclab` aktiv, Orchestrierung mit System-Python):
 ```bash
@@ -134,7 +134,7 @@ hebt `experiments.py umstellen EXP-NNN` auf das aktuelle Protokoll (`protokoll_v
   - **Urteilsregel**: *besser*, wenn P(besser) gesichert > 0,5 (untere KI-Grenze), die Zuverlässigkeit nicht
     gesichert schlechter ist (Fisher p < 0,05) und keine Leitplanke verletzt ist; *schlechter*, wenn P gesichert
     < 0,5 oder die Zuverlässigkeit gesichert schlechter; sonst *kein Unterschied* (+ „Leitplanke verletzt“).
-  - **Leaderboard** sortiert nach der **Leistung** (Leon, 2026-10-08: am Ende zählt eine brauchbare Policy je
+  - **Leaderboard** sortiert nach der **Leistung** (2026-10-08: am Ende zählt eine brauchbare Policy je
     Greifart; die Zuverlässigkeit bestimmt nur, wie viele Seeds man braucht). Gesamt-IQM steht daneben.
   - **Bericht**: Kopf mit Leistung, Zuverlässigkeit, Leitplanken, Befund (Ursache je gescheitertem Seed:
     lernt nicht zu greifen / greift, verliert das Objekt / hält, aber gekippt; Engpass-Objekt; deutliche
@@ -221,7 +221,7 @@ int8 − float (M2).
   - *schlechter*: Intervall komplett < 0
   - *kein messbarer Unterschied*: sonst — dann gewinnt die einfachere Variante
   - *Leitplanke verletzt*: besser im Aufgabenerfolg, aber eine Leitplanke über der Toleranz
-- Das Urteil ist ein Vorschlag; Leon bestätigt es in `EXP-NNN_experiment.yaml` → `schluss`.
+- Das Urteil ist ein Vorschlag; ein Mensch bestätigt es in `EXP-NNN_experiment.yaml` → `schluss`.
 
 ### Versionen
 

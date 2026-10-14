@@ -1,7 +1,7 @@
 # Prüfung Aktions- und Aktuatorweg (2026-10-11)
 
-Anlass (Leon): der Aktionsfilter (EXP-024) und die Begrenzung auf ±1 (EXP-020/022) greifen zur Laufzeit ein, und die kleine
-Aktionsskala von Unterarm/Handgelenk war nie gegen die Servo-Physik geprüft. Grundsatz (Leon): **die Servos behalten ihr
+Anlass: der Aktionsfilter (EXP-024) und die Begrenzung auf ±1 (EXP-020/022) greifen zur Laufzeit ein, und die kleine
+Aktionsskala von Unterarm/Handgelenk war nie gegen die Servo-Physik geprüft. Grundsatz: **die Servos behalten ihr
 volles Potential, das Netz lernt es vernünftig zu nutzen** — echte Hardware-Grenzen in die Sim, alles andere über Kosten im
 Training statt Eingriffe zur Laufzeit. Geprüft gegen Code, Datenblatt-Modell (`config/pib_hand_config_v5.py`) und Vorbild
 (Isaac Lab Dexsuite, `~/IsaacLab/source`). Zahlen mit „Modell“ sind aus dem Servomodell gerechnet, nicht gemessen.

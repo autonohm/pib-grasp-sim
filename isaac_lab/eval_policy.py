@@ -1,28 +1,28 @@
 """
-eval_policy.py — Policy nach dem Bewertungsprotokoll eval-v2 bewerten (experiments/README.md, ADR-021).
+eval_policy.py — evaluate a policy with the evaluation protocol eval-v2 (experiments/README.md, ADR-021).
 
-eval-v2 (seit 2026-10-09) = eval-v1 mit Reset ohne Überlappung und Fall (Startpose fast offen, Platzierung nach
-tatsächlicher Größe und Gierdrehung, YCB in Ruhelage — env_cfg/mdp); eval-v1-Dateien bleiben als Historie.
+eval-v2 (since 2026-10-09) = eval-v1 with a reset without overlap and fall (start pose almost open, placement by
+actual size and yaw rotation, YCB in its rest pose — env_cfg/mdp); eval-v1 files stay as history.
 
-Exportierter Actor (TorchScript, deterministisch) in der Greifaufgabe; nur die Abbrüche
-„Dose gefallen“ und „Physik instabil“ sind aktiv, der Kippwinkel wird gemessen. Je Episode:
-Ende, größter Kippwinkel, Unterarmdrehung, Griffkraft/Kraft > 15 N in der Haltephase,
-Stall-Anteil, Absinken, Unruhe, Objektweg (Verschiebung der Objektmitte in der Tischebene ggü. t = 0,1 s, seit
-2026-10-10 — Befund tools/diag_objektweg.py: die Policies ziehen das Objekt Richtung Unterarm).
-Ausgabe: <protokoll>.txt + <protokoll>.json (Metriken, Erfolg je Episode für den Bootstrap in experiments.py) — je Protokollversion eine Datei, nichts wird
-bei einer neuen Version überschrieben. Andere Bedingung (Objekt aus env_cfg.OBJECTS):
---objekt quader_7x7x20 --bedingung quader_seitlich → <protokoll>_<bedingung>.json/.txt; Greifart „von oben“
+Exported actor (TorchScript, deterministic) in the grasping task; only the terminations
+"object dropped" and "physics unstable" are active, the tilt angle is measured. Per episode:
+end, largest tilt angle, forearm rotation, grip force/force > 15 N in the hold phase,
+stall share, sinking, jitter, object path (displacement of the object centre in the table plane vs. t = 0.1 s, since
+2026-10-10 — finding tools/diag_objektweg.py: the policies pull the object towards the forearm).
+Output: <protokoll>.txt + <protokoll>.json (metrics, success per episode for the bootstrap in experiments.py) — one file
+per protocol version, nothing is overwritten by a new version. Another condition (object from env_cfg.OBJECTS):
+--objekt quader_7x7x20 --bedingung quader_seitlich → <protokoll>_<bedingung>.json/.txt; grasp type "top"
 (env_cfg_oben): --greifart oben --objekt kugel_d7 --bedingung kugel_d7_oben --max_kipp_deg -1
-(Standardbedingung zylinder_seitlich bleibt <protokoll>.json).
+(the default condition zylinder_seitlich stays <protokoll>.json).
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/eval_policy.py --policy <run>/exported/policy.pt --num_envs 16 --real_time
   ~/IsaacLab/isaaclab.sh -p isaac_lab/eval_policy.py --checkpoint <run>/model_299.pt --headless
-Mit --checkpoint: lädt wie Isaac Labs play.py und exportiert nach <run>/exported/ (JIT + ONNX).
-Mit --video N: zeichnet die ersten N Schritte auf (<out>/videos/), braucht Kameras.
-Mit --verlauf: zusätzlich Verlauf über die Episode (je Zeitschritt, Mittel über laufende Episoden:
-Objekthöhe ggü. Start, Kippwinkel, Finger am Objekt, Griffkraft, Anteil laufender Episoden) →
-verlauf-v1[_<bedingung>].json. --nur-medien: keine Bewertungsdateien schreiben (Video/Verlauf allein,
-überschreibt keine vorhandene Bewertung).
+With --checkpoint: loads like Isaac Lab's play.py and exports to <run>/exported/ (JIT + ONNX).
+With --video N: records the first N steps (<out>/videos/), needs cameras.
+With --verlauf: additionally the time series over the episode (per time step, mean over running episodes:
+object height vs. start, tilt angle, fingers on the object, grip force, fraction of running episodes) →
+verlauf-v1[_<bedingung>].json. --nur-medien: write no evaluation files (video/time series only,
+does not overwrite an existing evaluation).
 """
 import argparse
 import sys
@@ -92,19 +92,19 @@ from pib_grasp import mdp  # noqa: E402
 from pib_grasp.env_cfg import DROP_DEPTH, DROP_SPEED, GRASP_TIME_S, PibGraspEnvCfg, apply_object  # noqa: E402
 from pib_hand_left_v5_cfg import SERVO_JOINTS, WRIST_JOINT  # noqa: E402
 
-HOLD_START_S = GRASP_TIME_S + DROP_DEPTH / DROP_SPEED     # Tisch unten → Haltephase
-EARLY_S = 0.1                                              # Startfehler (Reset-Überlappung)
+HOLD_START_S = GRASP_TIME_S + DROP_DEPTH / DROP_SPEED     # table down → hold phase
+EARLY_S = 0.1                                              # start failure (reset overlap)
 FORCE_LIMIT_N = 15.0
 STALL_FRACTION = 0.9
-# Überlastschutz des STS3215 (Datenblatt): > 80 % Blockiermoment länger als 2 s (Nachtlauf 2026-10-13; Werte am echten Servo
-# ungeprüft) — Stall-Dauer = längster Lauf am Stück je Servo, Schutz-Anteil = Episoden mit einem Lauf > 2 s
+# Overload protection of the STS3215 (datasheet): > 80 % stall torque for longer than 2 s (night run 2026-10-13; values not
+# checked on the real servo) — stall duration = longest continuous run per servo, protection share = episodes with a run > 2 s
 PROTECT_FRACTION = 0.8
 PROTECT_S = 2.0
 REQ_DEG = args_cli.max_kipp_deg if args_cli.max_kipp_deg >= 0 else None
 BEW_ART, BEW_PARAM = (args_cli.bewegung.split(":")[0], float(args_cli.bewegung.split(":")[1])) if args_cli.bewegung else (None, 0.0)
-RUTSCH_M = 0.02          # Rutschen = Objekt > 2 cm relativ zur Hand ab Bewegungsbeginn (GenDexGrasp/GAGrasp)
+RUTSCH_M = 0.02          # slip = object > 2 cm relative to the hand after motion start (GenDexGrasp/GAGrasp)
 
-# ── Umgebung: wie im Training, nur Abbrüche „gefallen“ und „instabil“ ─────────────────────
+# ── Environment: as in training, only the terminations "dropped" and "unstable" ─────────────
 if args_cli.greifart == "oben":
     from pib_grasp.env_cfg_oben import DEFAULT_OBJECT_OBEN, PibGraspEnvCfg_Oben, apply_object_oben
     args_cli.objekt = args_cli.objekt or DEFAULT_OBJECT_OBEN
@@ -114,42 +114,42 @@ else:
     cfg, TASK = apply_object(PibGraspEnvCfg(), args_cli.objekt), "Pib-Grasp-Hand-Left-v0"
 cfg.scene.num_envs = args_cli.num_envs
 cfg.seed = args_cli.seed
-if args_cli.action_filter > 0:                                 # wie im Training (env.yaml: actions.servos.alpha)
+if args_cli.action_filter > 0:                                 # as in training (env.yaml: actions.servos.alpha)
     from pib_grasp.env_cfg import filtered_servo_action
     cfg.actions.servos = filtered_servo_action(args_cli.action_filter)
-if args_cli.action_scale > 0:                                  # wie im Training (env.yaml: actions.servos.scale)
+if args_cli.action_scale > 0:                                  # as in training (env.yaml: actions.servos.scale)
     cfg.actions.servos.scale = args_cli.action_scale
-if args_cli.servo_last:                                    # wie im Training (env.yaml: observations.policy.servo_load)
+if args_cli.servo_last:                                    # as in training (env.yaml: observations.policy.servo_load)
     from pib_grasp.env_cfg import add_servo_load_obs
     add_servo_load_obs(cfg)
 if args_cli.stoerung:
-    # Robustheit (Leaderboard v3, Sim-to-Real-Lücken docs/pruefung-aktionsweg.md): ungenaue Vorgreifpose wie ein IK-Team sie
-    # liefert (seitlich: Objekt bis 2 cm weiter weg / 1 cm näher, ±3 cm längs der Finger; von oben ±1,5 cm), Sensorrauschen
-    # (Gelenkwinkel σ 0,01 rad, FSR σ 0,5 N, vor dem Verlauf) und 1 Policy-Schritt Verzögerung (≈ 17 ms, in der Schleife)
+    # Robustness (leaderboard v3, sim-to-real gaps docs/protokoll/pruefung-aktionsweg.md): inaccurate pre-grasp pose as an IK team
+    # would deliver it (side: object up to 2 cm further away / 1 cm closer, ±3 cm along the fingers; top ±1.5 cm), sensor noise
+    # (joint angles σ 0.01 rad, FSR σ 0.5 N, before the history) and 1 policy step of delay (≈ 17 ms, in the loop)
     from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
     pr = cfg.events.reset_object.params["pose_range"]
     if args_cli.greifart == "oben":
         pr.update(x=(-0.015, 0.015), y=(-0.015, 0.015))
-        cfg.events.place_objects.params["height_jitter"] = 0.005           # Höhe der Vorgreifpose ±5 mm
+        cfg.events.place_objects.params["height_jitter"] = 0.005           # height of the pre-grasp pose ±5 mm
     else:
         pr.update(x=(-0.02, 0.01), y=(-0.03, 0.03))
     cfg.observations.policy.joint_pos.noise = Gnoise(mean=0.0, std=0.01)
     cfg.observations.policy.fsr.noise = Gnoise(mean=0.0, std=0.5)
     cfg.observations.policy.enable_corruption = True
-if getattr(cfg.terminations, "object_tilted", None) is not None:   # trainingsspezifisch (EXP-001/002)
+if getattr(cfg.terminations, "object_tilted", None) is not None:   # training-specific (EXP-001/002)
     cfg.terminations.object_tilted = None
-    cfg.rewards.early_termination = None      # verweist auf object_tilted; Belohnung hier unbenutzt
+    cfg.rewards.early_termination = None      # refers to object_tilted; reward unused here
 torch.manual_seed(args_cli.seed)
 env = gym.make(TASK, cfg=cfg, render_mode="rgb_array" if args_cli.video else None)
 uenv = env.unwrapped
 
 if args_cli.checkpoint:
-    # wie ~/IsaacLab/scripts/reinforcement_learning/rsl_rl/play.py: laden, Actor exportieren
+    # as in ~/IsaacLab/scripts/reinforcement_learning/rsl_rl/play.py: load, export the actor
     from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper, export_policy_as_jit, export_policy_as_onnx
     from rsl_rl.runners import OnPolicyRunner
     from pib_grasp.agents.rsl_rl_ppo_cfg import PibGraspPPORunnerCfg
     agent_cfg = PibGraspPPORunnerCfg()
-    # Netzgröße wie im Training (EXP-031/032: Actor 512-256-128) aus params/agent.yaml des Laufs
+    # network size as in training (EXP-031/032: actor 512-256-128) from the run's params/agent.yaml
     agent_yaml = os.path.join(os.path.dirname(args_cli.checkpoint), "params", "agent.yaml")
     if os.path.exists(agent_yaml):
         import yaml
@@ -160,8 +160,8 @@ if args_cli.checkpoint:
                 setattr(agent_cfg.policy, key, list(trained[key]) if key != "activation" else trained[key])
     runner = OnPolicyRunner(RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions), agent_cfg.to_dict(),
                             log_dir=None, device=uenv.device)
-    # Nur der Actor wird bewertet: Critic-Gewichte mit anderer Form überspringen — Trainingsvarianten mit
-    # privilegierten Zusatz-Beobachtungen (EXP-021: +6 Critic-Eingänge) laden sonst nicht in die Basisaufgabe
+    # Only the actor is evaluated: skip critic weights with a different shape — training variants with
+    # privileged extra observations (EXP-021: +6 critic inputs) would not load into the base task otherwise
     ckpt = torch.load(args_cli.checkpoint, map_location=uenv.device, weights_only=False)
     own = runner.alg.policy.state_dict()
     state = {k: v for k, v in ckpt["model_state_dict"].items() if k in own and own[k].shape == v.shape}
@@ -189,12 +189,12 @@ if args_cli.video:
     env = gym.wrappers.RecordVideo(env, video_folder=str(out_dir / ("videos" if STEM == PROTOCOL else f"videos_{args_cli.bedingung}")), step_trigger=lambda s: s == 0,
                                    video_length=args_cli.video, disable_logger=True)
 class RuleGrasp(torch.nn.Module):
-    """Regelbasierter Griff im selben Aktionsraum wie die Policy (relative Servo-Ziele, Skala wie ActionsCfg) und
-    nur mit denselben Sensoren (Gelenkwinkel, FSR). Bis rot_s: Daumen-Rotator auf rotator_deg, sonst halten.
-    Danach schließen Daumen und Finger mit 'schliessen' (Anteil des maximalen Schritts je 1/60 s).
-    alle_schliessen: weiter schließen bis zum Anschlag (Heuristik wie Chen et al. 2022).
-    bis_kontakt: je Finger ab FSR > kontakt_n nur noch um nachdruck_deg nachdrücken (Hsiao et al. 2010).
-    Handgelenk und Unterarm halten ihre Startstellung."""
+    """Rule-based grasp in the same action space as the policy (relative servo targets, scale like ActionsCfg) and
+    only with the same sensors (joint angles, FSR). Until rot_s: thumb rotator to rotator_deg, otherwise hold.
+    Then thumb and fingers close with 'schliessen' (fraction of the maximum step per 1/60 s).
+    alle_schliessen: keep closing until the stop (heuristic like Chen et al. 2022).
+    bis_kontakt: per finger, once FSR > kontakt_n, only push on by nachdruck_deg (Hsiao et al. 2010).
+    Wrist and forearm hold their start position."""
 
     def __init__(self, env, name: str, params: str):
         super().__init__()
@@ -206,7 +206,7 @@ class RuleGrasp(torch.nn.Module):
         self.robot = env.scene["robot"]
         self.ids = [self.robot.joint_names.index(n) for n in SERVO_JOINTS]
         term = env.action_manager.get_term("servos")
-        s = term._scale                                      # (Umgebungen × Aktionen) oder Skalar
+        s = term._scale                                      # (environments × actions) or scalar
         self.scale = s[0].clone() if torch.is_tensor(s) else torch.full((len(self.ids),), float(s), device=env.device)
         self.hold = None
         self.contact = torch.zeros(env.num_envs, 5, dtype=torch.bool, device=env.device)
@@ -222,19 +222,19 @@ class RuleGrasp(torch.nn.Module):
         self.hold[new] = q[new]
         self.contact[new] = False
         a = torch.zeros_like(q)
-        a[:, :2] = ((self.hold[:, :2] - q[:, :2]) / self.scale[:2]).clamp(-1, 1)             # Unterarm, Handgelenk
-        a[:, 2] = ((math.radians(p["rotator_deg"]) - q[:, 2]) / self.scale[2]).clamp(-1, 1)  # Daumen-Rotator
+        a[:, :2] = ((self.hold[:, :2] - q[:, :2]) / self.scale[:2]).clamp(-1, 1)             # forearm, wrist
+        a[:, 2] = ((math.radians(p["rotator_deg"]) - q[:, 2]) / self.scale[2]).clamp(-1, 1)  # thumb rotator
         closing = (t >= p["rot_s"]).float()[:, None]
-        a[:, 3:] = p["schliessen"] * closing                                                 # Daumen + 4 Finger
+        a[:, 3:] = p["schliessen"] * closing                                                 # thumb + 4 fingers
         if self.name == "bis_kontakt":
-            self.contact |= mdp.fingertip_forces(env) > p["kontakt_n"]                       # FSR: Daumen … klein
+            self.contact |= mdp.fingertip_forces(env) > p["kontakt_n"]                       # FSR: thumb … little
             squeeze = (math.radians(p["nachdruck_deg"]) / self.scale[3:]).clamp(-1, 1)
             a[:, 3:] = torch.where(self.contact, squeeze.expand_as(a[:, 3:]) * closing, a[:, 3:])
         return a
 
 
 class OnnxPolicy(torch.nn.Module):
-    """ONNX-Policy (Normalisierung im Netz) über onnxruntime, CPU; Eingang mit variabler Batchgröße umgeschrieben."""
+    """ONNX policy (normalisation inside the network) via onnxruntime, CPU; input rewritten to a variable batch size."""
 
     def __init__(self, path: str):
         super().__init__()
@@ -275,59 +275,59 @@ def zeros():
     return torch.zeros(N, device=dev)
 
 
-# laufende Größen je Umgebung (aktuelle Episode)
+# running quantities per environment (current episode)
 steps, max_tilt, early_tilt, max_forearm = zeros(), zeros(), zeros(), zeros()
 hold_steps, hold_force, hold_over, stall, act_rate, sink = zeros(), zeros(), zeros(), zeros(), zeros(), zeros()
-act_rate_eff = zeros()      # Unruhe wirksam: Änderung der Aktion, die die Servos bekommen (auf ±1 begrenzt, ggf. geglättet)
+act_rate_eff = zeros()      # effective jitter: change of the action the servos receive (clipped to ±1, possibly smoothed)
 eff_prev = torch.zeros(N, len(SERVO_JOINTS), device=dev)
-stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # Stall-Anteil je Servo (beschreibend, seit 2026-10-11)
-prot_run = torch.zeros(N, len(stall_ids), device=dev)          # laufender Lauf ≥ 80 % je Servo [Schritte]
-prot_max, prot_frac = zeros(), zeros()                         # längster Lauf je Episode; Σ Anteil Servos ≥ 80 % (= Kosten c_t)
-# Servo-Last wie am echten Servo (Nachtlauf 2026-10-14): alle 8 Servos inkl. Handgelenk (Stall-Moment über das Pleuel),
-# kein Stall am Anschlag (Firmware kappt) — gleiche Funktion wie die Kosten im Training (mdp.servo_stall), Schwelle 80 %
-# wie der Überlastschutz
+stall_joint = torch.zeros(N, len(stall_ids), device=dev)       # stall share per servo (descriptive, since 2026-10-11)
+prot_run = torch.zeros(N, len(stall_ids), device=dev)          # current run ≥ 80 % per servo [steps]
+prot_max, prot_frac = zeros(), zeros()                         # longest run per episode; Σ fraction of servos ≥ 80 % (= cost c_t)
+# Servo load as on the real servo (night run 2026-10-14): all 8 servos incl. the wrist (stall torque via the linkage),
+# no stall at the joint stop (the firmware clips) — same function as the training cost (mdp.servo_stall), threshold 80 %
+# like the overload protection
 real_names = list(SERVO_JOINTS)
 real_ids = [robot.joint_names.index(n) for n in real_names]
-s80_joint = torch.zeros(N, len(stall_ids), device=dev)         # ≥ 80 % je Servo (7, ohne Handgelenk), wie bisher gemessen
-s80r_joint = torch.zeros(N, len(real_ids), device=dev)         # ≥ 80 % je Servo (8), wie real
-s80r_hold = torch.zeros(N, len(real_ids), device=dev)          # … nur Haltephase
+s80_joint = torch.zeros(N, len(stall_ids), device=dev)         # ≥ 80 % per servo (7, without wrist), measured as before
+s80r_joint = torch.zeros(N, len(real_ids), device=dev)         # ≥ 80 % per servo (8), as on the real servo
+s80r_hold = torch.zeros(N, len(real_ids), device=dev)          # … hold phase only
 prot_run_r = torch.zeros(N, len(real_ids), device=dev)
 prot_max_r = zeros()
-xy_path, xy_path_max = zeros(), zeros()     # Objektweg in der Tischebene ggü. t = EARLY_S (abgesetzt, Größe eingeschwungen)
+xy_path, xy_path_max = zeros(), zeros()     # object path in the table plane vs. t = EARLY_S (settled, scale settled)
 xy0 = obj.data.root_pos_w[:, :2].clone()
-# Schwingen (Leaderboard v3): Objektbewegung in der Haltephase (Hand fest → jede Bewegung ist Wackeln/Rutschen) und
-# Frequenz der Servo-Befehle (amplitudengewichtete mittlere Frequenz des Spektrums, angelehnt an CAPS, Mysore et al. 2021)
+# Oscillation (leaderboard v3): object motion in the hold phase (hand fixed → any motion is wobbling/slipping) and
+# frequency of the servo commands (amplitude-weighted mean frequency of the spectrum, inspired by CAPS, Mysore et al. 2021)
 hold_v2, hold_w2 = zeros(), zeros()
 T_EP = int(uenv.max_episode_length) + 2
 ep_act = torch.zeros(N, T_EP, len(SERVO_JOINTS), device=dev)
-hold_touch = torch.zeros(N, 5, device=dev)       # Fingernutzung: Schritte mit Objektkontakt > 1 N je Finger
-hold_fobj = torch.zeros(N, 5, device=dev)        # … und Objektkraft je Finger (Reihenfolge Daumen … klein)
+hold_touch = torch.zeros(N, 5, device=dev)       # finger use: steps with object contact > 1 N per finger
+hold_fobj = torch.zeros(N, 5, device=dev)        # … and object force per finger (order thumb … little)
 forearm0 = robot.data.joint_pos[:, forearm].clone()
-z0 = obj.data.root_pos_w[:, 2].clone()           # Dosenhöhe beim Episodenstart (Größe randomisiert)
-episodes = []                                   # abgeschlossene Episoden
-# Belastungstest (--bewegung): Lage beim Bewegungsbeginn, größter Rutschweg danach, Beschleunigung beim ersten Rutschen
+z0 = obj.data.root_pos_w[:, 2].clone()           # can height at episode start (scale randomised)
+episodes = []                                   # completed episodes
+# Load test (--bewegung): pose at motion start, largest slip afterwards, acceleration at the first slip
 p_bew0 = obj.data.root_pos_w.clone()
 rutsch_max = zeros()
 a_grenz = torch.full((N,), float("nan"), device=dev)
 a_last = zeros()
-# Verlauf je Zeitschritt seit Episodenstart (Summen über laufende Episoden, nur abgeschlossene zählen)
+# Time series per time step since episode start (sums over running episodes, only completed ones count)
 T = int(uenv.max_episode_length) + 2
 trace_keys = ("hoehe_mm", "kipp_deg", "finger", "kraft_n")
 trace_sum = {k: torch.zeros(T, device=dev) for k in trace_keys}
 trace_n = torch.zeros(T, device=dev)
-ep_trace = {k: torch.zeros(N, T, device=dev) for k in trace_keys}   # laufende Episode je Umgebung
+ep_trace = {k: torch.zeros(N, T, device=dev) for k in trace_keys}   # running episode per environment
 
 
 def action_frequency(i) -> float | None:
-    """Amplitudengewichtete mittlere Frequenz [Hz] der Servo-Befehle einer Episode, gemittelt über die Servos."""
+    """Amplitude-weighted mean frequency [Hz] of the servo commands of an episode, averaged over the servos."""
     n_i = int(steps[i].item())
     if n_i < 16:
         return None
     seq = ep_act[i, :n_i]
-    amp = torch.fft.rfft(seq - seq.mean(0), dim=0).abs()[1:]                  # ohne Gleichanteil
+    amp = torch.fft.rfft(seq - seq.mean(0), dim=0).abs()[1:]                  # without DC component
     freq = torch.fft.rfftfreq(n_i, d=dt, device=dev)[1:, None]
     tot = amp.sum(0)
-    ok = tot > 1e-6                                                           # Servos, die sich überhaupt bewegen
+    ok = tot > 1e-6                                                           # servos that move at all
     return float(((amp * freq).sum(0)[ok] / tot[ok]).mean()) if ok.any() else 0.0
 
 
@@ -341,7 +341,7 @@ def finish(i, reason):
     req_ok = REQ_DEG is None or math.degrees(max_tilt[i].item()) <= REQ_DEG
     bewegt = BEW_ART is not None and steps[i].item() * dt > mdp.BEWEGUNG_START_S
     if bewegt and reason == "object_dropped" and math.isnan(a_grenz[i].item()):
-        a_grenz[i] = a_last[i]                     # gefallen, bevor 2 cm Rutschen gemessen waren
+        a_grenz[i] = a_last[i]                     # dropped before 2 cm of slip was measured
     if BEW_ART is not None:
         req_ok = req_ok and rutsch_max[i].item() < RUTSCH_M
     n = max(steps[i].item(), 1.0)
@@ -372,7 +372,7 @@ def finish(i, reason):
         "drehschwingen_deg_s": math.degrees((hold_w2[i] / hold_steps[i]).sqrt().item()) if hold_steps[i] > 0 else None,
         "aktion_frequenz_hz": action_frequency(i),
         "rutsch_max_mm": 1000 * rutsch_max[i].item() if bewegt else None,
-        "a_grenz": None if not bewegt or math.isnan(a_grenz[i].item()) else a_grenz[i].item(),   # None = hält bis zum Ende
+        "a_grenz": None if not bewegt or math.isnan(a_grenz[i].item()) else a_grenz[i].item(),   # None = holds until the end
         "richtung": i % len(mdp.BEWEGUNG_RICHTUNGEN[BEW_ART]) if BEW_ART else None,
     })
 
@@ -380,16 +380,16 @@ def finish(i, reason):
 t_start = time.time()
 total_steps = 0
 with torch.inference_mode():
-    # mit Video mindestens bis zur vollen Videolänge (sonst fehlt z. B. das Absenken des Tischs)
+    # with video at least until the full video length (otherwise e.g. the table lowering is missing)
     while (len(episodes) < args_cli.episodes or total_steps < args_cli.video) and simulation_app.is_running():
         t0 = time.time()
         total_steps += 1
         act = policy(obs["policy"])
-        if args_cli.action_clip > 0 and not args_cli.regel:       # wie rsl_rl clip_actions im Training
+        if args_cli.action_clip > 0 and not args_cli.regel:       # like rsl_rl clip_actions in training
             act = act.clamp(-args_cli.action_clip, args_cli.action_clip)
-        if args_cli.stoerung:                                      # 1 Schritt Verzögerung: ausgeführt wird die vorige Aktion
+        if args_cli.stoerung:                                      # 1-step delay: the previous action is executed
             act, act_queued = (act_queued if total_steps > 1 else torch.zeros_like(act)), act
-        if BEW_ART:                                                # Scheinkräfte für diesen Schritt (Episodenzeit)
+        if BEW_ART:                                                # fictitious forces for this step (episode time)
             a_now = mdp.apply_arm_motion(uenv, BEW_ART, BEW_PARAM, mdp.episode_time(uenv))
             a_last = torch.where(steps * dt > mdp.BEWEGUNG_START_S - dt, a_now, a_last)
             pos_now = obj.data.root_pos_w
@@ -404,7 +404,7 @@ with torch.inference_mode():
         for i in done.nonzero().flatten().tolist():
             if len(episodes) < args_cli.episodes:
                 finish(i, next((n for n in term_names if uenv.termination_manager.get_term(n)[i]), "?"))
-        # neue Episoden zurücksetzen, laufende fortschreiben (Werte nach dem Schritt)
+        # reset new episodes, update running ones (values after the step)
         for buf in (steps, max_tilt, early_tilt, max_forearm, hold_steps, hold_force, hold_over, stall, act_rate, act_rate_eff, sink,
                     hold_touch, hold_fobj, xy_path, xy_path_max, stall_joint, hold_v2, hold_w2, ep_act, prot_run, prot_max,
                     prot_frac, s80_joint, s80r_joint, s80r_hold, prot_run_r, prot_max_r):
@@ -451,8 +451,8 @@ with torch.inference_mode():
         ep_act[rows_live, (steps[rows_live] - 1).long().clamp(0, T_EP - 1)] = eff[rows_live]
         hold_v2[in_hold] += (obj.data.root_lin_vel_w[in_hold] ** 2).sum(-1)
         hold_w2[in_hold] += (obj.data.root_ang_vel_w[in_hold] ** 2).sum(-1)
-        sink[live] = (z0 - obj.data.root_pos_w[:, 2]).clamp(min=0.0)[live]   # Hand fest → ggü. Startlage
-        ref = live & (steps <= early_steps)                                   # bis 0,1 s mitführen, dann fest
+        sink[live] = (z0 - obj.data.root_pos_w[:, 2]).clamp(min=0.0)[live]   # hand fixed → relative to the start pose
+        ref = live & (steps <= early_steps)                                   # track until 0.1 s, then fixed
         xy0[ref] = obj.data.root_pos_w[ref, :2]
         xy_path[live] = torch.norm(obj.data.root_pos_w[:, :2] - xy0, dim=-1)[live]
         xy_path_max[live] = torch.maximum(xy_path_max[live], xy_path[live])
@@ -504,29 +504,29 @@ summary = {
         "drehschwingen_deg_s": mean([e["drehschwingen_deg_s"] for e in held]),
         "aktion_frequenz_hz": mean([e["aktion_frequenz_hz"] for e in held]),
     },
-    # beschreibend (keine Leitplanke): Kontaktanteil/Kraft je Finger in der Haltephase, gehaltene Episoden
+    # descriptive (not a guardrail): contact share/force per finger in the hold phase, held episodes
     "fingernutzung": {
         "finger": ["daumen", "zeige", "mittel", "ring", "klein"],
         "kontakt_anteil": [mean([e["finger_kontakt"][k] for e in held if e["finger_kontakt"]]) for k in range(5)],
         "kraft_n": [mean([e["finger_kraft_n"][k] for e in held if e["finger_kraft_n"]]) for k in range(5)],
         "finger_mit_kontakt": mean([sum(e["finger_kontakt"]) for e in held if e["finger_kontakt"]]),
     },
-    # beschreibend: Anteil der Schritte je Servo (außer Handgelenk) mit ≥ 90 % des Stall-Moments, gehaltene Episoden
+    # descriptive: fraction of steps per servo (except the wrist) with ≥ 90 % of the stall torque, held episodes
     "stall_je_servo": {"servo": [n for n in SERVO_JOINTS if n != WRIST_JOINT],
                        "anteil": [mean([e["stall_je_servo"][k] for e in held]) for k in range(len(stall_ids))]},
-    # Überlastschutz (Nachtlauf 2026-10-13), gehaltene Episoden: längster Lauf ≥ 80 % Stall am Stück (Median),
-    # Anteil der Episoden mit einem Lauf > 2 s, mittlerer Anteil der 7 Servos ≥ 80 % (= Kosten der Lagrange-Grenze)
+    # Overload protection (night run 2026-10-13), held episodes: longest continuous run ≥ 80 % stall (median),
+    # fraction of episodes with a run > 2 s, mean fraction of the 7 servos ≥ 80 % (= cost of the Lagrangian limit)
     "servo_schutz": {
         "stall_dauer_median_s": median([e["stall_dauer_max_s"] for e in held]),
         "schutz_anteil": sum(1 for e in held if e["stall_dauer_max_s"] > PROTECT_S) / max(len(held), 1) if held else None,
         "stall80_servo_anteil": mean([e["stall80_servo_anteil"] for e in held]),
-        # wie am echten Servo (Sehne zieht nur, Firmware-Grenzen; Nachtlauf 2026-10-14)
+        # as on the real servo (8 servos incl. wrist, firmware limits; night run 2026-10-14)
         "stall_dauer_real_median_s": median([e["stall_dauer_real_max_s"] for e in held]),
         "schutz_anteil_real": sum(1 for e in held if e["stall_dauer_real_max_s"] > PROTECT_S) / max(len(held), 1) if held else None,
     },
-    # Servo-Last wie am echten Servo (Nachtlauf 2026-10-14), gehaltene Episoden: Anteil der Schritte je Servo mit ≥ 80 %
-    # Stall-Moment, alle 8 Servos (Handgelenk über das Pleuel), ohne Drücken am Anschlag; „mittel“ = Mittel über die 8
-    # (Leaderboard v3: Servo-Last real); „bisher_80“ = 7 Servos ohne Handgelenk, mit Anschlag (wie die Lagrange-Kosten bis EXP-037)
+    # Servo load as on the real servo (night run 2026-10-14), held episodes: fraction of steps per servo with ≥ 80 %
+    # stall torque, all 8 servos (wrist via the linkage), without pushing against the stop; "mittel" = mean over the 8
+    # (leaderboard v3: Servo-Last real); "bisher_80" = 7 servos without wrist, with stop (like the Lagrangian cost up to EXP-037)
     "servo_last_real": {
         "servo": real_names,
         "anteil": [mean([e["stall80_real_je_servo"][k] for e in held]) for k in range(len(real_ids))],
@@ -540,7 +540,7 @@ summary = {
     },
 }
 if BEW_ART:
-    # Belastungstest: Episoden, die die Bewegung erreicht haben (kein Startfehler, nicht vorher gefallen)
+    # Load test: episodes that reached the motion (no start failure, not dropped before)
     bew = [e for e in episodes if e["rutsch_max_mm"] is not None]
     richt = mdp.BEWEGUNG_RICHTUNGEN[BEW_ART]
     grenz = lambda es: median([BEW_PARAM if e["a_grenz"] is None else e["a_grenz"] for e in es])  # noqa: E731
@@ -548,7 +548,7 @@ if BEW_ART:
         "art": BEW_ART, "param": BEW_PARAM, "episoden_bewegt": len(bew),
         "erfolg_bewegt": sum(1 for e in bew if e["erfolg"]) / max(len(bew), 1),
         "rutsch_median_mm": median([e["rutsch_max_mm"] for e in bew]),
-        # Rampe: Beschleunigung beim ersten Rutschen > 2 cm; hält bis zum Ende → a_max (zensiert)
+        # Ramp: acceleration at the first slip > 2 cm; holds until the end → a_max (censored)
         "a_grenz_median": grenz(bew) if BEW_ART == "rampe" else None,
         "je_richtung": {r: {"episoden": len(es), "erfolg": sum(1 for e in es if e["erfolg"]) / max(len(es), 1),
                             "a_grenz_median": grenz(es) if BEW_ART == "rampe" else None,
@@ -615,7 +615,7 @@ lines = [
         f"{n.replace('_left', '')} {pct(x)}" for n, x in zip(summary["servo_last_real"]["servo"], summary["servo_last_real"]["anteil"])),
 ]
 if args_cli.video and getattr(env, "recording", False):
-    env.stop_recording()                        # Video schreiben, auch wenn kürzer als --video
+    env.stop_recording()                        # write the video even if shorter than --video
 if args_cli.verlauf:
     n = trace_n.clamp(min=1)
     last = int((trace_n > 0).nonzero().max().item()) + 1 if (trace_n > 0).any() else 0

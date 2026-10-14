@@ -1,10 +1,10 @@
 """
-check_objekt.py — Szenenprüfung eines Katalogobjekts (env_cfg.OBJECTS) in der Basisaufgabe, wie bewertet wird.
+check_objekt.py — scene check of a catalogue object (env_cfg.OBJECTS) in the base task, as it is evaluated.
 
-Je Umgebung: Maße (Bounding Box in der Welt), Abstand Oberfläche ↔ Handfläche, Boden ↔ Tischplatte, Bewegung in
-den ersten 0,1 s (Startfehler/Überlappung), Kippwinkel kurz vor dem Absenken (steht das Objekt?), Masse laut PhysX,
-gehalten am Ende. Ohne --policy Aktionen 0 (Hand bleibt in der Reset-Stellung). Bilder (t = 1, 60, 200 Schritte) und
-Bericht nach isaac_sim/tools/_check_objekt_<objekt>*.
+Per environment: dimensions (bounding box in the world), distance surface ↔ palm, bottom ↔ table top, motion in
+the first 0.1 s (start failure/overlap), tilt shortly before the lowering (does the object stand?), mass according to PhysX,
+held at the end. Without --policy actions are 0 (the hand stays in the reset position). Images (t = 1, 60, 200 steps) and
+report to isaac_sim/tools/_check_objekt_<objekt>*.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/check_objekt.py --headless --enable_cameras --objekt ycb_003_cracker
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/check_objekt.py --headless --enable_cameras --objekt ycb_006_senf \
@@ -97,7 +97,7 @@ lines = [f"== {args.objekt} | {args.policy or 'Aktionen 0'} | {u.num_envs} Umgeb
 bad = 0
 for i in range(u.num_envs):
     sz = size[i]
-    gap = 100 * (HAND_POS[0] - (d[i, 0].item() + sz[0] / 2))       # Handfläche bei x = HAND_POS[0]
+    gap = 100 * (HAND_POS[0] - (d[i, 0].item() + sz[0] / 2))       # palm at x = HAND_POS[0]
     bottom = 1000 * (d[i, 2].item() - sz[2] / 2 - TABLE_TOP_Z)
     mv = 1000 * moved[i].item()
     bad += mv > 5

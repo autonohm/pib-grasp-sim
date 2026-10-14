@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-test_client_pickup_v5.py — Pickup-Demo für pib ros2_control-Stack (v5-Hand).
+test_client_pickup_v5.py — pickup demo for the pib ros2_control stack (v5 hand).
 
-Analog zu test_client_pickup.py (v4), aber mit v5-Joint-Namen (kein dof_-Präfix, Daumen-
-Mittelgelenk heißt "tip") und der über isaac_sim/tools/dump_pose.py aus der laufenden
-v5-Stage aufgenommenen Sequenz (isaac_sim/tools/_pose_dump.json, gitignored):
-  1. neutral  — T-Pose
-  2. approach — rechter Arm über die Dose, Daumen opponiert
-  3. grasp    — alle rechten Finger schließen (41.4°)
-  4. lift     — Schulter hebt die Dose an (shoulder_vertical_right 54.3° → 23.1°)
+Like test_client_pickup.py (v4), but with v5 joint names (no dof_ prefix, the thumb
+middle joint is called "tip") and the sequence recorded from the running v5 stage via
+isaac_sim/tools/dump_pose.py (isaac_sim/tools/_pose_dump.json, gitignored):
+  1. neutral  — T pose
+  2. approach — right arm above the can, thumb in opposition
+  3. grasp    — all right fingers close (41.4°)
+  4. lift     — the shoulder lifts the can (shoulder_vertical_right 54.3° → 23.1°)
 
-Sendet alle 44 DOFs (nicht nur eine Teilmenge wie bei v4) — 1:1 wie aufgenommen, kein
-Handverlesen nötig, da dump_pose.py ohnehin den vollen Gelenkzustand dumpt.
+Sends all 44 DOFs (not only a subset as in v4) — 1:1 as recorded, no
+manual selection needed, since dump_pose.py dumps the full joint state anyway.
 
-Voraussetzung:
-  1. Isaac Sim läuft (pib_upperbody_v5.usd mit Action Graph geladen, start.py ausgeführt,
-     Play gedrückt)
+Prerequisites:
+  1. Isaac Sim is running (pib_upperbody_v5.usd with Action Graph loaded, start.py executed,
+     Play pressed)
   2. ros2 launch pib_bringup pib_sim_v5.launch.py
 
 Start:
@@ -36,7 +36,7 @@ def _r(deg: float) -> float:
     return math.radians(deg)
 
 
-# ── Alle 44 v5-DOFs, Reihenfolge wie in _pose_dump.json aufgenommen ──────────
+# ── All 44 v5 DOFs, order as recorded in _pose_dump.json ─────────────────────
 POSE_JOINTS = [
     "head_horizontal", "head_vertical", "shoulder_vertical_left",
     "shoulder_horizontal_left", "upper_arm_left", "elbow_left", "forearm_left",
@@ -53,7 +53,7 @@ POSE_JOINTS = [
     "thumb_right_proximal", "thumb_right_tip",
 ]
 
-# ── Waypoints, direkt aus isaac_sim/tools/_pose_dump.json übernommen (Grad) ──
+# ── Waypoints, taken directly from isaac_sim/tools/_pose_dump.json (degrees) ──
 _NEUTRAL = [
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -78,7 +78,7 @@ _LIFT = [
     41.4, 41.4, 41.4, 41.4, 41.4, 41.4, 41.4, 41.4, 90.0, 41.4, 41.4,
 ]
 
-# Feedback-Indizes in POSE_JOINTS (für die Fortschritts-Ausgabe pro Sekunde)
+# feedback indices in POSE_JOINTS (for the progress output every second)
 _IDX_ELBOW_RIGHT = 26
 _IDX_THUMB_RIGHT_ROTATOR = 41
 _IDX_INDEX_RIGHT_PROXIMAL = 29
@@ -86,12 +86,12 @@ _IDX_INDEX_RIGHT_PROXIMAL = 29
 
 def _make_pickup_trajectory():
     """
-    4 Waypoints, je 2s Abstand (wie in _pose_dump.json aufgenommen, "t": 2.0 pro Waypoint).
+    4 waypoints, 2 s apart each (as recorded in _pose_dump.json, "t": 2.0 per waypoint).
 
-    Step 1 neutral  → t=0.0s  T-Pose, alle 0°
-    Step 2 approach → t=2.0s  Arm positioniert, Hand offen, Daumen opponiert
-    Step 3 grasp    → t=4.0s  Finger schließen auf 41.4°
-    Step 4 lift     → t=6.0s  Schulter hebt (54.3° → 23.1°), Dose angehoben
+    Step 1 neutral  → t=0.0s  T pose, all 0°
+    Step 2 approach → t=2.0s  arm positioned, hand open, thumb in opposition
+    Step 3 grasp    → t=4.0s  fingers close to 41.4°
+    Step 4 lift     → t=6.0s  shoulder lifts (54.3° → 23.1°), can lifted
     """
     def pt(positions_deg, sec):
         return JointTrajectoryPoint(
@@ -155,7 +155,7 @@ class PibPickupClientV5(Node):
         handle.get_result_async().add_done_callback(self._on_result)
 
     def _on_feedback(self, feedback_msg):
-        """Zeigt Ist- vs. Soll-Position der wichtigsten Gelenke pro Sekunde."""
+        """Shows actual vs. target position of the most important joints every second."""
         fb = feedback_msg.feedback
         if not fb.actual.positions or not fb.desired.positions:
             return

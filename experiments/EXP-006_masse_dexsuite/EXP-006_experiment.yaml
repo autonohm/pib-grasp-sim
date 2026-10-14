@@ -49,7 +49,7 @@ ergebnis: '5 Seeds: Aufgabenerfolg 77,5 % [52,0–93,4], IQM 89,0 %, Seeds 93/27
   Policy), Griffkraft 86 N. Leaderboard Platz 1: IQM über alle Objekte 67,8 % (Ø 6
   cm 89, Ø 8 cm 74, Quader 53 %). Hebt das Objekt vor dem Absenken ~5 cm an (Verlauf).'
 urteil: kein gesicherter Unterschied zu EXP-004 nach eval-v1, aber robuster (1/5 Fehlschlag-Seeds)
-  und beste Übertragung — neue Baseline — bestätigt (Leon, 2026-10-08)
+  und beste Übertragung — neue Baseline — bestätigt (2026-10-08)
 schluss: Breitere Masse (wie Dexsuite) ergibt Kraftgriff mit ~3 Fingern und den besten
   Transfer auf andere Objekte. Baseline für die nächsten Experimente (EXP-012 ff.).
 commit_nachtrag: 73b412a

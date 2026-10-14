@@ -137,7 +137,7 @@ mkdir -p ~/repos/pib-hand-sim/ros2_ws/src/pib_description/urdf
   <name>pib_description</name>
   <version>0.1.0</version>
   <description>pib Roboter URDF mit ros2_control Hardware-Interface</description>
-  <maintainer email="leonkrampf206@gmail.com">Leon</maintainer>
+  <maintainer email="todo@example.com">pib-hand-sim</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -423,7 +423,7 @@ touch ~/repos/pib-hand-sim/ros2_ws/src/pib_bringup/pib_bringup/__init__.py
   <name>pib_bringup</name>
   <version>0.1.0</version>
   <description>pib Simulation — Start-Launch und Test-Client</description>
-  <maintainer email="leonkrampf206@gmail.com">Leon</maintainer>
+  <maintainer email="todo@example.com">pib-hand-sim</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake_python</buildtool_depend>

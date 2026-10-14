@@ -25,7 +25,7 @@ training:
   umgebungen: 1024
   seeds: [42, 43, 44]
   zusatz_args: []               # weitere Argumente für train.py
-fenstertest: true               # Szene/Belohnung/Abbruch geändert → Leon schaut kurz zu
+fenstertest: true               # Szene/Belohnung/Abbruch geändert → kurz im Fenster ansehen
 
 # --- automatisch (experiments.py run) ---
 commit: null

@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "Wenn du dieses Repository nutzt, zitiere es bitte so."
+title: "pib Hand Simulation: digitaler Zwilling und RL-Greifen für die pib-Hand"
+type: software
+authors:
+  - given-names: Leon
+    family-names: "<Nachname>"
+version: "0.1"
+date-released: "2026-10-15"
+repository-code: "https://github.com/churro206/pib-hand-sim"
+keywords: [robotics, reinforcement learning, dexterous grasping, Isaac Lab, Isaac Sim, pib]

@@ -1,4 +1,4 @@
-Lies `docs/handoff.md` und `docs/current-sprint.md`.
+Lies `docs/protokoll/handoff.md` und `docs/protokoll/current-sprint.md`.
 
 Fasse dann in maximal 4 Sätzen zusammen:
 - Was in der letzten Session erreicht wurde

@@ -1,13 +1,13 @@
 """
-pruef_bewegung.py — Stimmen die Scheinkräfte des Belastungstests (mdp.apply_arm_motion)?
+pruef_bewegung.py — Are the fictitious forces of the load test (mdp.apply_arm_motion) correct?
 
-Ein Objekt schwebt im Inertialsystem (Gegenkraft −m·g, im Handrahmen mitgedreht), 0,45 m vom Ellbogen entfernt wie
-in der Szene, frei von Hand und Tisch: x_I(t) = x0. Im Bezugssystem der Hand, das sich mit dem Arm bewegt, muss es dann
-genau
-  Verschieben:  p_H(t) = x_I(t) − D·s(t)·d                     (d = Richtung, s = Minimum-Jerk bzw. Rampe)
-  Drehen:       p_H(t) = P + R(θ(t))ᵀ·(x_I(t) − P)             (P = Drehpunkt = Hand-Root, θ um die feste Achse)
-folgen. Das prüft alle Terme zusammen (Translation, gedrehte Schwerkraft, Euler-, Flieh- und Corioliskraft), unabhängig
-von der Formel im Code. Bericht: isaac_sim/tools/_pruef_bewegung.txt
+An object floats in the inertial frame (counter-force −m·g, rotated along in the hand frame), 0.45 m from the elbow as
+in the scene, free of hand and table: x_I(t) = x0. In the frame of the hand, which moves with the arm, it must then
+follow exactly
+  translation:  p_H(t) = x_I(t) − D·s(t)·d                     (d = direction, s = minimum jerk or ramp)
+  rotation:     p_H(t) = P + R(θ(t))ᵀ·(x_I(t) − P)             (P = pivot = hand root, θ about the fixed axis)
+This checks all terms together (translation, rotated gravity, Euler, centrifugal and Coriolis forces), independently
+of the formula in the code. Report: isaac_sim/tools/_pruef_bewegung.txt
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/pruef_bewegung.py --headless
 """
@@ -35,13 +35,13 @@ from pib_grasp.env_cfg import PibGraspEnvCfg  # noqa: E402
 
 cfg = PibGraspEnvCfg()
 cfg.scene.num_envs = args.num_envs
-cfg.terminations.object_dropped = None          # das freie Objekt fällt absichtlich
+cfg.terminations.object_dropped = None          # the free object falls on purpose
 env = gym.make("Pib-Grasp-Hand-Left-v0", cfg=cfg)
 uenv = env.unwrapped
 obj, robot = uenv.scene["object"], uenv.scene["robot"]
 dev, N, dt = uenv.device, uenv.num_envs, uenv.step_dt
-START = 0.1                                     # Bewegungsbeginn [s] nach dem Freigeben
-DAUER = 0.75                                    # Beobachtung [s]
+START = 0.1                                     # motion start [s] after the release
+DAUER = 0.75                                    # observation [s]
 g = torch.tensor((0.0, 0.0, -9.81), device=dev)
 H = uenv.physics_dt                             # Physikschritt (1/120 s)
 
@@ -56,7 +56,7 @@ def rot_T(v, n, theta):
 
 for nr, (art, param) in enumerate(FAELLE):
     env.reset(seed=0)
-    # Objekt freigeben: hinter dem Handrücken (+x), 25 cm über der Hand, in Ruhe — r ≈ 0,45 m zum Ellbogen
+    # release the object: behind the back of the hand (+x), 25 cm above the hand, at rest — r ≈ 0.45 m to the elbow
     pose = obj.data.root_state_w[:, :7].clone()
     pose[:, :3] = uenv.scene.env_origins + torch.tensor((0.3, -0.34, 0.75), device=dev)
     obj.write_root_pose_to_sim(pose)
@@ -67,12 +67,12 @@ for nr, (art, param) in enumerate(FAELLE):
     act = torch.zeros(N, uenv.action_manager.total_action_dim, device=dev)
     k = torch.arange(N, device=dev) % len(mdp.BEWEGUNG_RICHTUNGEN.get(art, (0,)))
     while t < DAUER - 1e-9:
-        if art != "frei":                       # frei = nur Schwebekraft (Kontrolle)
+        if art != "frei":                       # free = floating force only (control)
             mdp.apply_arm_motion(uenv, art, param, torch.full((N,), t, device=dev), start_s=START)
         else:
             obj.permanent_wrench_composer.set_forces_and_torques(forces=torch.zeros(N, 1, 3, device=dev),
                                                                  torques=torch.zeros(N, 1, 3, device=dev), is_global=True)
-        # Schwebekraft −m·g im Inertialsystem, im Handrahmen mit R(θ)ᵀ gedreht (Drehung zur Schrittmitte wie im mdp)
+        # floating force −m·g in the inertial frame, rotated with R(θ)ᵀ in the hand frame (rotation at mid-step as in the mdp)
         m_obj = obj.root_physx_view.get_masses().to(dev)[:, :, None]
         th = torch.zeros(N, device=dev)
         if art in ("gieren", "nicken"):
@@ -87,7 +87,7 @@ for nr, (art, param) in enumerate(FAELLE):
         env.step(act)
         t += dt
         tt = torch.full((N,), t, device=dev)
-        x_i = x0                                     # schwebt im Inertialsystem
+        x_i = x0                                     # floats in the inertial frame
         tau = tt - START
         if art == "frei":
             pred, bewegung = x_i, torch.zeros(N, device=dev)
@@ -113,7 +113,7 @@ for nr, (art, param) in enumerate(FAELLE):
         weg_max = max(weg_max, bewegung.max().item())
         if bewegung.max() > 0.01:
             worst_rel = max(worst_rel, (err / bewegung.clamp(min=0.01)).max().item())
-    if nr == 0:                                 # erster Lauf nach dem Start: Teleport wirkt verzögert (Aufwärmen)
+    if nr == 0:                                 # first run after the start: the teleport takes effect with a delay (warm-up)
         continue
     lines.append(f"{art}:{param:<5} Abweichung max {1000 * worst:6.2f} mm bei Weg max {1000 * weg_max:5.0f} mm "
                  f"({100 * worst / max(weg_max, 1e-3):4.1f} %)")

@@ -82,7 +82,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf, Leon schläft)
+fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf)
 
 # --- automatisch (experiments.py run) ---
 commit: 3adf87d
@@ -98,5 +98,5 @@ ergebnis: 'Leistung 87 % [81–92] (ggü. EXP-022 kein gesicherter Unterschied, 
   98 % / Senf 97 %. Roh-Ausgabe des Netzes springt stark (Unruhe roh 2,98 — der Filter glättet sie). Stall je Servo (s42):
   nur noch der Zeigefinger dauerhaft im Stall (89 %), Daumen-Rotator 2 %, Daumen 11 %, Mittel 21 % (EXP-022: 87–90 %).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese bestätigt — bestes Gesamtbild bisher; Kandidat für die neue Basis (Videos: Leon). Firmware muss denselben
+schluss: 'Entwurf: Hypothese bestätigt — bestes Gesamtbild bisher; Kandidat für die neue Basis (Videos sichten). Firmware muss denselben
   Filter (α = 0,3, 60 Hz) vor die Servos setzen. Urteilsregel korrigiert: bei geglätteter Aktion zählt nur „Unruhe wirksam“.'

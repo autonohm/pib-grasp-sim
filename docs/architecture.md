@@ -9,7 +9,7 @@ dieser Datei dort).
 
 ## Team-Kontext
 RoboCup 2027 @Home. Mehrere Gruppen:
-- **pib-Sim** (Leon): Simulation, ros2_control-Stack, Schnittstellen
+- **pib-Sim**: Simulation, ros2_control-Stack, Schnittstellen
 - **IK-Team**: Inverse Kinematik — gibt Gelenkwinkel-Trajektorien aus
 - **Greifpunkt-Team**: Greifpunkterkennung — gibt Greifpunkt im Roboterframe aus
 - **Objekterkennung**: hinten angestellt
@@ -24,7 +24,7 @@ v5-Hand (8 Servos, 5 FSR, STM32N657 mit NPU) — auf diesem Branch, siehe Abschn
 Referenz-Implementierung) und v5 (im Aufbau) parallel — nicht ablösend. Durchgängiges
 Namensschema: `_v4`-Suffix bzw. `_v5`-Suffix auf jeder Ebene (USD, Config, ROS2-Package).
 Wo unten nicht explizit unterschieden wird, ist v4 gemeint (aktuell einziger vollständig
-verifizierter Stand); v5-Stand siehe `docs/current-sprint.md`.
+verifizierter Stand); v5-Stand siehe `docs/protokoll/current-sprint.md`.
 
 ---
 
@@ -225,7 +225,7 @@ gebündelt und mit Simulationszeit (`IsaacTimeSplitter`) als `sensor_msgs/JointS
 `/pib/fingertip_forces` publiziert (Reihenfolge/Format: `docs/conventions.md`). Aufbau per
 `build_contact_sensors_v5.py` + `build_fingertip_force_graph_v5.py`. Verworfen:
 `ArticulationView.get_net_contact_forces()` (Tensor-API, bräuchte Script Node) und ein
-Script Node zum Bündeln (Leon: nur native Nodes).
+Script Node zum Bündeln (nur native Nodes).
 
 **Bekannter Stolperstein**: Der Onshape-Importer legt Robotik-Meshes standardmäßig als
 `instanceable` an (Performance-Feature für viele parallele Roboter-Instanzen, hier ohne
@@ -245,7 +245,7 @@ gezogen (USD, `config/`, roher Onshape-Export, ROS2-Package). Action Graph, ros2
 Stack, Pickup-/Putdown-Demo, `config/pib_hand_config_v5.py` und Fingerkopplung (Mimic
 Joints, ADR-011) und das Servo-Aktuatormodell (ADR-012) für v5 sind fertig. Noch offen:
 Putdown-Regression, ADR zur
-v5-Reimport-Entscheidung (bisher nur in `docs/current-sprint.md` nacherzählt).
+v5-Reimport-Entscheidung (bisher nur in `docs/protokoll/current-sprint.md` nacherzählt).
 
 ---
 

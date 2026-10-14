@@ -42,9 +42,9 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-08_00-14-07_EXP-007_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Ø 6 cm 78,0 % → Ø 8 cm 61,6 % (−16 PP) → Quader 40,0 % (−38 PP); Finger
-  ~1,8. Sichten (Leon): Pinzettengriff instabiler, Anheben bleibt.'
+  ~1,8. Sichten: Pinzettengriff instabiler, Anheben bleibt.'
 urteil: Hypothese bestätigt (längeres Training verbessert die Übertragung nicht) —
-  bestätigt (Leon, 2026-10-08)
+  bestätigt (2026-10-08)
 schluss: Mehr Training ersetzt keine Objektvielfalt.
 laeufe_von: EXP-007
 nachtrag:

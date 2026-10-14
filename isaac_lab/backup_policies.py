@@ -1,16 +1,16 @@
 """
-backup_policies.py — Trainierte Policies der Experimente nach Hugging Face sichern (privates Repo).
+backup_policies.py — back up the experiments' trained policies to Hugging Face (private repo).
 
-Je Lauf (logs/rsl_rl/pib_grasp_hand_left/<lauf>/) nur das Nötige: letzter Checkpoint (zum
-Weitertrainieren), exported/ (JIT + ONNX für den Nucleo), params/, meta.json, Diff, Bewertung,
-TensorBoard-Log, Video — keine Zwischen-Checkpoints. Dazu experiments/ (Pläne, Berichte) und
-eine Modellkarte. Unveränderte Dateien lädt Hugging Face nicht erneut hoch (Hash-Abgleich).
+Per run (logs/rsl_rl/pib_grasp_hand_left/<lauf>/) only what is needed: last checkpoint (for
+continued training), exported/ (JIT + ONNX for the Nucleo), params/, meta.json, diff, evaluation,
+TensorBoard log, video — no intermediate checkpoints. Plus experiments/ (plans, reports) and
+a model card. Hugging Face does not re-upload unchanged files (hash comparison).
 
-Start über isaaclab.sh -p (nur Python, keine Simulation — liefert requests für huggingface_hub):
+Start via isaaclab.sh -p (Python only, no simulation — provides requests for huggingface_hub):
   conda activate env_isaaclab
-  ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py            # Probelauf: was, wie groß
-  ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py --upload   # hochladen (Repo privat)
-Anmeldung vorher einmalig selbst: hf auth login (Token nie ins Repo/in Skripte).
+  ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py            # dry run: what, how large
+  ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py --upload   # upload (repo private)
+Log in once beforehand yourself: hf auth login (never put the token into the repo/scripts).
 """
 import argparse
 import os
@@ -47,7 +47,7 @@ Details: `docs/conventions.md` → „Isaac Lab“ im Projekt-Repository.
 
 def files_of(run: Path) -> list[Path]:
     ckpts = sorted(run.glob("model_*.pt"), key=lambda p: int(p.stem.split("_")[1]))
-    out = ckpts[-1:]                                   # nur der letzte Checkpoint
+    out = ckpts[-1:]                                   # only the last checkpoint
     for pattern in KEEP:
         out += [p for p in run.glob(pattern) if p.is_file()]
     return out
@@ -76,7 +76,7 @@ def main():
     api = HfApi()
     print(f"Angemeldet als: {api.whoami()['name']}")
     api.create_repo(a.repo_id, repo_type="model", private=True, exist_ok=True)
-    # Staging mit Hardlinks (kein zusätzlicher Speicher), dann ein einziger Upload
+    # staging with hard links (no extra storage), then a single upload
     with tempfile.TemporaryDirectory(dir=REPO / "logs") as tmp:
         stage = Path(tmp)
         for run in runs:

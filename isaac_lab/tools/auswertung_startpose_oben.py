@@ -1,11 +1,11 @@
 """
-auswertung_startpose_oben.py — Startpose „von oben“ über alle Objekte auswählen (nach tools/suche_startpose_oben.py).
+auswertung_startpose_oben.py — choose the start pose for the "top" grasp over all objects (after tools/suche_startpose_oben.py).
 
-Je Objekt und Kombination (Kippung, Rollen, Rotator, Höhe, Versatz) über die Wiederholungen: gehalten, sauberer Start (kein
-Kontakt Hand↔Objekt > 0,5 N in 0,1 s, kein Hand↔Tisch vor dem Schließen), Tischkontakt beim Schließen, Handfläche, Finger.
-Eine Pose (Kippung, Rollen, Rotator, Versatz) gilt für alle Objekte, die Höhe darf je Objekt verschieden sein (Leon: Höhe je
-Objekt): je Objekt die beste saubere Höhe; Rangfolge der Posen nach dem Mittel über die Benchmark-Objekte, dann dem
-schwächsten Objekt. Ausgabe: docs/startpose-oben/ (ergebnis.md, Diagramme) — Empfehlung, umgestellt wird von Hand.
+Per object and combination (tilt, roll, rotator, height, offset) over the repetitions: held, clean start (no contact
+hand↔object > 0.5 N within 0.1 s, no hand↔table before closing), table contact while closing, palm, fingers.
+One pose (tilt, roll, rotator, offset) applies to all objects, the height may differ per object (decision: height
+per object): per object the best clean height; poses ranked by the mean over the benchmark objects, then by the
+weakest object. Output: docs/protokoll/startpose-oben/ (ergebnis.md, plots) — a recommendation; switching is done by hand.
 
   conda activate env_isaaclab && python isaac_lab/tools/auswertung_startpose_oben.py
 """
@@ -20,8 +20,8 @@ import numpy as np  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 SRC = REPO / "logs" / "startpose_oben"
-OUT = REPO / "docs" / "startpose-oben"
-# Objekt → (Kurzname, Höhe [mm], Benchmark?)  — Testobjekt YCB zählt nicht in die Auswahl
+OUT = REPO / "docs" / "protokoll" / "startpose-oben"
+# object → (short name, height [mm], benchmark?)  — the YCB test object does not count for the selection
 OBJ = {"kugel_d5": ("Kugel Ø 5", 50, True), "kugel_d7": ("Kugel Ø 7", 70, True), "kugel_d9": ("Kugel Ø 9", 90, True),
        "dose_d68x10": ("Dose 6,8×10", 100, True), "quader_9x6x4": ("Schachtel 9×6×4", 40, True),
        "ycb_005_suppe": ("YCB-Suppe (Test)", 102, False)}
@@ -53,7 +53,7 @@ heights = sorted({k[3] for n in data for k in data[n]})
 
 
 def best_height(n, pose):
-    """Beste saubere Höhe eines Objekts für eine Pose: gehalten, dann wenig Tischkontakt, dann niedrig."""
+    """Best clean height of an object for a pose: held, then little table contact, then low."""
     cand = [(h, data[n].get(pose[:3] + (h, pose[3]))) for h in heights]
     cand = [(h, v) for h, v in cand if v and v["sauber"]]
     if not cand:
@@ -86,7 +86,7 @@ for i, (m, lo, p, per) in enumerate(score[:12], 1):
                       for n, (h, v) in zip(bench, per))
     L.append(f"| {i} | {p[0]:g}° | {p[1]:g}° | {p[2]:g}° | {1000 * p[3]:+.0f} mm | {pct(m)} | {pct(lo)} | {cells} |")
 
-# Diagramme für die beste Pose: gehalten über Kippung × Höhe je Objekt (Rollen, Rotator, Versatz der besten Pose)
+# plots for the best pose: held over tilt × height per object (roll, rotator, offset of the best pose)
 best = score[0][2]
 kipps = sorted({k[0] for n in data for k in data[n]})
 fig, axs = plt.subplots(1, len(data), figsize=(3.2 * len(data), 3.2), squeeze=False)
@@ -109,7 +109,7 @@ fig.colorbar(im, ax=axs[0].tolist(), shrink=0.8)
 fig.savefig(OUT / "gehalten_kippung_hoehe.svg")
 plt.close(fig)
 
-# Höhe je Objekt für die beste Pose → Regel „Höhe aus Objektgröße“
+# height per object for the best pose → rule "height from object size"
 h_obj = [(OBJ[n][1], h) for n, (h, v) in zip(bench, score[0][3]) if h is not None]
 L += ["", f"![gehalten über Kippung und Höhe](gehalten_kippung_hoehe.svg)", "",
       "## Höhe je Objekt für die beste Pose", "", "| Objekt | Objekthöhe | beste Höhe der tiefsten Spitze | gehalten | Tisch beim Schließen | Handfläche | Finger am Objekt | Objektweg |",

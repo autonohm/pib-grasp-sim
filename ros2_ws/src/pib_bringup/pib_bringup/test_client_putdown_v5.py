@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-test_client_putdown_v5.py — Kehrt die Pickup-Demo v5 exakt um (Dose absetzen und loslassen).
+test_client_putdown_v5.py — reverses the v5 pickup demo exactly (put the can down and release it).
 
-Identische 4 Keyframes wie test_client_pickup_v5.py, nur in umgekehrter Reihenfolge:
+The same 4 keyframes as test_client_pickup_v5.py, only in reverse order:
 
-  Step 1 lift     → t=0.0s  Startzustand: Dose gehoben, Hand geschlossen
-  Step 2 grasp    → t=2.0s  Schulter senkt ab (23.1° → 54.3°) — Dose auf dem Tisch
-  Step 3 approach → t=4.0s  Finger öffnen (41.4° → 0°) — Dose losgelassen
-  Step 4 neutral  → t=6.0s  Arm zurück in T-Pose
+  Step 1 lift     → t=0.0s  start state: can lifted, hand closed
+  Step 2 grasp    → t=2.0s  shoulder lowers (23.1° → 54.3°) — can on the table
+  Step 3 approach → t=4.0s  fingers open (41.4° → 0°) — can released
+  Step 4 neutral  → t=6.0s  arm back to the T pose
 
-Voraussetzung: Roboter steht im Endzustand von test_client_pickup_v5.py (Dose bereits
-gehoben). Reihenfolge: zuerst `ros2 run pib_bringup test_client_pickup_v5`, danach dieses
-Skript.
+Prerequisite: the robot is in the final state of test_client_pickup_v5.py (can already
+lifted). Order: first `ros2 run pib_bringup test_client_pickup_v5`, then this
+script.
 
 Start:
   ros2 run pib_bringup test_client_putdown_v5
@@ -25,7 +25,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from builtin_interfaces.msg import Duration
 from sensor_msgs.msg import JointState
 
-# ── Identisch zu test_client_pickup_v5.py — alle 44 v5-DOFs ──────────────────
+# ── Identical to test_client_pickup_v5.py — all 44 v5 DOFs ───────────────────
 POSE_JOINTS = [
     "head_horizontal", "head_vertical", "shoulder_vertical_left",
     "shoulder_horizontal_left", "upper_arm_left", "elbow_left", "forearm_left",
@@ -134,7 +134,7 @@ class PibPutdownClientV5(Node):
         handle.get_result_async().add_done_callback(self._on_result)
 
     def _on_feedback(self, feedback_msg):
-        """Zeigt Ist- vs. Soll-Position der wichtigsten Gelenke pro Sekunde."""
+        """Shows actual vs. target position of the most important joints every second."""
         fb = feedback_msg.feedback
         if not fb.actual.positions or not fb.desired.positions:
             return

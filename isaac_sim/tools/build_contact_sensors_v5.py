@@ -1,16 +1,16 @@
 """
-build_contact_sensors_v5.py — Phase 1: legt die IsaacContactSensor-Prims an allen 10
-Fingerspitzen von pib v5 an (ADR-008-Muster), nach der GUI-Vorlage index_right:
+build_contact_sensors_v5.py — phase 1: creates the IsaacContactSensor prims on all 10
+fingertips of pib v5 (ADR-008 pattern), following the GUI template index_right:
 
-  <Fingertip-Link>/Contact_Sensor   IsaacContactSensor, radius -1 (ganzes Glied),
-                                    Schwelle 0..100000, PhysxContactReportAPI am Link
+  <fingertip link>/Contact_Sensor   IsaacContactSensor, radius -1 (whole link),
+                                    threshold 0..100000, PhysxContactReportAPI on the link
 
-NUR die Sensor-Prims — keine Graph-Knoten (die verkabelt Phase 2,
-build_fingertip_force_graph_v5.py). Getrennt, um einzugrenzen, ob Isaac wegen der Sensoren
-oder wegen der Graph-Knoten abstürzt. Idempotent: vorhandene Sensoren bleiben unverändert.
+ONLY the sensor prims — no graph nodes (those are wired in phase 2,
+build_fingertip_force_graph_v5.py). Separated to narrow down whether Isaac crashes because of the sensors
+or because of the graph nodes. Idempotent: existing sensors stay unchanged.
 
-Im Script Editor ausführen, bei geöffneter pib_upperbody_v5.usd, Simulation GESTOPPT.
-Danach Stage speichern (Ctrl+S). Ausgabe zusätzlich nach
+Run in the Script Editor with pib_upperbody_v5.usd open and the simulation STOPPED.
+Then save the stage (Ctrl+S). Output additionally to
 isaac_sim/tools/_contact_sensors_build.txt (gitignored).
 """
 import io
@@ -25,8 +25,8 @@ out = io.StringIO()
 
 ROBOT = "/World/pib_upperbody_urdf_v5"
 
-# Fingerspitzen → Kind-Link des *_tip-Gelenks (aus pib_upperbody_urdf_v5/robot.urdf).
-# Reihenfolge = Reihenfolge im gebündelten Topic (Phase 2).
+# fingertips → child link of the *_tip joint (from pib_upperbody_urdf_v5/robot.urdf).
+# Order = order in the bundled topic (phase 2).
 FINGERTIPS = {
     "thumb_left": "urdf_thumb_tip",
     "index_left": "urdf_finger_tip",
@@ -67,7 +67,7 @@ def _ensure_sensor(link_path: str) -> str:
         raise RuntimeError(f"Link nicht gefunden: {link_path}")
     if link.IsInstanceProxy() or link.IsInstance():
         raise RuntimeError(f"{link_path} ist instanceable — erst Instanceable ausschalten (ADR-008)")
-    # Gleicher Befehl und gleiche Parameter wie die GUI-Vorlage (index_right)
+    # same command and same parameters as the GUI template (index_right)
     omni.kit.commands.execute(
         "IsaacSensorCreateContactSensor",
         path="/Contact_Sensor",

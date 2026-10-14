@@ -81,7 +81,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf, Leon schläft)
+fenstertest: false              # Szene unverändert; Prüfung: reward_diag + Kurztest (Nachtlauf)
 
 # --- automatisch (experiments.py run) ---
 commit: 3adf87d
@@ -98,4 +98,4 @@ ergebnis: 'Leistung 86 % [83–89] (kein Unterschied), 4/5 (Seed 44 hält gekipp
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
 schluss: 'Entwurf: Hypothese nicht bestätigt — W = −0,1 zu schwach gegen die Haltebelohnung. Ursache des Stalls ist die Aktionsart: volle
   relative Aktion (0,1 rad) > 5° Sättigungsfehler → bei blockiertem Finger volles Moment; die Regel hält mit 0,2 ohne Stall
-  (47 N). Nächster Versuch: stärkere Strafe oder kleinere Aktionsskala der Finger (Leon entscheidet), mit Filter (EXP-024).'
+  (47 N). Nächster Versuch: stärkere Strafe oder kleinere Aktionsskala der Finger (offen), mit Filter (EXP-024).'

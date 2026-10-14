@@ -1,14 +1,14 @@
 """
-isaac_sim/start.py — Session-Startroutine für pib in Isaac Sim.
+isaac_sim/start.py — session start routine for pib in Isaac Sim.
 
-Vor dem ersten Play ausführen. Konfiguriert Drives, Limits und Initialpose —
-PhysX cached diese Werte nicht, sie müssen nach jedem Session-Start gesetzt werden.
+Run before the first Play. Configures drives, limits and the initial pose —
+PhysX does not cache these values, they must be set after every session start.
 
-Workflow Script Editor:
-  USD laden (enthält Action Graph) → start.py → Play
+Script Editor workflow:
+  load the USD (contains the Action Graph) → start.py → Play
 
-Workflow Standalone:
-  autostart.py ruft start.run() automatisch auf — manuell nicht nötig.
+Standalone workflow:
+  autostart.py calls start.run() automatically — not needed manually.
 """
 import os
 import sys
@@ -50,10 +50,10 @@ def _load_setup_stage():
 
 def run(stg=None) -> None:
     """
-    Session-Startroutine: configure_drives → configure_mimic_joints → set_joint_limits
+    Session start routine: configure_drives → configure_mimic_joints → set_joint_limits
     → set_initial_pose.
 
-    stg: USD Stage. Wenn None wird via omni.usd.get_context() ermittelt (Script Editor).
+    stg: USD stage. If None, it is obtained via omni.usd.get_context() (Script Editor).
     """
     if stg is None:
         import omni.usd  # type: ignore

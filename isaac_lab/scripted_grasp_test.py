@@ -1,18 +1,18 @@
 """
-scripted_grasp_test.py — Szene der Greifaufgabe ohne Policy prüfen.
+scripted_grasp_test.py — check the scene of the grasping task without a policy.
 
-Fester Griff: erst fährt der Daumen-Rotator 0,4 s auf --thumb_rot (Grad, je Episode
-ein Wert), dann schließen alle Finger-/Daumen-MCPs mit voller Schrittweite. Misst zusätzlich
-den größten Kippwinkel der Dose (Kippabbruch wie in eval-v1 aus) — ist „aufrecht halten“ mit
-dieser Hand überhaupt erreichbar? Handgelenk
-und Unterarm bleiben. Nur Machbarkeitstest der Szene — die Policy soll die Opposition
-selbst lernen. Zeigt, ob die Szene stimmt (Startkontakte, Tisch
-senkt sich, Sensoren) und ob ein stumpfer Griff die Dose überhaupt hält.
+Fixed grasp: first the thumb rotator moves to --thumb_rot (degrees, one value per episode)
+for 0.4 s, then all finger/thumb MCPs close with the full step size. Additionally measures
+the largest tilt angle of the can (tilt termination as in eval-v1 off) — can "hold upright"
+be reached with this hand at all? Wrist
+and forearm stay. Only a feasibility test of the scene — the policy is supposed to learn the opposition
+itself. Shows whether the scene is right (start contacts, the table
+lowers, sensors) and whether a blunt grasp holds the can at all.
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/scripted_grasp_test.py --headless --num_envs 16
-Mit Fenster zum Zuschauen (Echtzeit, Fenster bleibt am Ende offen):
+With a window to watch (real time, the window stays open at the end):
   ~/IsaacLab/isaaclab.sh -p isaac_lab/scripted_grasp_test.py --num_envs 16 --real_time --thumb_rot 0,45,90
-Bericht zusätzlich in isaac_sim/tools/_scripted_grasp_test.txt.
+Report additionally in isaac_sim/tools/_scripted_grasp_test.txt.
 """
 import argparse
 import sys
@@ -61,7 +61,7 @@ term = uenv.action_manager.get_term("servos")
 names = term._joint_names
 close = torch.tensor([1.0 if n.endswith("_proximal") else 0.0 for n in names], device=uenv.device)
 rot_i = names.index("thumb_left_rotator")
-rot_joint = None   # gesetzt nach robot = ...
+rot_joint = None   # set after robot = ...
 ROTATE_S = 0.4
 
 
@@ -102,7 +102,7 @@ for episode, rot_deg in enumerate(rot_targets):
         total_reward += rew
         newly = terminated & (dropped_at < 0)
         dropped_at[newly] = t
-        drop_pos[newly] = prev[newly]          # letzte Lage vor dem automatischen Reset
+        drop_pos[newly] = prev[newly]          # last pose before the automatic reset
         prev = obj.data.root_pos_w.clone() - uenv.scene.env_origins
         alive = dropped_at < 0
         max_tilt[alive] = torch.maximum(max_tilt[alive], mdp.object_tilt(uenv)[alive])

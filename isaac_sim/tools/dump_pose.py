@@ -1,27 +1,27 @@
 """
-dump_pose.py — Liest die aktuellen Drive-Targets (Grad, Onshape-Konvention
-seit ADR-007) der Gelenke aus der offenen Stage und hängt sie als Waypoint
-an isaac_sim/tools/_pose_dump.json an — zum Weiterverarbeiten in einen neuen
-Test-Client (test_client_*.py), ohne die Werte aus der Isaac-Sim-Konsole
-copy-pasten zu müssen (dort oft nicht sauber selektierbar).
+dump_pose.py — reads the current drive targets (degrees, Onshape convention
+since ADR-007) of the joints from the open stage and appends them as a waypoint
+to isaac_sim/tools/_pose_dump.json — for turning them into a new
+test client (test_client_*.py) without having to copy-paste the values from the
+Isaac Sim console (often not cleanly selectable there).
 
-Hintergrund: Testpose-Sequenzen entstehen weiterhin manuell — Roboter in
-Isaac Sim von Hand posiert (Physics Inspector / Drive-Target-Slider), siehe
-docs/handoff.md. Dieses Skript ersetzt nur das fehleranfällige Abtippen/
-Kopieren der Werte. Liest dasselbe Attribut, das setup_stage.set_initial_pose()
-setzt (UsdPhysics.DriveAPI "angular" → TargetPosition, Grad) — also exakt die
-Werte, die beim manuellen Posieren tatsächlich gesetzt wurden.
+Background: test pose sequences are still created manually — the robot is posed by hand
+in Isaac Sim (Physics Inspector / drive target sliders), see
+docs/protokoll/handoff.md. This script only replaces the error-prone typing/
+copying of the values. It reads the same attribute that setup_stage.set_initial_pose()
+sets (UsdPhysics.DriveAPI "angular" → TargetPosition, degrees) — i.e. exactly the
+values that were actually set while posing manually.
 
-Verwendung (ein Durchlauf pro Waypoint):
-  1. Roboter in Isaac Sim manuell auf die gewünschte Pose bringen (Play an,
-     Zielpose über Drive-Targets/Physics Inspector anfahren, kurz einschwingen
-     lassen).
-  2. WAYPOINT_LABEL/WAYPOINT_TIME_S unten anpassen.
-  3. Dieses Skript im Script Editor ausführen — hängt den Waypoint in
-     _pose_dump.json an (bestehende Waypoints bleiben erhalten).
-  4. Wenn alle Waypoints drin sind: kurz Bescheid geben, ich lese die Datei.
+Usage (one run per waypoint):
+  1. Bring the robot into the desired pose manually in Isaac Sim (Play on,
+     move to the target pose via drive targets/Physics Inspector, let it
+     settle briefly).
+  2. Adjust WAYPOINT_LABEL/WAYPOINT_TIME_S below.
+  3. Run this script in the Script Editor — it appends the waypoint to
+     _pose_dump.json (existing waypoints are kept).
+  4. When all waypoints are in: hand the file over for processing.
 
-Im Script Editor ausführen.
+Run in the Script Editor.
 """
 import json
 import os
@@ -36,7 +36,7 @@ def _find_root() -> str:
         return os.environ["PIB_HAND_SIM_ROOT"]
     from pathlib import Path
     f = Path(stage.GetRootLayer().realPath)
-    for ancestor in f.parents:  # alle Elternverzeichnisse, nicht nur 2 Ebenen
+    for ancestor in f.parents:  # all parent directories, not just 2 levels
         if (ancestor / "config" / "pib_hand_config_v4.py").is_file():
             return str(ancestor)
     raise FileNotFoundError("pib-hand-sim nicht gefunden. PIB_HAND_SIM_ROOT setzen.")
@@ -46,14 +46,14 @@ DUMP_FILE = os.path.join(_find_root(), "isaac_sim", "tools", "_pose_dump.json")
 
 # --- Pro Waypoint anpassen -------------------------------------------------
 WAYPOINT_LABEL = "neutral"   # z.B. "neutral", "approach", "grasp", "lift"
-WAYPOINT_TIME_S = 2.0         # Ziel-Zeit relativ zum Sequenzstart (Sekunden)
+WAYPOINT_TIME_S = 2.0         # target time relative to the sequence start (seconds)
 
-# Leer lassen = alle PhysicsRevoluteJoint-Prims in der Stage (alle 44 DOFs).
-# Für eine konkrete Sequenz gezielt einschränken, z.B.:
+# Leave empty = all PhysicsRevoluteJoint prims in the stage (all 44 DOFs).
+# Restrict it for a specific sequence, e.g.:
 # JOINT_FILTER = [
-#     "dof_shoulder_vertical_right", "dof_shoulder_horizontal_right",
-#     "dof_elbow_right", "dof_forearm_right", "dof_wrist_right",
-#     "dof_thumb_right_rotator", "dof_index_right_proximal",
+# "dof_shoulder_vertical_right", "dof_shoulder_horizontal_right",
+# "dof_elbow_right", "dof_forearm_right", "dof_wrist_right",
+# "dof_thumb_right_rotator", "dof_index_right_proximal",
 # ]
 JOINT_FILTER: list = []
 # ---------------------------------------------------------------------------

@@ -1,11 +1,11 @@
 """
-pib_sim.launch.py — Startet den kompletten ros2_control-Stack für Isaac Sim.
+pib_sim.launch.py — starts the complete ros2_control stack for Isaac Sim.
 
-Voraussetzung: Isaac Sim läuft, USD (mit Action Graph) geladen, start.py ausgeführt, Play gedrückt.
+Prerequisite: Isaac Sim is running, USD (with Action Graph) loaded, start.py executed, Play pressed.
 
 Start:
   source /opt/ros/jazzy/setup.bash
-  source ~/repos/pib-hand-sim/ros2_ws/install/setup.bash
+  source <repo>/ros2_ws/install/setup.bash
   ros2 launch pib_bringup pib_sim.launch.py
 """
 import os
@@ -31,8 +31,8 @@ def generate_launch_description():
         "config", "controllers.yaml"
     )
 
-    # robot_state_publisher — publiziert URDF auf /robot_description Topic
-    # (Jazzy: controller_manager subscribed Topic statt Parameter zu lesen)
+    # robot_state_publisher — publishes the URDF on the /robot_description topic
+    # (Jazzy: controller_manager subscribes to the topic instead of reading a parameter)
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -58,7 +58,7 @@ def generate_launch_description():
         arguments=["joint_state_broadcaster"],
     )
 
-    # JointTrajectoryController spawnen — erst nach JointStateBroadcaster
+    # spawn the JointTrajectoryController — only after the JointStateBroadcaster
     joint_trajectory_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",

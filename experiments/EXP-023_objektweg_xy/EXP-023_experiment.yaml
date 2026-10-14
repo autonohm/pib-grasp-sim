@@ -82,7 +82,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: false              # nur ein Belohnungsterm, Szene unverändert; Prüfung: reward_diag + Kurztest (Leon abwesend)
+fenstertest: false              # nur ein Belohnungsterm, Szene unverändert; Prüfung: reward_diag + Kurztest
 
 # --- automatisch (experiments.py run) ---
 commit: cf1f981+lokal
@@ -99,4 +99,4 @@ ergebnis: 'Leistung 87 % [83–89] (ggü. EXP-022 kein Unterschied), 5/5 Seeds. 
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
 schluss: 'Entwurf: Die Strafe senkt das Ziehen, aber nicht zuverlässig, und macht mehrere Seeds unruhig (vermutlich
   Nachregeln gegen die Strafe). So nicht als neue Basis; für „von oben“ zunächst ohne xy-Strafe (EXP-022-Rezept).
-  Möglich: kleineres Gewicht oder Strafe nur vor dem Absenken; Videos s43 (37 mm) vs. s42 ansehen (Leon).'
+  Möglich: kleineres Gewicht oder Strafe nur vor dem Absenken; Videos s43 (37 mm) vs. s42 ansehen.'

@@ -1,22 +1,22 @@
 """
-plot_training.py — Trainingsdiagramme eines Experiments aus den TensorBoard-Logs (rsl_rl).
+plot_training.py — training plots of an experiment from the TensorBoard logs (rsl_rl).
 
-Liest events.out.tfevents.* aller Seeds und schreibt nach <experiment>/diagramme/EXP-NNN_<name>:
+Reads events.out.tfevents.* of all seeds and writes to <experiment>/diagramme/EXP-NNN_<name>:
   lernkurve.svg    Train/mean_reward, Train/mean_episode_length
-  belohnung.svg    Episode_Reward/* (Belohnung je Sekunde Episode, wie Isaac Lab sie loggt)
-  abbrueche.svg    Episode_Termination/* (Anteil der Episoden je Abbruchgrund)
-  ppo.svg          Value-/Surrogate-Loss, Entropie, Rausch-Std, Lernrate
-  training.json    Endwerte je Seed (Mittel der letzten 10 Iterationen, ungeglättet)
-  bedingungen.svg  mit --bedingungen <results.json>: Ergebnis je Bedingung (Objekt) — Aufgabenerfolg,
-                   Finger am Objekt, Kippwinkel je Seed, dazu Mittel (und 95-%-KI beim Aufgabenerfolg)
-  verlauf.svg      mit --verlauf-laeufe/--verlauf-bedingungen: Verlauf über die Episode je Objekt (Mittel über
-                   Seeds und laufende Episoden): Objekthöhe ggü. Start, Kippwinkel, Finger am Objekt, Griffkraft
-Seeds dünn (Farbe fest je Seed), Mittel über die Seeds kräftig; Eltern (Mittel, gestrichelt) nur
-bei Abbrüchen und PPO — die Trainings-Belohnung ist zwischen Experimenten nicht vergleichbar
-(ADR-016). x-Achse: Simulationsschritte (Iteration × Umgebungen × Schritte je Umgebung).
+  belohnung.svg    Episode_Reward/* (reward per second of episode, as Isaac Lab logs it)
+  abbrueche.svg    Episode_Termination/* (fraction of episodes per termination cause)
+  ppo.svg          value/surrogate loss, entropy, noise std, learning rate
+  training.json    final values per seed (mean of the last 10 iterations, unsmoothed)
+  bedingungen.svg  with --bedingungen <results.json>: result per condition (object) — task success,
+                   fingers on the object, tilt angle per seed, plus the mean (and 95 % CI for task success)
+  verlauf.svg      with --verlauf-laeufe/--verlauf-bedingungen: time series over the episode per object (mean over
+                   seeds and running episodes): object height vs. start, tilt angle, fingers on the object, grip force
+Seeds thin (fixed colour per seed), mean over the seeds bold; parents (mean, dashed) only
+for terminations and PPO — the training reward is not comparable between experiments
+(ADR-016). x axis: simulation steps (iteration × environments × steps per environment).
 
-Aufgerufen von experiments.py (report) über isaaclab.sh -p — braucht tensorboard + matplotlib
-aus env_isaaclab, keine Simulation:
+Called from experiments.py (report) via isaaclab.sh -p — needs tensorboard + matplotlib
+from env_isaaclab, no simulation:
   ~/IsaacLab/isaaclab.sh -p isaac_lab/plot_training.py --exp-dir experiments/EXP-004_... \
       --runs <laufordner> ... [--eltern-runs <laufordner> ...] [--eltern-name EXP-000]
 """
@@ -32,9 +32,9 @@ import yaml  # noqa: E402
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
-MAX_POINTS = 400     # Punkte je Linie in der SVG (nach dem Glätten)
-TAIL = 10            # Iterationen für die Endwerte
-# Farben (Kategorie-Palette der dataviz-Referenz, feste Reihenfolge): Farbe folgt dem Seed
+MAX_POINTS = 400     # points per line in the SVG (after smoothing)
+TAIL = 10            # iterations for the final values
+# Colours (categorical palette of the dataviz reference, fixed order): the colour follows the seed
 SEED_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 STANDARD_SEEDS = [42, 43, 44, 45, 46]
 INK, INK2, MUTED, GRID, AXIS, SURFACE = "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7", "#fcfcfb"
@@ -71,7 +71,7 @@ def load_run(run_dir: Path) -> dict:
 
 
 def smooth(y: np.ndarray) -> np.ndarray:
-    """Exponentielles Mittel (wie TensorBoard, mit Bias-Korrektur), Spanne ~ n/50."""
+    """Exponential mean (like TensorBoard, with bias correction), span ~ n/50."""
     span = max(3, len(y) // 50)
     alpha = 2 / (span + 1)
     out, acc, w = np.empty_like(y), 0.0, 0.0
@@ -105,7 +105,7 @@ def mean_curve(runs: list[dict], tag: str):
 
 
 def seed_color(seed, seeds: list) -> str:
-    if seed is None:                       # Lauf ohne Seed im Namen (EXP-000)
+    if seed is None:                       # run without a seed in its name (EXP-000)
         return SEED_COLORS[0]
     if seed in STANDARD_SEEDS:
         return SEED_COLORS[STANDARD_SEEDS.index(seed)]
@@ -169,7 +169,7 @@ def plot_figure(out: Path, title: str, tags: list[str], runs: list[dict], parent
 
 
 def plot_conditions(out: Path, results: dict, exp_name: str):
-    """Ergebnis je Bedingung: Seeds als Punkte (links im Feld), Mittel als Strich + 95-%-KI (rechts)."""
+    """Result per condition: seeds as points (left in the cell), mean as a bar + 95 % CI (right)."""
     conds = (list(results["benchmark"].values()) if results.get("benchmark")
              else [results] + list((results.get("weitere_bedingungen") or {}).values()))
     seeds = sorted({s for c in conds for s in c.get("seed_ids") or [] if s is not None})
@@ -226,7 +226,7 @@ def plot_conditions(out: Path, results: dict, exp_name: str):
 
 
 def plot_trace(out: Path, runs: list[str], conds: list[tuple[str, str]], exp_name: str):
-    """Verlauf über die Episode: je Objekt eine Linie (Mittel über die Seeds), Absenken markiert."""
+    """Time series over the episode: one line per object (mean over the seeds), table lowering marked."""
     panels = [("hoehe_mm", "Objekthöhe ggü. Start [mm]"), ("kipp_deg", "Kippwinkel [°]"),
               ("finger", "Finger am Objekt (> 1 N)"), ("kraft_n", "Griffkraft, Summe FSR [N]")]
     fig, axes = plt.subplots(2, 2, figsize=(4.2 * 2, 2.6 * 2 + 0.9), squeeze=False)

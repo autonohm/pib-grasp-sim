@@ -29,7 +29,7 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-07_00-27-37_EXP-002_s44
 ergebnis: Aufgabenerfolg 0 %, Haltequote 0 % (3 Seeds, 1500 Iterationen) — identisch
   zu EXP-001.
-urteil: kein Unterschied (Entwurf, von Leon zu bestätigen)
+urteil: kein Unterschied (Entwurf, zu bestätigen)
 schluss: Mehr Training löst ein falsch gesetztes lokales Optimum nicht. Erst Belohnung/Aufbau
   richtig, dann Budget erhöhen (Stufe 2 später).
 nachtrag:

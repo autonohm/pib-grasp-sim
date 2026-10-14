@@ -1,11 +1,11 @@
 """
-quantisiere_int8.py — Policy (ONNX, float) nach ST-Vorgabe in int8 QDQ quantisieren und für den STM32N6 analysieren (M2).
+quantisiere_int8.py — quantise a policy (ONNX, float) to int8 QDQ following ST's guidelines and analyse it for the STM32N6 (M2).
 
-Ablauf (docs/conventions.md → „ST Edge AI“): onnxruntime quant_pre_process → quantize_static mit QuantFormat.QDQ,
-QInt8/QInt8, per_channel=True, Kalibrierdaten aus Sim-Rollouts (tools/kalibrierdaten_int8.py, MinMax). Danach:
-Abweichung int8 ↔ float auf einer getrennten Testmenge (Aktion auf ±1 begrenzt wie im Einsatz) und `stedgeai analyze
---target stm32n6 --st-neural-art` (welche Schichten laufen auf der NPU, Speicher, MACC). Läuft mit dem Python der
-conda-Umgebung env_isaaclab, ohne Isaac. Bericht: <out>/bericht.txt; int8-Modell <out>/policy_int8_qdq.onnx.
+Procedure (docs/conventions.md → "ST Edge AI"): onnxruntime quant_pre_process → quantize_static with QuantFormat.QDQ,
+QInt8/QInt8, per_channel=True, calibration data from sim rollouts (tools/kalibrierdaten_int8.py, MinMax). Then:
+deviation int8 ↔ float on a separate test set (action clipped to ±1 as in deployment) and `stedgeai analyze
+--target stm32n6 --st-neural-art` (which layers run on the NPU, memory, MACC). Runs with the Python of the
+conda environment env_isaaclab, without Isaac. Report: <out>/bericht.txt; int8 model <out>/policy_int8_qdq.onnx.
 
   conda activate env_isaaclab
   python isaac_lab/tools/quantisiere_int8.py --onnx <run>/exported/policy.onnx --daten logs/int8/<name>/daten.npz \
@@ -50,7 +50,7 @@ quant_pre_process(args.onnx, str(pre))
 quantize_static(str(pre), str(q8), Reader(calib), quant_format=QuantFormat.QDQ, activation_type=QuantType.QInt8,
                 weight_type=QuantType.QInt8, per_channel=True)
 
-# int8 ↔ float auf der Testmenge
+# int8 ↔ float on the test set
 s_f = ort.InferenceSession(args.onnx, providers=["CPUExecutionProvider"])
 s_q = ort.InferenceSession(str(q8), providers=["CPUExecutionProvider"])
 a_f = np.concatenate([s_f.run(None, {name: r[None, :]})[0] for r in test]).clip(-1, 1)
@@ -63,7 +63,7 @@ lines = [f"== int8-Quantisierung: {args.onnx}",
          f"Vorzeichen gleich: {100 * np.mean(np.sign(a_f) == np.sign(a_q)):.1f} %  |  Modellgröße float "
          f"{Path(args.onnx).stat().st_size / 1024:.0f} kB, int8 QDQ {q8.stat().st_size / 1024:.0f} kB", ""]
 
-# ST Edge AI: Analyse für den STM32N6 mit Neural-ART
+# ST Edge AI: analysis for the STM32N6 with Neural-ART
 st = shutil.which("stedgeai") or str(Path.home() / "ST/STEdgeAI/4.0/4.0/Utilities/linux/stedgeai")
 cmd = [st, "analyze", "--model", str(q8.resolve()), "--target", "stm32n6", "--st-neural-art",
        "--input-data-type", "float32", "--output-data-type", "float32"]

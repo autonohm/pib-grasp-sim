@@ -49,7 +49,7 @@ training:
   - 45
   - 46
   zusatz_args: []
-fenstertest: true               # Szene/Belohnung/Abbruch geändert → Leon schaut kurz zu
+fenstertest: true               # Szene/Belohnung/Abbruch geändert → kurz im Fenster ansehen
 
 # --- automatisch (experiments.py run) ---
 commit: 75cde79

@@ -1,16 +1,16 @@
 """
-diag_stall.py — Woher kommt der gemessene Servo-Stall? (2026-10-13, Befund A: Drücken gegen die eigene Gelenkgrenze)
+diag_stall.py — Where does the measured servo stall come from? (2026-10-13, finding A: pushing against the own joint limit)
 
-Die relative Aktion setzt das Stellziel in jedem Physikschritt auf Ist-Stellung + Skala·a und kappt es nicht auf die
-Gelenkgrenzen; das Moment ist Isaac Labs PD-Schätzung (applied_torque). Am blockierten Gelenk ist „Stall“ damit nur
-|a| ≥ ~0,7 — egal ob Objekt, Anschlag oder anderer Finger blockiert. Real ziehen die 6 Hand-Servos (alle außer Unterarm
-und Handgelenk) über eine Sehne, eine Feder öffnet: Moment in Öffnungsrichtung gibt es dort nicht.
+The relative action sets the position target in every physics step to current position + scale·a and does not clip it to the
+joint limits; the torque is Isaac Lab's PD estimate (applied_torque). At a blocked joint, "stall" is therefore just
+|a| ≥ ~0.7 — no matter whether the object, the stop or another finger blocks it. On the real hand the 6 hand servos (all except
+forearm and wrist) pull via a tendon and a spring opens: there is no torque in the opening direction there.
 
-Teilt den Stall (|τ| ≥ 80 % Stall-Moment, wie Training und Überlastschutz) je Servo auf: Zug (τ > 0, Beugen/Opposition)
-oder Druck (τ < 0), und jeweils „am Anschlag“ (≤ 1° vor der Grenze in Momentrichtung), „Finger am Objekt“ (ein Körper
-des Fingers > 1 N am Objekt), „sonst“ (frei, anderer Finger, Fingerrücken …). Getrennt nach Greifphase (t < 2 s) und
-Haltephase (t ≥ 2,5 s); dazu der Überlastschutz (Lauf > 2 s) wie bisher und nur mit Zug bei den Sehnen-Servos.
-Basisaufgabe wie eval-v2, deterministisch, Seed 1000. Bericht: isaac_sim/tools/_diag_stall_<name>_<objekt>.txt/.json
+Splits the stall (|τ| ≥ 80 % stall torque, as in training and the overload protection) per servo into pulling (τ > 0,
+flexion/opposition) or pushing (τ < 0), each "at the stop" (≤ 1° from the limit in the torque direction), "finger on the
+object" (a body of the finger > 1 N on the object), "other" (free, another finger, back of the finger …). Separately for the
+grasp phase (t < 2 s) and the hold phase (t ≥ 2.5 s); plus the overload protection (run > 2 s) as before and with pulling only
+for the tendon servos. Base task as in eval-v2, deterministic, seed 1000. Report: isaac_sim/tools/_diag_stall_<name>_<objekt>.txt/.json
 
   ~/IsaacLab/isaaclab.sh -p isaac_lab/tools/diag_stall.py --headless --name EXP-036_s42 \
       --policy <run>/exported/policy.pt --action_scale 0.1 [--action_clip 1.0 --action_filter 0.3] --objekt zylinder_d6
@@ -49,8 +49,8 @@ from isaaclab.sensors import ContactSensorCfg  # noqa: E402
 
 FRACTION, PROTECT_S, LIMIT_TOL = 0.8, 2.0, math.radians(1.0)
 GRASP_END_S, HOLD_START_S = 2.0, 2.5
-JOINTS = [j for j in SERVO_JOINTS if j != WRIST_JOINT]                # wie STALL_JOINTS (Training) und eval_policy
-TENDON = [j != "forearm_left" for j in JOINTS]                         # Sehne + Rückstellfeder: alle außer Unterarm
+JOINTS = [j for j in SERVO_JOINTS if j != WRIST_JOINT]                # like STALL_JOINTS (training) and eval_policy
+TENDON = [j != "forearm_left" for j in JOINTS]                         # tendon + return spring: all except the forearm
 FINGER = {"thumb_left_rotator": ["urdf_thumb_rotator_left", "urdf_thumb_proximal", "urdf_thumb_tip"],
           "thumb_left_proximal": ["urdf_thumb_proximal", "urdf_thumb_tip"]}
 for _j, _sfx in (("index", ""), ("middle", "_2"), ("ring", "_3"), ("pinky", "_4")):
@@ -97,13 +97,13 @@ with torch.inference_mode():
             a = a.clamp(-args.action_clip, args.action_clip)
         obs, _, term, trunc, _ = env.step(a)
         alive &= ~term
-        live = alive & ~trunc                                     # Zeitende: der Schritt danach ist schon zurückgesetzt
+        live = alive & ~trunc                                     # timeout: the step after it is already reset
         t = k * u.step_dt
         tau = robot.data.applied_torque[:, ids]
         q = robot.data.joint_pos[:, ids]
         stall = tau.abs() >= FRACTION * robot.data.joint_effort_limits[:, ids]
         zug, druck = stall & (tau > 0), stall & (tau < 0)
-        f = sens.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)       # (N, Körper)
+        f = sens.data.force_matrix_w_history[:, :, 0].norm(dim=-1).amax(dim=1)       # (N, bodies)
         touch = torch.stack([(f[:, b] > 1.0).any(-1) if b else torch.zeros(N, dtype=torch.bool, device=dev)
                              for b in body_idx], dim=-1)                              # (N, J)
         at_hi, at_lo = q >= hi - LIMIT_TOL, q <= lo + LIMIT_TOL
@@ -115,8 +115,8 @@ with torch.inference_mode():
             cnt[ph]["schritte"] += m.sum()
             for key, c in cls.items():
                 cnt[ph][key] += (c & m[:, None]).float().sum(0)
-        real = torch.where(tendon[None, :], zug, stall)          # wie am echten Servo: Sehne zieht nur
-        fw = real & ~torch.where(tau > 0, at_hi, at_lo)           # und Firmware-Winkelgrenzen: kein Drücken am Anschlag
+        real = torch.where(tendon[None, :], zug, stall)          # as on the real servo: the tendon only pulls
+        fw = real & ~torch.where(tau > 0, at_hi, at_lo)           # and firmware angle limits: no pushing against the stop
         run_all = torch.where(stall & live[:, None], run_all + 1, torch.zeros_like(run_all))
         run_zug = torch.where(real & live[:, None], run_zug + 1, torch.zeros_like(run_zug))
         max_all = torch.where(live, torch.maximum(max_all, run_all.max(-1).values), max_all)
