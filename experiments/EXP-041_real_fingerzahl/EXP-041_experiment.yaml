@@ -3,8 +3,7 @@ id: EXP-041
 titel: 'Kontrolle: Stall wie real + Fingerzahl, ohne Grenze je Servo'
 datum: '2026-10-13'
 eltern: EXP-038
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Kontrolle zu EXP-040 (2×2 mit EXP-038/039): Wirkt die Fingerzahl-Belohnung nur zusammen mit der Grenze je Servo? Erwartet: Finger wie EXP-038 (≈ 3), d. h. ohne Grenze je Servo keine Wirkung wie in EXP-026.'
 aenderung: 'Zusätzlich Belohnung nach Fingerzahl wie EXP-040, aber ohne Grenze je Servo (Task HeavyMultiProgressDexCapsLagrangeRealFinger-v0).'
@@ -80,10 +79,14 @@ training:
 fenstertest: false
 
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: 562424e
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_05-45-00_EXP-041_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_06-11-44_EXP-041_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_06-32-57_EXP-041_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_06-53-48_EXP-041_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_07-14-49_EXP-041_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 82 % [75–86] (ggü. EXP-038 P = 0,70 [0,44–0,93], kein Unterschied), 3/5 (s42, s43 gekippt). Erfolgreiche Seeds: Servo-Last real 14 %, Schutz > 2 s 87 %, Finger ≈ 3,5, Unruhe 0,04, Transport 82 %, Rampe Top 75 m/s². Index 0,51.'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Kontrolle wie erwartet — ohne Grenze je Servo ändert die Fingerzahl-Belohnung die Lastverteilung nicht (Schutz 87 %), wie EXP-026. Zusammen mit 040: die Wirkung entsteht erst aus der Kombination.'

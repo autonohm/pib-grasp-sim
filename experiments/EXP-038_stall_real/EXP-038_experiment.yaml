@@ -4,8 +4,7 @@ titel: Stall-Kosten wie am echten Servo (8 Servos inkl. Handgelenk, kein Drücke
   Anschlag)
 datum: '2026-10-13'
 eltern: EXP-036
-status: geplant                 # geplant | läuft | ausgewertet | verworfen
-
+status: trainiert
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Die Stall-Kosten messen, was den echten Servo belastet: mit dem Handgelenk (bisher nie gemessen) und ohne Drücken gegen den Anschlag (die Firmware kappt dort). Vor dem Griff entfallen so Kosten, die nur aus Erkundung bestehen. Erwartet: Leistung und Zuverlässigkeit mindestens wie EXP-036 (nicht gesichert schlechter, ≥ 4/5), Servo-Last real ≤ EXP-036, Unruhe ≤ 0,1, Transport ≥ 95 %.'
 aenderung: 'Stall-Kosten wie am echten Servo: 8 Servos inkl. Handgelenk (Stall-Moment über das Pleuel), kein Stall ≤ 1° vor der Gelenkgrenze in Momentrichtung (Task HeavyMultiProgressDexCapsLagrangeReal-v0).'
@@ -81,10 +80,14 @@ training:
 fenstertest: false
 
 # --- automatisch (experiments.py run) ---
-commit: null
-laeufe: []
-
+commit: 562424e
+laeufe:
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_23-16-57_EXP-038_s42
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-13_23-44-20_EXP-038_s43
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_00-06-01_EXP-038_s44
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_00-27-30_EXP-038_s45
+- logs/rsl_rl/pib_grasp_hand_left/2026-10-14_00-48-23_EXP-038_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
-ergebnis: ""                    # Kurzfassung der Zahlen
+ergebnis: 'Leistung 75 % [57–81] (ggü. EXP-036 P(besser) = 0,31 [0,08–0,50], kein Unterschied), 3/5 (s44, s46 gekippt). Erfolgreiche Seeds: Unruhe 0,04, Servo-Last real 13 % (EXP-036 13 %), Schutz > 2 s 94 % (85), Kippen 45° (EXP-036 37°), Transport 79 % (95), Rampe Top 112 m/s². Index 0,41 (Platz 17). Last weiter auf einem Servo (s42 Zeigefinger, s44/s46 Daumen-MCP, s45 Mittelfinger je ~100 % der Haltephase).'
 urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: ""                     # was folgt daraus, nächstes Experiment
+schluss: 'Entwurf: Hypothese nicht bestätigt — Kosten wie real ändern die Servo-Last nicht (13 %) und entlasten das Erkunden nicht messbar; Zuverlässigkeit und Transport eher schlechter (nicht gesichert, 5 Seeds). Als Kostendefinition trotzdem richtig (Handgelenk gemessen, keine Anschlag-Artefakte) und Basis für 039–041.'

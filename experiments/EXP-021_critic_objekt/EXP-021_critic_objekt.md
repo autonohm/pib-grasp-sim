@@ -35,7 +35,8 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 | Stall-Anteil [Anteil] | 99.9 % | | | | 99.9 % |
 | Absinken [mm] | 0 | | | | 0.000324 |
 | Unruhe | 0.703 | | | | 0.912 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.343 | | | | 0.374 |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.343 | | | | 0.362 |
+| Objektweg Tischebene Ende [mm] | 139 | | | | 136 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 23.9 %, instabil 0.0 %, anforderung_verletzt 3.0 %
 
@@ -63,6 +64,7 @@ Bedingung `zylinder_d8_seitlich` (Objekt `zylinder_d8`, Kippwinkel ≤ 45°), Pr
 | Absinken [mm] | 0 | | | | 0 |
 | Unruhe | 0.689 | | | | 0.683 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.333 | | | | 0.259 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 30.4 %, instabil 0.0 %, anforderung_verletzt 0.7 %
 
@@ -92,6 +94,7 @@ Bedingung `quader_seitlich` (Objekt `quader_7x7x20`, Kippwinkel ≤ 45°), Proto
 | Absinken [mm] | 0 | | | | 0 |
 | Unruhe | 0.895 | | | | 1.08 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.43 | | | | 0.439 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 37.1 %, instabil 0.0 %, anforderung_verletzt 0.2 %
 
@@ -120,6 +123,7 @@ Bedingung `flasche_seitlich` (Objekt `flasche_d7x25`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 0.0124 | | | | 0.0163 |
 | Unruhe | 0.803 | | | | 0.975 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.399 | | | | 0.361 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 27.8 %, instabil 0.0 %, anforderung_verletzt 3.6 %
 
@@ -148,6 +152,7 @@ Bedingung `saftpackung_seitlich` (Objekt `saftpackung_9x6x19`, Kippwinkel ≤ 45
 | Absinken [mm] | 0.00153 | | | | 0.000216 |
 | Unruhe | 0.86 | | | | 1.35 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.428 | | | | 0.593 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 33.6 %, instabil 0.0 %, anforderung_verletzt 0.4 %
 
@@ -176,6 +181,7 @@ Bedingung `ycb_cracker_seitlich` (Objekt `ycb_003_cracker`, Kippwinkel ≤ 45°)
 | Absinken [mm] | 0.0174 | | | | 0.147 |
 | Unruhe | 0.531 | | | | 0.986 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.214 | | | | 0.339 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 36.8 %, instabil 0.0 %, anforderung_verletzt 0.2 %
 
@@ -204,6 +210,7 @@ Bedingung `ycb_zucker_seitlich` (Objekt `ycb_004_zucker`, Kippwinkel ≤ 45°), 
 | Absinken [mm] | 0.654 | | | | 0.114 |
 | Unruhe | 0.475 | | | | 1.11 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.213 | | | | 0.498 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 30.8 %, instabil 0.0 %, anforderung_verletzt 2.3 %
 
@@ -232,6 +239,7 @@ Bedingung `ycb_senf_seitlich` (Objekt `ycb_006_senf`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 0.845 | | | | 0.509 |
 | Unruhe | 0.522 | | | | 1.15 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.235 | | | | 0.388 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 38.6 %, instabil 0.0 %, anforderung_verletzt 1.0 %
 

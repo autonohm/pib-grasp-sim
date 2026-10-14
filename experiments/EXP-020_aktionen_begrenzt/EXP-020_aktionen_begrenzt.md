@@ -6,7 +6,7 @@
 
 **Zuverlässigkeit** 4/5 Seeds erfolgreich [28–99 %] — EXP-018: 5/10, exakter Fisher-Test p = 0.58 → nicht unterscheidbar (für eine Aussage ≥ 10 Seeds je Experiment)
 
-**Leitplanken** Unruhe: 1.13 > 1.09; Unruhe wirksam (Aktion auf ±1 begrenzt): 1.13 > 0.449 ✗
+**Leitplanken** Unruhe: 1.13 > 1.09; Unruhe wirksam (Aktion auf ±1 begrenzt): 1.13 > 0.434 ✗
 
 **Befund** ohne Erfolg: Seed 43 (lernt nicht zu greifen); Engpass Quader (77 %)
 
@@ -35,14 +35,15 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 | Stall-Anteil [Anteil] | 99.2 % | | | | 99.9 % |
 | Absinken [mm] | 0.135 | | | | 0.000324 |
 | Unruhe | 1.13 | | | | 0.912 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.13 | | | | 0.374 |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.13 | | | | 0.362 |
+| Objektweg Tischebene Ende [mm] | 113 | | | | 136 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 26.0 %, instabil 0.1 %, anforderung_verletzt 2.7 %
 
 **Urteilsvorschlag: kein messbarer Unterschied** (gegenüber EXP-018)
 Unterschied Aufgabenerfolg +26.5 Prozentpunkte (95-%-KI -18.8 … +64.8)
 - Leitplanke: Unruhe: 1.13 > 1.09
-- Leitplanke: Unruhe wirksam (Aktion auf ±1 begrenzt): 1.13 > 0.449
+- Leitplanke: Unruhe wirksam (Aktion auf ±1 begrenzt): 1.13 > 0.434
 
 Je Seed: 93.7 %, 0.0 %, 87.5 %, 81.5 %, 93.5 %
 
@@ -64,6 +65,7 @@ Bedingung `zylinder_d8_seitlich` (Objekt `zylinder_d8`, Kippwinkel ≤ 45°), Pr
 | Absinken [mm] | 0.0129 | | | | 0 |
 | Unruhe | 1.35 | | | | 0.683 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.35 | | | | 0.259 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 30.7 %, instabil 0.0 %, anforderung_verletzt 1.0 %
 
@@ -92,6 +94,7 @@ Bedingung `quader_seitlich` (Objekt `quader_7x7x20`, Kippwinkel ≤ 45°), Proto
 | Absinken [mm] | 0.0101 | | | | 0 |
 | Unruhe | 1.45 | | | | 1.08 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.45 | | | | 0.439 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 38.0 %, instabil 0.2 %, anforderung_verletzt 0.4 %
 
@@ -120,6 +123,7 @@ Bedingung `flasche_seitlich` (Objekt `flasche_d7x25`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 0.0269 | | | | 0.0163 |
 | Unruhe | 1.23 | | | | 0.975 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.23 | | | | 0.361 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 30.0 %, instabil 0.2 %, anforderung_verletzt 8.4 %
 
@@ -149,6 +153,7 @@ Bedingung `saftpackung_seitlich` (Objekt `saftpackung_9x6x19`, Kippwinkel ≤ 45
 | Absinken [mm] | 0.000448 | | | | 0.000216 |
 | Unruhe | 1.28 | | | | 1.35 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 1.28 | | | | 0.593 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 32.4 %, instabil 0.1 %, anforderung_verletzt 0.9 %
 
@@ -176,6 +181,7 @@ Bedingung `ycb_cracker_seitlich` (Objekt `ycb_003_cracker`, Kippwinkel ≤ 45°)
 | Absinken [mm] | 1.07 | | | | 0.147 |
 | Unruhe | 0.826 | | | | 0.986 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.826 | | | | 0.339 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 31.4 %, instabil 0.1 %, anforderung_verletzt 0.2 %
 
@@ -203,6 +209,7 @@ Bedingung `ycb_zucker_seitlich` (Objekt `ycb_004_zucker`, Kippwinkel ≤ 45°), 
 | Absinken [mm] | 2.67 | | | | 0.114 |
 | Unruhe | 0.78 | | | | 1.11 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.78 | | | | 0.498 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 23.6 %, instabil 0.2 %, anforderung_verletzt 0.7 %
 
@@ -230,6 +237,7 @@ Bedingung `ycb_senf_seitlich` (Objekt `ycb_006_senf`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 5.55 | | | | 0.509 |
 | Unruhe | 0.451 | | | | 1.15 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.451 | | | | 0.388 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 28.0 %, instabil 0.1 %, anforderung_verletzt 2.7 %
 

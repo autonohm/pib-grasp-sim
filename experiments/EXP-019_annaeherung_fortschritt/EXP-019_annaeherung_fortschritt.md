@@ -6,7 +6,7 @@
 
 **Zuverlässigkeit** 10/10 Seeds erfolgreich [69–100 %] — EXP-018: 5/10, exakter Fisher-Test p = 0.03 → gesichert besser
 
-**Leitplanken** Kippwinkel Median [°]: 29.3 > 23.4; Unterarm Median [°]: 41.2 > 31.7; Unruhe: 1.19 > 1.09; Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.449 ✗
+**Leitplanken** Kippwinkel Median [°]: 29.3 > 23.4; Unterarm Median [°]: 41.2 > 31.7; Unruhe: 1.19 > 1.09; Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.434 ✗
 
 **Befund** Engpass Quader (78 %); Kippwinkel 29° (EXP-018: 18°); Unruhe 1.19 (EXP-018: 0.91)
 
@@ -35,7 +35,8 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 | Stall-Anteil [Anteil] | 99.7 % | | | | 99.9 % |
 | Absinken [mm] | 0.0578 | | | | 0.000324 |
 | Unruhe | 1.19 | | | | 0.912 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.562 | | | | 0.374 |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.562 | | | | 0.362 |
+| Objektweg Tischebene Ende [mm] | 124 | | | | 136 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 7.8 %, instabil 0.0 %, anforderung_verletzt 8.2 %
 
@@ -44,7 +45,7 @@ Unterschied Aufgabenerfolg +38.8 Prozentpunkte (95-%-KI +9.7 … +67.8)
 - Leitplanke: Kippwinkel Median [°]: 29.3 > 23.4
 - Leitplanke: Unterarm Median [°]: 41.2 > 31.7
 - Leitplanke: Unruhe: 1.19 > 1.09
-- Leitplanke: Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.449
+- Leitplanke: Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.434
 
 Je Seed: 94.3 %, 86.5 %, 74.9 %, 84.7 %, 82.1 %, 79.7 %, 80.2 %, 74.7 %, 92.5 %, 90.1 %
 
@@ -66,6 +67,7 @@ Bedingung `zylinder_d8_seitlich` (Objekt `zylinder_d8`, Kippwinkel ≤ 45°), Pr
 | Absinken [mm] | 0.0132 | | | | 0 |
 | Unruhe | 1.07 | | | | 0.683 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.484 | | | | 0.259 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 15.0 %, instabil 0.0 %, anforderung_verletzt 4.1 %
 
@@ -96,6 +98,7 @@ Bedingung `quader_seitlich` (Objekt `quader_7x7x20`, Kippwinkel ≤ 45°), Proto
 | Absinken [mm] | 0.00317 | | | | 0 |
 | Unruhe | 1.68 | | | | 1.08 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.729 | | | | 0.439 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 19.5 %, instabil 0.0 %, anforderung_verletzt 5.1 %
 
@@ -126,6 +129,7 @@ Bedingung `flasche_seitlich` (Objekt `flasche_d7x25`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 0.0295 | | | | 0.0163 |
 | Unruhe | 1.2 | | | | 0.975 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.547 | | | | 0.361 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 11.0 %, instabil 0.0 %, anforderung_verletzt 7.5 %
 
@@ -156,6 +160,7 @@ Bedingung `saftpackung_seitlich` (Objekt `saftpackung_9x6x19`, Kippwinkel ≤ 45
 | Absinken [mm] | 0.0102 | | | | 0.000216 |
 | Unruhe | 1.64 | | | | 1.35 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.707 | | | | 0.593 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 14.7 %, instabil 0.0 %, anforderung_verletzt 6.0 %
 
@@ -185,6 +190,7 @@ Bedingung `ycb_cracker_seitlich` (Objekt `ycb_003_cracker`, Kippwinkel ≤ 45°)
 | Absinken [mm] | 1.07 | | | | 0.147 |
 | Unruhe | 1.46 | | | | 0.986 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.61 | | | | 0.339 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 18.5 %, instabil 0.0 %, anforderung_verletzt 0.0 %
 
@@ -215,6 +221,7 @@ Bedingung `ycb_zucker_seitlich` (Objekt `ycb_004_zucker`, Kippwinkel ≤ 45°), 
 | Absinken [mm] | 0.755 | | | | 0.114 |
 | Unruhe | 1.24 | | | | 1.11 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.499 | | | | 0.498 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 16.0 %, instabil 0.0 %, anforderung_verletzt 1.4 %
 
@@ -243,6 +250,7 @@ Bedingung `ycb_senf_seitlich` (Objekt `ycb_006_senf`, Kippwinkel ≤ 45°), Prot
 | Absinken [mm] | 0.68 | | | | 0.509 |
 | Unruhe | 1.17 | | | | 1.15 |
 | Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.509 | | | | 0.388 |
+| Objektweg Tischebene Ende [mm] | – | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 18.3 %, instabil 0.0 %, anforderung_verletzt 2.3 %
 

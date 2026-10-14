@@ -26,26 +26,26 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 
 | Metrik | Mittel | 95-%-KI | IQM | Fehlschlag-Seeds (< 50 %) | EXP-027 (Mittel / IQM) |
 |---|---|---|---|---|---|
-| aufgabenerfolg | 67.9 % | 34.6 % – 89.6 % | 80.9 % | 20.0 % | 55.9 % / 66.0 % |
-| haltequote | 93.4 % | 89.4 % – 96.3 % | 94.4 % | 0.0 % | 94.5 % / 94.7 % |
-| Kippwinkel Median [°] | 40.1 | | | | 44.4 |
-| Unterarm Median [°] | 50.3 | | | | 50.9 |
-| Griffkraft Mittel [N] | 84.9 | | | | 96.5 |
+| aufgabenerfolg | 68.2 % | 34.8 % – 89.6 % | 81.4 % | 20.0 % | 55.9 % / 66.0 % |
+| haltequote | 93.5 % | 89.9 % – 96.3 % | 94.4 % | 0.0 % | 94.5 % / 94.7 % |
+| Kippwinkel Median [°] | 40.2 | | | | 44.4 |
+| Unterarm Median [°] | 50.2 | | | | 50.9 |
+| Griffkraft Mittel [N] | 85.1 | | | | 96.5 |
 | Kraft > 15 N [Anteil] | 100.0 % | | | | 99.9 % |
 | Stall-Anteil [Anteil] | 99.6 % | | | | 99.8 % |
 | Absinken [mm] | 0.0021 | | | | 0.00332 |
 | Unruhe | 0.107 | | | | 1.68 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.0545 | | | | 0.663 |
-| Objektweg Tischebene Ende [mm] | 88.8 | | | | 99.7 |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.0546 | | | | 0.663 |
+| Objektweg Tischebene Ende [mm] | 88.7 | | | | 99.7 |
 
-Fehlerarten: startfehler 0.0 %, gefallen 6.6 %, instabil 0.0 %, anforderung_verletzt 25.5 %
+Fehlerarten: startfehler 0.0 %, gefallen 6.5 %, instabil 0.0 %, anforderung_verletzt 25.4 %
 
 **Urteilsvorschlag: kein messbarer Unterschied** (gegenüber EXP-027)
-Unterschied Aufgabenerfolg +11.4 Prozentpunkte (95-%-KI -40.7 … +56.0)
+Unterschied Aufgabenerfolg +11.7 Prozentpunkte (95-%-KI -40.3 … +56.0)
 
-Je Seed: 95.3 %, 82.9 %, 2.0 %, 86.8 %, 72.4 %
+Je Seed: 95.3 %, 82.9 %, 2.0 %, 86.8 %, 73.9 %
 
-Fingernutzung (Haltephase): im Mittel 3.23 Finger am Objekt; Kontaktanteil je Seed (Daumen, Zeige, Mittel, Ring, klein): 100/99/76/92/0 · 100/27/66/70/79 · 100/54/27/0/96 · 96/98/100/4/1 · 99/65/60/8/98
+Fingernutzung (Haltephase): im Mittel 3.21 Finger am Objekt; Kontaktanteil je Seed (Daumen, Zeige, Mittel, Ring, klein): 100/99/76/92/0 · 100/27/66/70/79 · 100/54/27/0/96 · 96/98/100/4/1 · 98/64/56/8/98
 
 #### Bedingung `zylinder_d8_seitlich`
 

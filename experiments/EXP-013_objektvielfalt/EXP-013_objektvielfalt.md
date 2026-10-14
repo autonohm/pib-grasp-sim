@@ -43,7 +43,8 @@ Bedingung `zylinder_seitlich` (Objekt `zylinder_d6`, Kippwinkel ≤ 45°), Proto
 | Stall-Anteil [Anteil] | 100.0 % | | | | – |
 | Absinken [mm] | 0 | | | | – |
 | Unruhe | 0.762 | | | | – |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | – |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | 0.373 | | | | – |
+| Objektweg Tischebene Ende [mm] | 145 | | | | – |
 
 Fehlerarten: startfehler 0.0 %, gefallen 41.9 %, instabil 0.0 %, anforderung_verletzt 7.2 %
 
@@ -68,7 +69,8 @@ Bedingung `zylinder_d8_seitlich` (Objekt `zylinder_d8`, Kippwinkel ≤ 45°), Pr
 | Stall-Anteil [Anteil] | 100.0 % | | | | 100.0 % |
 | Absinken [mm] | 0 | | | | 0 |
 | Unruhe | 0.889 | | | | 0.762 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | – |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | 0.373 |
+| Objektweg Tischebene Ende [mm] | – | | | | 145 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 44.3 %, instabil 0.0 %, anforderung_verletzt 2.6 %
 
@@ -94,7 +96,8 @@ Bedingung `quader_seitlich` (Objekt `quader_7x7x20`, Kippwinkel ≤ 45°), Proto
 | Stall-Anteil [Anteil] | 100.0 % | | | | 100.0 % |
 | Absinken [mm] | 0.0174 | | | | 0 |
 | Unruhe | 0.953 | | | | 0.762 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | – |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | 0.373 |
+| Objektweg Tischebene Ende [mm] | – | | | | 145 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 51.7 %, instabil 0.0 %, anforderung_verletzt 4.3 %
 
@@ -121,7 +124,8 @@ Bedingung `flasche_seitlich` (Objekt `flasche_d7x25`, Kippwinkel ≤ 45°), Prot
 | Stall-Anteil [Anteil] | 100.0 % | | | | 100.0 % |
 | Absinken [mm] | 0.0161 | | | | 0 |
 | Unruhe | 0.834 | | | | 0.762 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | – |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | 0.373 |
+| Objektweg Tischebene Ende [mm] | – | | | | 145 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 43.7 %, instabil 0.0 %, anforderung_verletzt 3.5 %
 
@@ -147,7 +151,8 @@ Bedingung `saftpackung_seitlich` (Objekt `saftpackung_9x6x19`, Kippwinkel ≤ 45
 | Stall-Anteil [Anteil] | 100.0 % | | | | 100.0 % |
 | Absinken [mm] | 0.0045 | | | | 0 |
 | Unruhe | 0.856 | | | | 0.762 |
-| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | – |
+| Unruhe wirksam (Aktion auf ±1 begrenzt) | – | | | | 0.373 |
+| Objektweg Tischebene Ende [mm] | – | | | | 145 |
 
 Fehlerarten: startfehler 0.0 %, gefallen 46.0 %, instabil 0.1 %, anforderung_verletzt 3.0 %
 

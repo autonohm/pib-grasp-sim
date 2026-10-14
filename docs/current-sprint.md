@@ -409,6 +409,14 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        **Index 0,66 = Platz 1** seitlich (EXP-024 0,64), Unruhe 0,04, Servo-Last 11 %, 4/5, Transport 95 % (Kriterium 97 %
        knapp verfehlt), Kippen 28° → Kandidat neue Basis neben EXP-024 (Videos: Leon); **EXP-037 Servo-Last als Beobachtung**
        gesichert schlechter → verworfen. Nächster Schritt Überlastschutz: Grenze je Servo oder Kosten auf die Stall-Lauflänge
+5j. [x] **Nachtlauf 2026-10-13/14** (Plan + Ergebnis `docs/nachtlauf-2026-10-14.md`, Diagnose `tools/diag_stall.py`; Eltern
+       EXP-036, Entwürfe, Urteil Leon): Stall wie am echten Servo (8 Servos inkl. Handgelenk über das Pleuel, kein Drücken am
+       Anschlag) als neue Kennzahl **Servo-Last real**, Index darauf umgestellt (alle 24 nachbewertet) → seitlich **EXP-024 0,70**
+       vor EXP-036 0,66. **EXP-038** Kosten wie real: keine Wirkung (13 %), 3/5. **EXP-039** Grenze je Servo allein: Schutz 83 %,
+       Transport 61 %. **EXP-040** Grenze je Servo + Fingerzahl: **Schutz > 2 s 21 %** (EXP-036 85 %), Servo-Last 5 %, 4,1 Finger,
+       aber Rampe 71 statt 108 m/s², Transport 83 %, 2/5 — Zielkonflikt Servo-Schonung ↔ Griffreserve; Top s42 (94 %, Schutz 12 %).
+       **EXP-041** Fingerzahl allein: Schutz 87 % (Kontrolle). Häufigste Fehlerart der neuen Läufe: Kippen > 45°
+5k. [ ] **Repo abgabebereit für künftige pib-Studierende** — Plan `docs/plan-abgabe.md`, Entwürfe `docs/abgabe/` (Entscheidungen Leon)
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“

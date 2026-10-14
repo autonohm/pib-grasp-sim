@@ -85,6 +85,65 @@
      0.6912618230536226,
      0.4454713154918638
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.4,
+    "schutz_anteil": 0.9979360165118679,
+    "stall80_servo_anteil": 0.6075593745812602,
+    "stall_dauer_real_median_s": 4.4,
+    "schutz_anteil_real": 0.9979360165118679
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.05851277995996861,
+     0.09144444142394267,
+     0.061547372711945415,
+     0.8378583609757962,
+     0.9802617039166245,
+     0.9467545872394637,
+     0.021441642324737168,
+     0.00921119762304882
+    ],
+    "anteil_halten": [
+     0.00030099760771751157,
+     0.002227382210609037,
+     0.017543859851918538,
+     0.9869023047577901,
+     0.9967492260557856,
+     0.997480220346874,
+     8.59993164907176e-06,
+     8.599931456848317e-05
+    ],
+    "mittel": 0.3758790107719409,
+    "mittel_halten": 0.37516232375961406,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.05851277995996861,
+     0.09808525067568594,
+     0.9107346257004576,
+     0.9850073276227965,
+     0.9509285898154488,
+     0.7448486655170119,
+     0.504805085748065
+    ]
    }
   },
   {
@@ -153,6 +212,65 @@
      0.9705919204614102,
      0.7735582822250823,
      0.5180440327408127
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.716666666666667,
+    "schutz_anteil": 0.9948717948717949,
+    "stall80_servo_anteil": 0.6754986702585659,
+    "stall_dauer_real_median_s": 3.716666666666667,
+    "schutz_anteil_real": 0.9948717948717949
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.048498712329862595,
+     0.041803449902396934,
+     0.41808406850657404,
+     0.24301972816674372,
+     0.7565379784091447,
+     0.9701381993293762,
+     0.7777332887383035,
+     0.0030731102891075304
+    ],
+    "anteil_halten": [
+     0.00043589744716882706,
+     0.0005384615503060512,
+     0.39302564142128593,
+     0.2189059830036683,
+     0.795213675562961,
+     0.9893333334743213,
+     0.8294444445023934,
+     0.0
+    ],
+    "mittel": 0.40736106695893864,
+    "mittel_halten": 0.4033621796202631,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.048498712329862595,
+     0.5887484443951876,
+     0.809615853703939,
+     0.8753636373906659,
+     0.973893798498007,
+     0.7803679282127474,
+     0.6520102869279873
     ]
    }
   },
@@ -223,6 +341,65 @@
      0.23490063467450104,
      0.8714450639921697
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.6666666666666665,
+    "schutz_anteil": 0.9742798353909465,
+    "stall80_servo_anteil": 0.5932415451541646,
+    "stall_dauer_real_median_s": 3.6166666666666667,
+    "schutz_anteil_real": 0.9691358024691358
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.09429834452251723,
+     0.06559884838674623,
+     0.2739723372834144,
+     0.1991601237766598,
+     0.8778741507840807,
+     0.9713616808071549,
+     0.020273991253460785,
+     0.012785503253917528
+    ],
+    "anteil_halten": [
+     0.008693415781774332,
+     0.008161865701753293,
+     0.23614540489279348,
+     0.1551868998696606,
+     0.9420953365473973,
+     0.9980538411088932,
+     0.0,
+     0.003960905439477153
+    ],
+    "mittel": 0.3144156225084939,
+    "mittel_halten": 0.29403720866771865,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.09429834452251723,
+     0.2853924720596001,
+     0.7514227289829112,
+     0.8823068145654881,
+     0.9801849395098019,
+     0.2751388274930387,
+     0.8839513739272032
+    ]
    }
   },
   {
@@ -292,6 +469,65 @@
      0.8322384372825992,
      0.6663974470627376
     ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.933333333333333,
+    "schutz_anteil": 0.9968814968814969,
+    "stall80_servo_anteil": 0.5309829985068433,
+    "stall_dauer_real_median_s": 3.933333333333333,
+    "schutz_anteil_real": 0.9968814968814969
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.030794734768172544,
+     0.09117853726703759,
+     0.20592554022529957,
+     0.7470148098490467,
+     0.6625949577375154,
+     0.28794564821093255,
+     0.8357781519597346,
+     0.003516527653958362
+    ],
+    "anteil_halten": [
+     0.00029452530310921017,
+     8.662509017482616e-05,
+     0.17195079692207632,
+     0.8044785170829438,
+     0.6713617465298104,
+     0.21645876647238455,
+     0.967732155280238,
+     0.00019057519664201816
+    ],
+    "mittel": 0.3580936134589622,
+    "mittel_halten": 0.3540692134846724,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.030794734768172544,
+     0.3156953031369514,
+     0.8817171366757514,
+     0.6664592729358142,
+     0.29302722377714213,
+     0.8403921442545889,
+     0.6887988878022918
+    ]
    }
   },
   {
@@ -360,6 +596,65 @@
      0.968257887401278,
      0.11051316688714362,
      0.2609035977216625
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.25,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.46734376112273074,
+    "stall_dauer_real_median_s": 4.25,
+    "schutz_anteil_real": 1.0
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.02139218320291509,
+     0.0858480345556345,
+     0.10777128514459249,
+     0.9617277258524188,
+     0.750547779338661,
+     0.9710902472652455,
+     0.034090595680816224,
+     0.008158769459271478
+    ],
+    "anteil_halten": [
+     0.001957672020351445,
+     0.0013756614099576991,
+     0.03813051182737268,
+     0.9871075838419889,
+     0.7770105826988738,
+     0.9997442682584127,
+     0.0022398589849077833,
+     0.00014991182045488762
+    ],
+    "mittel": 0.3675783275624444,
+    "mittel_halten": 0.35096450635779,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.02139218320291509,
+     0.15295528950041565,
+     0.9696543992196441,
+     0.7566963601216832,
+     0.9717550649844781,
+     0.12029267544587138,
+     0.27865698539390765
     ]
    }
   }
@@ -4193,6 +4488,65 @@
        0.6912618230536226,
        0.4454713154918638
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.4,
+      "schutz_anteil": 0.9979360165118679,
+      "stall80_servo_anteil": 0.6075593745812602,
+      "stall_dauer_real_median_s": 4.4,
+      "schutz_anteil_real": 0.9979360165118679
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.05851277995996861,
+       0.09144444142394267,
+       0.061547372711945415,
+       0.8378583609757962,
+       0.9802617039166245,
+       0.9467545872394637,
+       0.021441642324737168,
+       0.00921119762304882
+      ],
+      "anteil_halten": [
+       0.00030099760771751157,
+       0.002227382210609037,
+       0.017543859851918538,
+       0.9869023047577901,
+       0.9967492260557856,
+       0.997480220346874,
+       8.59993164907176e-06,
+       8.599931456848317e-05
+      ],
+      "mittel": 0.3758790107719409,
+      "mittel_halten": 0.37516232375961406,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.05851277995996861,
+       0.09808525067568594,
+       0.9107346257004576,
+       0.9850073276227965,
+       0.9509285898154488,
+       0.7448486655170119,
+       0.504805085748065
+      ]
      }
     },
     {
@@ -4261,6 +4615,65 @@
        0.9705919204614102,
        0.7735582822250823,
        0.5180440327408127
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.716666666666667,
+      "schutz_anteil": 0.9948717948717949,
+      "stall80_servo_anteil": 0.6754986702585659,
+      "stall_dauer_real_median_s": 3.716666666666667,
+      "schutz_anteil_real": 0.9948717948717949
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.048498712329862595,
+       0.041803449902396934,
+       0.41808406850657404,
+       0.24301972816674372,
+       0.7565379784091447,
+       0.9701381993293762,
+       0.7777332887383035,
+       0.0030731102891075304
+      ],
+      "anteil_halten": [
+       0.00043589744716882706,
+       0.0005384615503060512,
+       0.39302564142128593,
+       0.2189059830036683,
+       0.795213675562961,
+       0.9893333334743213,
+       0.8294444445023934,
+       0.0
+      ],
+      "mittel": 0.40736106695893864,
+      "mittel_halten": 0.4033621796202631,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.048498712329862595,
+       0.5887484443951876,
+       0.809615853703939,
+       0.8753636373906659,
+       0.973893798498007,
+       0.7803679282127474,
+       0.6520102869279873
       ]
      }
     },
@@ -4331,6 +4744,65 @@
        0.23490063467450104,
        0.8714450639921697
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.6666666666666665,
+      "schutz_anteil": 0.9742798353909465,
+      "stall80_servo_anteil": 0.5932415451541646,
+      "stall_dauer_real_median_s": 3.6166666666666667,
+      "schutz_anteil_real": 0.9691358024691358
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.09429834452251723,
+       0.06559884838674623,
+       0.2739723372834144,
+       0.1991601237766598,
+       0.8778741507840807,
+       0.9713616808071549,
+       0.020273991253460785,
+       0.012785503253917528
+      ],
+      "anteil_halten": [
+       0.008693415781774332,
+       0.008161865701753293,
+       0.23614540489279348,
+       0.1551868998696606,
+       0.9420953365473973,
+       0.9980538411088932,
+       0.0,
+       0.003960905439477153
+      ],
+      "mittel": 0.3144156225084939,
+      "mittel_halten": 0.29403720866771865,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.09429834452251723,
+       0.2853924720596001,
+       0.7514227289829112,
+       0.8823068145654881,
+       0.9801849395098019,
+       0.2751388274930387,
+       0.8839513739272032
+      ]
      }
     },
     {
@@ -4400,6 +4872,65 @@
        0.8322384372825992,
        0.6663974470627376
       ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.933333333333333,
+      "schutz_anteil": 0.9968814968814969,
+      "stall80_servo_anteil": 0.5309829985068433,
+      "stall_dauer_real_median_s": 3.933333333333333,
+      "schutz_anteil_real": 0.9968814968814969
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.030794734768172544,
+       0.09117853726703759,
+       0.20592554022529957,
+       0.7470148098490467,
+       0.6625949577375154,
+       0.28794564821093255,
+       0.8357781519597346,
+       0.003516527653958362
+      ],
+      "anteil_halten": [
+       0.00029452530310921017,
+       8.662509017482616e-05,
+       0.17195079692207632,
+       0.8044785170829438,
+       0.6713617465298104,
+       0.21645876647238455,
+       0.967732155280238,
+       0.00019057519664201816
+      ],
+      "mittel": 0.3580936134589622,
+      "mittel_halten": 0.3540692134846724,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.030794734768172544,
+       0.3156953031369514,
+       0.8817171366757514,
+       0.6664592729358142,
+       0.29302722377714213,
+       0.8403921442545889,
+       0.6887988878022918
+      ]
      }
     },
     {
@@ -4468,6 +4999,65 @@
        0.968257887401278,
        0.11051316688714362,
        0.2609035977216625
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.25,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.46734376112273074,
+      "stall_dauer_real_median_s": 4.25,
+      "schutz_anteil_real": 1.0
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.02139218320291509,
+       0.0858480345556345,
+       0.10777128514459249,
+       0.9617277258524188,
+       0.750547779338661,
+       0.9710902472652455,
+       0.034090595680816224,
+       0.008158769459271478
+      ],
+      "anteil_halten": [
+       0.001957672020351445,
+       0.0013756614099576991,
+       0.03813051182737268,
+       0.9871075838419889,
+       0.7770105826988738,
+       0.9997442682584127,
+       0.0022398589849077833,
+       0.00014991182045488762
+      ],
+      "mittel": 0.3675783275624444,
+      "mittel_halten": 0.35096450635779,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.02139218320291509,
+       0.15295528950041565,
+       0.9696543992196441,
+       0.7566963601216832,
+       0.9717550649844781,
+       0.12029267544587138,
+       0.27865698539390765
       ]
      }
     }

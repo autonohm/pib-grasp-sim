@@ -45,7 +45,12 @@
     "stall_anteil": 0.998996749156179,
     "absinken_mm": 0.037302531956628776,
     "unruhe": 0.4127191735764706,
-    "unruhe_wirksam": 0.1208719422325456
+    "unruhe_wirksam": 0.1208719422325456,
+    "objektweg_mm": 132.7678777012491,
+    "objektweg_max_mm": 135.27742588588632,
+    "schwingen_mm_s": 51.61878978590009,
+    "drehschwingen_deg_s": 112.20962660087176,
+    "aktion_frequenz_hz": 10.062982482890204
    },
    "fingernutzung": {
     "finger": [
@@ -70,6 +75,85 @@
      0.0
     ],
     "finger_mit_kontakt": 2.865054044997218
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0017265246844476393,
+     0.09580267683303795,
+     0.915143631858494,
+     0.9322922188558744,
+     0.9787489557365993,
+     0.20258278474986172,
+     0.48790654265341277
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.416666666666667,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5656308695404842,
+    "stall_dauer_real_median_s": 4.4,
+    "schutz_anteil_real": 1.0
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0024342442756503132,
+     0.0463284124000676,
+     0.036319235374587956,
+     0.9254016757369914,
+     0.8906611961738312,
+     0.9806660191783346,
+     0.010545799544735746,
+     0.0
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.014783821551900778,
+     0.993401324960976,
+     0.8775714785523058,
+     0.9975767085205951,
+     0.0,
+     0.0
+    ],
+    "mittel": 0.3615445728355249,
+    "mittel_halten": 0.3604166666982222,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.0024342442756503132,
+     0.10958376560247188,
+     0.9296441048960431,
+     0.9444751048219004,
+     0.9809148875863981,
+     0.3103155921277625,
+     0.6820511314628264
+    ]
    }
   },
   {
@@ -89,7 +173,12 @@
     "stall_anteil": 0.9831889481449771,
     "absinken_mm": 0.0,
     "unruhe": 1.3272694904571787,
-    "unruhe_wirksam": 0.5392889252789378
+    "unruhe_wirksam": 0.5392889252789378,
+    "objektweg_mm": 127.35995741978189,
+    "objektweg_max_mm": 129.2625208304753,
+    "schwingen_mm_s": 63.44562565686879,
+    "drehschwingen_deg_s": 99.66363234558531,
+    "aktion_frequenz_hz": 9.124802623778383
    },
    "fingernutzung": {
     "finger": [
@@ -114,6 +203,85 @@
      26.964548247711456
     ],
     "finger_mit_kontakt": 2.940853659280404
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0006923894779942517,
+     0.912833103104732,
+     0.8238280834619807,
+     0.8254354155793819,
+     0.07709839232802854,
+     0.859754031007808,
+     0.7241487256633303
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.9833333333333334,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.6182487680919118,
+    "stall_dauer_real_median_s": 3.9166666666666665,
+    "schutz_anteil_real": 0.9878048780487805
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0009602782643811071,
+     1.6485463761767896e-05,
+     0.6107781914998767,
+     0.49742002047426964,
+     0.04659204174064414,
+     0.057258136743915056,
+     0.8797756275389252,
+     0.7340193962515177
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.6598669621523494,
+     0.5918976347015844,
+     0.002984109387305584,
+     0.0,
+     0.9789726533834098,
+     0.8841186247119668
+    ],
+    "mittel": 0.3533525222471614,
+    "mittel_halten": 0.389729998042077,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.0009602782643811071,
+     0.9211376551910408,
+     0.8411831551896379,
+     0.8403753673868407,
+     0.09515821786304139,
+     0.8805298374887316,
+     0.7484029641131273
+    ]
    }
   },
   {
@@ -133,7 +301,12 @@
     "stall_anteil": 0.998846034696403,
     "absinken_mm": 0.0,
     "unruhe": 0.6592099875174784,
-    "unruhe_wirksam": 0.2849554988235937
+    "unruhe_wirksam": 0.2849554988235937,
+    "objektweg_mm": 130.62988228630275,
+    "objektweg_max_mm": 133.11887160719684,
+    "schwingen_mm_s": 39.59621323447209,
+    "drehschwingen_deg_s": 86.61000187440001,
+    "aktion_frequenz_hz": 8.151935618122419
    },
    "fingernutzung": {
     "finger": [
@@ -158,6 +331,85 @@
      13.875376786695172
     ],
     "finger_mit_kontakt": 2.874565972056977
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0008364312217357413,
+     0.13386771755758672,
+     0.910478618046424,
+     0.8855250846749793,
+     0.4220569950994104,
+     0.37569314951542765,
+     0.1843362743127121
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.25,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.4423321705916258,
+    "stall_dauer_real_median_s": 4.233333333333333,
+    "schutz_anteil_real": 1.0
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0016302664114239936,
+     1.1617100244620816e-05,
+     0.03853392134939592,
+     0.8648892436952641,
+     0.8914575508834484,
+     0.0673133509272399,
+     0.0021298017144241992,
+     0.20047242688427408
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.010538194482796826,
+     0.9981423611442248,
+     0.9015017362088353,
+     0.008368055591320929,
+     2.6041668024845422e-05,
+     0.22874131967643432
+    ],
+    "mittel": 0.2583047723707144,
+    "mittel_halten": 0.26841471359645463,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.0016302664114239936,
+     0.14421468132641166,
+     0.9184130979701877,
+     0.9040582312309804,
+     0.4730676817552497,
+     0.4343711227256184,
+     0.22057000974503657
+    ]
    }
   },
   {
@@ -177,7 +429,12 @@
     "stall_anteil": 0.9999218197241018,
     "absinken_mm": 0.025905927273001204,
     "unruhe": 2.512526199578037,
-    "unruhe_wirksam": 1.6947503494105147
+    "unruhe_wirksam": 1.6947503494105147,
+    "objektweg_mm": 117.9016367498037,
+    "objektweg_max_mm": 118.63606441550576,
+    "schwingen_mm_s": 74.35974899726429,
+    "drehschwingen_deg_s": 130.0452921115684,
+    "aktion_frequenz_hz": 12.552586938555184
    },
    "fingernutzung": {
     "finger": [
@@ -202,6 +459,85 @@
      6.765246711117063
     ],
     "finger_mit_kontakt": 3.5910620408849527
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     1.172704125639956e-05,
+     0.9791297656880569,
+     0.6039191687829228,
+     0.5293820964174442,
+     0.9749783929966226,
+     0.5713453591393833,
+     0.06752430307008052
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.45,
+    "schutz_anteil": 0.9978969505783386,
+    "stall80_servo_anteil": 0.5665545148384509,
+    "stall_dauer_real_median_s": 4.366666666666666,
+    "schutz_anteil_real": 0.9968454258675079
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     1.9545068760665934e-05,
+     0.0,
+     0.3686629950830793,
+     0.24514597860266787,
+     0.019982878295518654,
+     0.9715267314519792,
+     0.5901868049702661,
+     0.04331578126766736
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.5254206098253779,
+     0.4138801269895239,
+     0.0,
+     0.9961619350812413,
+     0.8709603932027076,
+     0.021766561915908013
+    ],
+    "mittel": 0.27985508934249237,
+    "mittel_halten": 0.35352370337684486,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     1.9545068760665934e-05,
+     0.9858219987085064,
+     0.643122668847144,
+     0.6827600705824189,
+     0.9777068843600878,
+     0.5943381771874702,
+     0.08211665138892132
+    ]
    }
   },
   {
@@ -221,7 +557,12 @@
     "stall_anteil": 0.9996229245480207,
     "absinken_mm": 0.0,
     "unruhe": 1.7054699177977157,
-    "unruhe_wirksam": 0.8227137848580649
+    "unruhe_wirksam": 0.8227137848580649,
+    "objektweg_mm": 137.9419519938734,
+    "objektweg_max_mm": 147.45962010263213,
+    "schwingen_mm_s": 74.47599303572878,
+    "drehschwingen_deg_s": 112.0142776856967,
+    "aktion_frequenz_hz": 9.92112922773603
    },
    "fingernutzung": {
     "finger": [
@@ -246,6 +587,85 @@
      22.309659508445076
     ],
     "finger_mit_kontakt": 2.581798972504454
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     2.459187703381694e-05,
+     0.7119430385554638,
+     0.9583249523200694,
+     0.25586618395992516,
+     0.13533729575204745,
+     0.4933212498858029,
+     0.470926247008839
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.3,
+    "schutz_anteil": 0.9988974641675854,
+    "stall80_servo_anteil": 0.44744266996214344,
+    "stall_dauer_real_median_s": 4.283333333333333,
+    "schutz_anteil_real": 0.9988974641675854
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     4.5085107895331056e-05,
+     0.019066901902936178,
+     0.6214531280404283,
+     0.9567715672174388,
+     0.1741801653028586,
+     0.1038555947544162,
+     0.5034080185632754,
+     0.4903415344632924
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.6425395073962645,
+     0.9995957369184021,
+     0.03563028319339374,
+     0.004823594330476295,
+     0.5314498347001275,
+     0.6076901874668247
+    ],
+    "mittel": 0.35864024941906764,
+    "mittel_halten": 0.3527161430006861,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     4.5085107895331056e-05,
+     0.734497888414179,
+     0.9608866049935826,
+     0.27715864991142836,
+     0.14921531176488217,
+     0.5116626919465922,
+     0.49863309556461227
+    ]
    }
   },
   {
@@ -265,7 +685,12 @@
     "stall_anteil": 0.9976119825962273,
     "absinken_mm": 0.0,
     "unruhe": 0.7309056850286264,
-    "unruhe_wirksam": 0.33409480357258736
+    "unruhe_wirksam": 0.33409480357258736,
+    "objektweg_mm": 134.18220515642733,
+    "objektweg_max_mm": 140.67203767864962,
+    "schwingen_mm_s": 79.26852653437867,
+    "drehschwingen_deg_s": 131.3382539270229,
+    "aktion_frequenz_hz": 8.369120777989718
    },
    "fingernutzung": {
     "finger": [
@@ -290,6 +715,85 @@
      7.956797634657565
     ],
     "finger_mit_kontakt": 3.4063247397412533
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0003334055675586243,
+     0.7280160650493986,
+     0.5131903525521235,
+     0.6101821979399219,
+     0.4781410917973839,
+     0.7860828117872567,
+     0.27293829937912356
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.7333333333333334,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.5099886527729094,
+    "stall_dauer_real_median_s": 3.716666666666667,
+    "schutz_anteil_real": 1.0
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.0005376164782103234,
+     0.007230733238336016,
+     0.6141622300356869,
+     0.38466667297093676,
+     0.6284653265029192,
+     0.37804023732301767,
+     0.7711129018706958,
+     0.20261889789984333
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.688181987989719,
+     0.5066143498680817,
+     0.5610799704262811,
+     0.3042974590518065,
+     0.9045683859947719,
+     0.2681240659215458
+    ],
+    "mittel": 0.37335432703995575,
+    "mittel_halten": 0.4041082774065257,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.0005376164782103234,
+     0.7441904028802442,
+     0.5361161537284674,
+     0.6377798435800278,
+     0.5514903167145736,
+     0.800531776849548,
+     0.29927733951407975
+    ]
    }
   },
   {
@@ -309,7 +813,12 @@
     "stall_anteil": 0.997159376341529,
     "absinken_mm": 0.0,
     "unruhe": 0.3580924228079959,
-    "unruhe_wirksam": 0.14955508076883198
+    "unruhe_wirksam": 0.14955508076883198,
+    "objektweg_mm": 131.84140096315588,
+    "objektweg_max_mm": 134.38679726396205,
+    "schwingen_mm_s": 43.21115270156313,
+    "drehschwingen_deg_s": 84.81043012124967,
+    "aktion_frequenz_hz": 8.765082499904773
    },
    "fingernutzung": {
     "finger": [
@@ -334,6 +843,85 @@
      25.294950082980517
     ],
     "finger_mit_kontakt": 2.8902231783432204
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     7.307070424134959e-05,
+     0.6498680102329413,
+     0.8609692762704241,
+     0.6099166032338758,
+     0.9439410593644407,
+     0.20463450692356072,
+     0.768781448416961
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.166666666666667,
+    "schutz_anteil": 1.0,
+    "stall80_servo_anteil": 0.617498952577225,
+    "stall_dauer_real_median_s": 4.166666666666667,
+    "schutz_anteil_real": 1.0
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     9.590529931677134e-05,
+     0.0031146387597065445,
+     0.7041367092101174,
+     0.8579185755250641,
+     0.12222901986184226,
+     0.950165768586447,
+     0.0015390517115158187,
+     0.7666121612784066
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.7960483208722011,
+     0.9936834561297583,
+     0.0036855036855036856,
+     0.9998771499943089,
+     0.0,
+     0.8871723996916974
+    ],
+    "mittel": 0.42572647877905206,
+    "mittel_halten": 0.4600583537966837,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     9.590529931677134e-05,
+     0.7060959174501406,
+     0.8680936713275071,
+     0.7378542731156806,
+     0.9502114377531431,
+     0.28558771328712274,
+     0.7745586013211468
+    ]
    }
   },
   {
@@ -353,7 +941,12 @@
     "stall_anteil": 0.9975440955469387,
     "absinken_mm": 0.4876399293858954,
     "unruhe": 0.7841961447219348,
-    "unruhe_wirksam": 0.4135313388583385
+    "unruhe_wirksam": 0.4135313388583385,
+    "objektweg_mm": 133.80823712795973,
+    "objektweg_max_mm": 138.20595994116144,
+    "schwingen_mm_s": 70.81634456123363,
+    "drehschwingen_deg_s": 119.2671304274072,
+    "aktion_frequenz_hz": 8.996969403104579
    },
    "fingernutzung": {
     "finger": [
@@ -378,6 +971,85 @@
      0.8595137562721651
     ],
     "finger_mit_kontakt": 2.936453904168918
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00018587360391393305,
+     0.0907260917932132,
+     0.375757330753147,
+     0.8910661899266725,
+     0.9113501466810703,
+     0.3610298147345794,
+     0.7526378167872416
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.216666666666667,
+    "schutz_anteil": 0.9914893617021276,
+    "stall80_servo_anteil": 0.5343022401787513,
+    "stall_dauer_real_median_s": 4.216666666666667,
+    "schutz_anteil_real": 0.9914893617021276
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00034801866264736397,
+     0.0,
+     0.045823775344042784,
+     0.02688048685717575,
+     0.8944870550264703,
+     0.9127540861038451,
+     7.909515060167363e-06,
+     0.011207782844963305
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.021489362063956387,
+     0.0006294326509963324,
+     0.9184574468328836,
+     0.9693262411965097,
+     1.7730497378618158e-05,
+     0.012349290813894031
+    ],
+    "mittel": 0.2364386392942756,
+    "mittel_halten": 0.24028368800695232,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.00034801866264736397,
+     0.10881910721989388,
+     0.47459067625409745,
+     0.9001819060124615,
+     0.920940432776796,
+     0.5335402936932254,
+     0.8016965848096508
+    ]
    }
   },
   {
@@ -397,7 +1069,12 @@
     "stall_anteil": 0.9998261755863607,
     "absinken_mm": 0.0,
     "unruhe": 1.8759512827104396,
-    "unruhe_wirksam": 0.6992848732603438
+    "unruhe_wirksam": 0.6992848732603438,
+    "objektweg_mm": 130.28843285996905,
+    "objektweg_max_mm": 141.5589860027832,
+    "schwingen_mm_s": 59.04095110015332,
+    "drehschwingen_deg_s": 105.85243159429265,
+    "aktion_frequenz_hz": 9.408617882115427
    },
    "fingernutzung": {
     "finger": [
@@ -422,6 +1099,85 @@
      28.271301352509024
     ],
     "finger_mit_kontakt": 3.4107421190833214
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     5.925832218297546e-05,
+     0.3312145144412419,
+     0.831777466344276,
+     0.2768232758640926,
+     0.2438203399836637,
+     0.4222550505255601,
+     0.7545164653538518
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 3.283333333333333,
+    "schutz_anteil": 0.9989373007438895,
+    "stall80_servo_anteil": 0.43044880180780365,
+    "stall_dauer_real_median_s": 3.283333333333333,
+    "schutz_anteil_real": 0.9989373007438895
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00021332996010614062,
+     0.00028443994647828224,
+     0.23841203194840016,
+     0.7972654185310307,
+     0.28766359797580904,
+     0.2441284827310018,
+     0.4675560625399662,
+     0.6759320269071564
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.1952532768956169,
+     0.999973432543934,
+     0.24545696114984664,
+     7.970244737537964e-05,
+     0.5269748494286371,
+     0.9010981225678806
+    ],
+    "mittel": 0.3389319238174936,
+    "mittel_halten": 0.35860454312916135,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.00021332996010614062,
+     0.3709531448916092,
+     0.8478285707018707,
+     0.30552010581799954,
+     0.2499674027795556,
+     0.469124432467617,
+     0.7695364743692842
+    ]
    }
   },
   {
@@ -441,7 +1197,12 @@
     "stall_anteil": 0.9973674386772616,
     "absinken_mm": 0.026978302949642038,
     "unruhe": 1.494540064614225,
-    "unruhe_wirksam": 0.5657413055633053
+    "unruhe_wirksam": 0.5657413055633053,
+    "objektweg_mm": 61.05268964832298,
+    "objektweg_max_mm": 61.662795544294134,
+    "schwingen_mm_s": 33.86360779282867,
+    "drehschwingen_deg_s": 59.87219874887545,
+    "aktion_frequenz_hz": 10.358284211058995
    },
    "fingernutzung": {
     "finger": [
@@ -466,6 +1227,85 @@
      0.0
     ],
     "finger_mit_kontakt": 2.169490934788955
+   },
+   "stall_je_servo": {
+    "servo": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.000171097041503234,
+     0.9116789144911963,
+     0.8869787302476093,
+     0.9526099976011899,
+     0.08045060598977284,
+     0.8093939994200753,
+     0.7472313328124447
+    ]
+   },
+   "servo_schutz": {
+    "stall_dauer_median_s": 4.3,
+    "schutz_anteil": 0.9989539748953975,
+    "stall80_servo_anteil": 0.641244001308893,
+    "stall_dauer_real_median_s": 4.266666666666667,
+    "schutz_anteil_real": 0.9989539748953975
+   },
+   "servo_last_real": {
+    "servo": [
+     "forearm_left",
+     "wrist_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil": [
+     0.00037330263523213474,
+     0.0,
+     0.03468992502066194,
+     0.22752406850148374,
+     0.9506890455798624,
+     0.08710394789772614,
+     0.202913313320834,
+     0.00012054564270568879
+    ],
+    "anteil_halten": [
+     0.0,
+     0.0,
+     0.009780334730566359,
+     0.20498605297145797,
+     0.9996513250482632,
+     0.04607740594814512,
+     0.16485355655510742,
+     0.0
+    ],
+    "mittel": 0.18792676857481325,
+    "mittel_halten": 0.1781685844066925,
+    "servo_bisher_80": [
+     "forearm_left",
+     "thumb_left_rotator",
+     "thumb_left_proximal",
+     "index_left_proximal",
+     "middle_left_proximal",
+     "ring_left_proximal",
+     "pinky_left_proximal"
+    ],
+    "anteil_bisher_80": [
+     0.00037330263523213474,
+     0.9373045857512552,
+     0.8942386895168776,
+     0.9552231157299864,
+     0.09250517028761895,
+     0.8335303458147468,
+     0.775540115956897
+    ]
    }
   }
  ],
@@ -626,7 +1466,8 @@
   "stall_anteil": 0.9970085545017999,
   "absinken_mm": 0.05778266915651673,
   "unruhe": 1.1860880368810103,
-  "unruhe_wirksam": 0.5624787902627063
+  "unruhe_wirksam": 0.5624787902627063,
+  "objektweg_mm": 123.77742719068458
  },
  "fehler": {
   "startfehler": 0.0,
@@ -645,7 +1486,7 @@
    "Kippwinkel Median [°]: 29.3 > 23.4",
    "Unterarm Median [°]: 41.2 > 31.7",
    "Unruhe: 1.19 > 1.09",
-   "Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.449"
+   "Unruhe wirksam (Aktion auf ±1 begrenzt): 0.562 > 0.434"
   ],
   "gegen": "EXP-018"
  },
@@ -1288,7 +2129,8 @@
     "stall_anteil": 0.9983104653218613,
     "absinken_mm": 0.01322184163056453,
     "unruhe": 1.0706256054435692,
-    "unruhe_wirksam": 0.4840358113368703
+    "unruhe_wirksam": 0.4840358113368703,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -1940,7 +2782,8 @@
     "stall_anteil": 0.9973917760284644,
     "absinken_mm": 0.003173174735778532,
     "unruhe": 1.6761543831624235,
-    "unruhe_wirksam": 0.7294752305912287
+    "unruhe_wirksam": 0.7294752305912287,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -2592,7 +3435,8 @@
     "stall_anteil": 0.9978797949803699,
     "absinken_mm": 0.029523187882737383,
     "unruhe": 1.2026199343768993,
-    "unruhe_wirksam": 0.5472784944664218
+    "unruhe_wirksam": 0.5472784944664218,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -3244,7 +4088,8 @@
     "stall_anteil": 0.9969478949706427,
     "absinken_mm": 0.01016361447544932,
     "unruhe": 1.6366802354217682,
-    "unruhe_wirksam": 0.7071553113188462
+    "unruhe_wirksam": 0.7071553113188462,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -3895,7 +4740,8 @@
     "stall_anteil": 0.9976067053655091,
     "absinken_mm": 1.068948200319935,
     "unruhe": 1.46096896792607,
-    "unruhe_wirksam": 0.6104428764631356
+    "unruhe_wirksam": 0.6104428764631356,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -4547,7 +5393,8 @@
     "stall_anteil": 0.9961082438176607,
     "absinken_mm": 0.7551444656527867,
     "unruhe": 1.2353103931491485,
-    "unruhe_wirksam": 0.49913898934223216
+    "unruhe_wirksam": 0.49913898934223216,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -5197,7 +6044,8 @@
     "stall_anteil": 0.997042582290017,
     "absinken_mm": 0.6797066439866136,
     "unruhe": 1.1749808646789255,
-    "unruhe_wirksam": 0.5085812215136958
+    "unruhe_wirksam": 0.5085812215136958,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -5388,7 +6236,12 @@
       "stall_anteil": 0.998996749156179,
       "absinken_mm": 0.037302531956628776,
       "unruhe": 0.4127191735764706,
-      "unruhe_wirksam": 0.1208719422325456
+      "unruhe_wirksam": 0.1208719422325456,
+      "objektweg_mm": 132.7678777012491,
+      "objektweg_max_mm": 135.27742588588632,
+      "schwingen_mm_s": 51.61878978590009,
+      "drehschwingen_deg_s": 112.20962660087176,
+      "aktion_frequenz_hz": 10.062982482890204
      },
      "fingernutzung": {
       "finger": [
@@ -5413,6 +6266,85 @@
        0.0
       ],
       "finger_mit_kontakt": 2.865054044997218
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0017265246844476393,
+       0.09580267683303795,
+       0.915143631858494,
+       0.9322922188558744,
+       0.9787489557365993,
+       0.20258278474986172,
+       0.48790654265341277
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.416666666666667,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5656308695404842,
+      "stall_dauer_real_median_s": 4.4,
+      "schutz_anteil_real": 1.0
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0024342442756503132,
+       0.0463284124000676,
+       0.036319235374587956,
+       0.9254016757369914,
+       0.8906611961738312,
+       0.9806660191783346,
+       0.010545799544735746,
+       0.0
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.014783821551900778,
+       0.993401324960976,
+       0.8775714785523058,
+       0.9975767085205951,
+       0.0,
+       0.0
+      ],
+      "mittel": 0.3615445728355249,
+      "mittel_halten": 0.3604166666982222,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.0024342442756503132,
+       0.10958376560247188,
+       0.9296441048960431,
+       0.9444751048219004,
+       0.9809148875863981,
+       0.3103155921277625,
+       0.6820511314628264
+      ]
      }
     },
     {
@@ -5432,7 +6364,12 @@
       "stall_anteil": 0.9831889481449771,
       "absinken_mm": 0.0,
       "unruhe": 1.3272694904571787,
-      "unruhe_wirksam": 0.5392889252789378
+      "unruhe_wirksam": 0.5392889252789378,
+      "objektweg_mm": 127.35995741978189,
+      "objektweg_max_mm": 129.2625208304753,
+      "schwingen_mm_s": 63.44562565686879,
+      "drehschwingen_deg_s": 99.66363234558531,
+      "aktion_frequenz_hz": 9.124802623778383
      },
      "fingernutzung": {
       "finger": [
@@ -5457,6 +6394,85 @@
        26.964548247711456
       ],
       "finger_mit_kontakt": 2.940853659280404
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0006923894779942517,
+       0.912833103104732,
+       0.8238280834619807,
+       0.8254354155793819,
+       0.07709839232802854,
+       0.859754031007808,
+       0.7241487256633303
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.9833333333333334,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.6182487680919118,
+      "stall_dauer_real_median_s": 3.9166666666666665,
+      "schutz_anteil_real": 0.9878048780487805
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0009602782643811071,
+       1.6485463761767896e-05,
+       0.6107781914998767,
+       0.49742002047426964,
+       0.04659204174064414,
+       0.057258136743915056,
+       0.8797756275389252,
+       0.7340193962515177
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.6598669621523494,
+       0.5918976347015844,
+       0.002984109387305584,
+       0.0,
+       0.9789726533834098,
+       0.8841186247119668
+      ],
+      "mittel": 0.3533525222471614,
+      "mittel_halten": 0.389729998042077,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.0009602782643811071,
+       0.9211376551910408,
+       0.8411831551896379,
+       0.8403753673868407,
+       0.09515821786304139,
+       0.8805298374887316,
+       0.7484029641131273
+      ]
      }
     },
     {
@@ -5476,7 +6492,12 @@
       "stall_anteil": 0.998846034696403,
       "absinken_mm": 0.0,
       "unruhe": 0.6592099875174784,
-      "unruhe_wirksam": 0.2849554988235937
+      "unruhe_wirksam": 0.2849554988235937,
+      "objektweg_mm": 130.62988228630275,
+      "objektweg_max_mm": 133.11887160719684,
+      "schwingen_mm_s": 39.59621323447209,
+      "drehschwingen_deg_s": 86.61000187440001,
+      "aktion_frequenz_hz": 8.151935618122419
      },
      "fingernutzung": {
       "finger": [
@@ -5501,6 +6522,85 @@
        13.875376786695172
       ],
       "finger_mit_kontakt": 2.874565972056977
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0008364312217357413,
+       0.13386771755758672,
+       0.910478618046424,
+       0.8855250846749793,
+       0.4220569950994104,
+       0.37569314951542765,
+       0.1843362743127121
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.25,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.4423321705916258,
+      "stall_dauer_real_median_s": 4.233333333333333,
+      "schutz_anteil_real": 1.0
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0016302664114239936,
+       1.1617100244620816e-05,
+       0.03853392134939592,
+       0.8648892436952641,
+       0.8914575508834484,
+       0.0673133509272399,
+       0.0021298017144241992,
+       0.20047242688427408
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.010538194482796826,
+       0.9981423611442248,
+       0.9015017362088353,
+       0.008368055591320929,
+       2.6041668024845422e-05,
+       0.22874131967643432
+      ],
+      "mittel": 0.2583047723707144,
+      "mittel_halten": 0.26841471359645463,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.0016302664114239936,
+       0.14421468132641166,
+       0.9184130979701877,
+       0.9040582312309804,
+       0.4730676817552497,
+       0.4343711227256184,
+       0.22057000974503657
+      ]
      }
     },
     {
@@ -5520,7 +6620,12 @@
       "stall_anteil": 0.9999218197241018,
       "absinken_mm": 0.025905927273001204,
       "unruhe": 2.512526199578037,
-      "unruhe_wirksam": 1.6947503494105147
+      "unruhe_wirksam": 1.6947503494105147,
+      "objektweg_mm": 117.9016367498037,
+      "objektweg_max_mm": 118.63606441550576,
+      "schwingen_mm_s": 74.35974899726429,
+      "drehschwingen_deg_s": 130.0452921115684,
+      "aktion_frequenz_hz": 12.552586938555184
      },
      "fingernutzung": {
       "finger": [
@@ -5545,6 +6650,85 @@
        6.765246711117063
       ],
       "finger_mit_kontakt": 3.5910620408849527
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       1.172704125639956e-05,
+       0.9791297656880569,
+       0.6039191687829228,
+       0.5293820964174442,
+       0.9749783929966226,
+       0.5713453591393833,
+       0.06752430307008052
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.45,
+      "schutz_anteil": 0.9978969505783386,
+      "stall80_servo_anteil": 0.5665545148384509,
+      "stall_dauer_real_median_s": 4.366666666666666,
+      "schutz_anteil_real": 0.9968454258675079
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       1.9545068760665934e-05,
+       0.0,
+       0.3686629950830793,
+       0.24514597860266787,
+       0.019982878295518654,
+       0.9715267314519792,
+       0.5901868049702661,
+       0.04331578126766736
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.5254206098253779,
+       0.4138801269895239,
+       0.0,
+       0.9961619350812413,
+       0.8709603932027076,
+       0.021766561915908013
+      ],
+      "mittel": 0.27985508934249237,
+      "mittel_halten": 0.35352370337684486,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       1.9545068760665934e-05,
+       0.9858219987085064,
+       0.643122668847144,
+       0.6827600705824189,
+       0.9777068843600878,
+       0.5943381771874702,
+       0.08211665138892132
+      ]
      }
     },
     {
@@ -5564,7 +6748,12 @@
       "stall_anteil": 0.9996229245480207,
       "absinken_mm": 0.0,
       "unruhe": 1.7054699177977157,
-      "unruhe_wirksam": 0.8227137848580649
+      "unruhe_wirksam": 0.8227137848580649,
+      "objektweg_mm": 137.9419519938734,
+      "objektweg_max_mm": 147.45962010263213,
+      "schwingen_mm_s": 74.47599303572878,
+      "drehschwingen_deg_s": 112.0142776856967,
+      "aktion_frequenz_hz": 9.92112922773603
      },
      "fingernutzung": {
       "finger": [
@@ -5589,6 +6778,85 @@
        22.309659508445076
       ],
       "finger_mit_kontakt": 2.581798972504454
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       2.459187703381694e-05,
+       0.7119430385554638,
+       0.9583249523200694,
+       0.25586618395992516,
+       0.13533729575204745,
+       0.4933212498858029,
+       0.470926247008839
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.3,
+      "schutz_anteil": 0.9988974641675854,
+      "stall80_servo_anteil": 0.44744266996214344,
+      "stall_dauer_real_median_s": 4.283333333333333,
+      "schutz_anteil_real": 0.9988974641675854
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       4.5085107895331056e-05,
+       0.019066901902936178,
+       0.6214531280404283,
+       0.9567715672174388,
+       0.1741801653028586,
+       0.1038555947544162,
+       0.5034080185632754,
+       0.4903415344632924
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.6425395073962645,
+       0.9995957369184021,
+       0.03563028319339374,
+       0.004823594330476295,
+       0.5314498347001275,
+       0.6076901874668247
+      ],
+      "mittel": 0.35864024941906764,
+      "mittel_halten": 0.3527161430006861,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       4.5085107895331056e-05,
+       0.734497888414179,
+       0.9608866049935826,
+       0.27715864991142836,
+       0.14921531176488217,
+       0.5116626919465922,
+       0.49863309556461227
+      ]
      }
     },
     {
@@ -5608,7 +6876,12 @@
       "stall_anteil": 0.9976119825962273,
       "absinken_mm": 0.0,
       "unruhe": 0.7309056850286264,
-      "unruhe_wirksam": 0.33409480357258736
+      "unruhe_wirksam": 0.33409480357258736,
+      "objektweg_mm": 134.18220515642733,
+      "objektweg_max_mm": 140.67203767864962,
+      "schwingen_mm_s": 79.26852653437867,
+      "drehschwingen_deg_s": 131.3382539270229,
+      "aktion_frequenz_hz": 8.369120777989718
      },
      "fingernutzung": {
       "finger": [
@@ -5633,6 +6906,85 @@
        7.956797634657565
       ],
       "finger_mit_kontakt": 3.4063247397412533
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0003334055675586243,
+       0.7280160650493986,
+       0.5131903525521235,
+       0.6101821979399219,
+       0.4781410917973839,
+       0.7860828117872567,
+       0.27293829937912356
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.7333333333333334,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.5099886527729094,
+      "stall_dauer_real_median_s": 3.716666666666667,
+      "schutz_anteil_real": 1.0
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.0005376164782103234,
+       0.007230733238336016,
+       0.6141622300356869,
+       0.38466667297093676,
+       0.6284653265029192,
+       0.37804023732301767,
+       0.7711129018706958,
+       0.20261889789984333
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.688181987989719,
+       0.5066143498680817,
+       0.5610799704262811,
+       0.3042974590518065,
+       0.9045683859947719,
+       0.2681240659215458
+      ],
+      "mittel": 0.37335432703995575,
+      "mittel_halten": 0.4041082774065257,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.0005376164782103234,
+       0.7441904028802442,
+       0.5361161537284674,
+       0.6377798435800278,
+       0.5514903167145736,
+       0.800531776849548,
+       0.29927733951407975
+      ]
      }
     },
     {
@@ -5652,7 +7004,12 @@
       "stall_anteil": 0.997159376341529,
       "absinken_mm": 0.0,
       "unruhe": 0.3580924228079959,
-      "unruhe_wirksam": 0.14955508076883198
+      "unruhe_wirksam": 0.14955508076883198,
+      "objektweg_mm": 131.84140096315588,
+      "objektweg_max_mm": 134.38679726396205,
+      "schwingen_mm_s": 43.21115270156313,
+      "drehschwingen_deg_s": 84.81043012124967,
+      "aktion_frequenz_hz": 8.765082499904773
      },
      "fingernutzung": {
       "finger": [
@@ -5677,6 +7034,85 @@
        25.294950082980517
       ],
       "finger_mit_kontakt": 2.8902231783432204
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       7.307070424134959e-05,
+       0.6498680102329413,
+       0.8609692762704241,
+       0.6099166032338758,
+       0.9439410593644407,
+       0.20463450692356072,
+       0.768781448416961
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.166666666666667,
+      "schutz_anteil": 1.0,
+      "stall80_servo_anteil": 0.617498952577225,
+      "stall_dauer_real_median_s": 4.166666666666667,
+      "schutz_anteil_real": 1.0
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       9.590529931677134e-05,
+       0.0031146387597065445,
+       0.7041367092101174,
+       0.8579185755250641,
+       0.12222901986184226,
+       0.950165768586447,
+       0.0015390517115158187,
+       0.7666121612784066
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.7960483208722011,
+       0.9936834561297583,
+       0.0036855036855036856,
+       0.9998771499943089,
+       0.0,
+       0.8871723996916974
+      ],
+      "mittel": 0.42572647877905206,
+      "mittel_halten": 0.4600583537966837,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       9.590529931677134e-05,
+       0.7060959174501406,
+       0.8680936713275071,
+       0.7378542731156806,
+       0.9502114377531431,
+       0.28558771328712274,
+       0.7745586013211468
+      ]
      }
     },
     {
@@ -5696,7 +7132,12 @@
       "stall_anteil": 0.9975440955469387,
       "absinken_mm": 0.4876399293858954,
       "unruhe": 0.7841961447219348,
-      "unruhe_wirksam": 0.4135313388583385
+      "unruhe_wirksam": 0.4135313388583385,
+      "objektweg_mm": 133.80823712795973,
+      "objektweg_max_mm": 138.20595994116144,
+      "schwingen_mm_s": 70.81634456123363,
+      "drehschwingen_deg_s": 119.2671304274072,
+      "aktion_frequenz_hz": 8.996969403104579
      },
      "fingernutzung": {
       "finger": [
@@ -5721,6 +7162,85 @@
        0.8595137562721651
       ],
       "finger_mit_kontakt": 2.936453904168918
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00018587360391393305,
+       0.0907260917932132,
+       0.375757330753147,
+       0.8910661899266725,
+       0.9113501466810703,
+       0.3610298147345794,
+       0.7526378167872416
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.216666666666667,
+      "schutz_anteil": 0.9914893617021276,
+      "stall80_servo_anteil": 0.5343022401787513,
+      "stall_dauer_real_median_s": 4.216666666666667,
+      "schutz_anteil_real": 0.9914893617021276
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00034801866264736397,
+       0.0,
+       0.045823775344042784,
+       0.02688048685717575,
+       0.8944870550264703,
+       0.9127540861038451,
+       7.909515060167363e-06,
+       0.011207782844963305
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.021489362063956387,
+       0.0006294326509963324,
+       0.9184574468328836,
+       0.9693262411965097,
+       1.7730497378618158e-05,
+       0.012349290813894031
+      ],
+      "mittel": 0.2364386392942756,
+      "mittel_halten": 0.24028368800695232,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.00034801866264736397,
+       0.10881910721989388,
+       0.47459067625409745,
+       0.9001819060124615,
+       0.920940432776796,
+       0.5335402936932254,
+       0.8016965848096508
+      ]
      }
     },
     {
@@ -5740,7 +7260,12 @@
       "stall_anteil": 0.9998261755863607,
       "absinken_mm": 0.0,
       "unruhe": 1.8759512827104396,
-      "unruhe_wirksam": 0.6992848732603438
+      "unruhe_wirksam": 0.6992848732603438,
+      "objektweg_mm": 130.28843285996905,
+      "objektweg_max_mm": 141.5589860027832,
+      "schwingen_mm_s": 59.04095110015332,
+      "drehschwingen_deg_s": 105.85243159429265,
+      "aktion_frequenz_hz": 9.408617882115427
      },
      "fingernutzung": {
       "finger": [
@@ -5765,6 +7290,85 @@
        28.271301352509024
       ],
       "finger_mit_kontakt": 3.4107421190833214
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       5.925832218297546e-05,
+       0.3312145144412419,
+       0.831777466344276,
+       0.2768232758640926,
+       0.2438203399836637,
+       0.4222550505255601,
+       0.7545164653538518
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 3.283333333333333,
+      "schutz_anteil": 0.9989373007438895,
+      "stall80_servo_anteil": 0.43044880180780365,
+      "stall_dauer_real_median_s": 3.283333333333333,
+      "schutz_anteil_real": 0.9989373007438895
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00021332996010614062,
+       0.00028443994647828224,
+       0.23841203194840016,
+       0.7972654185310307,
+       0.28766359797580904,
+       0.2441284827310018,
+       0.4675560625399662,
+       0.6759320269071564
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.1952532768956169,
+       0.999973432543934,
+       0.24545696114984664,
+       7.970244737537964e-05,
+       0.5269748494286371,
+       0.9010981225678806
+      ],
+      "mittel": 0.3389319238174936,
+      "mittel_halten": 0.35860454312916135,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.00021332996010614062,
+       0.3709531448916092,
+       0.8478285707018707,
+       0.30552010581799954,
+       0.2499674027795556,
+       0.469124432467617,
+       0.7695364743692842
+      ]
      }
     },
     {
@@ -5784,7 +7388,12 @@
       "stall_anteil": 0.9973674386772616,
       "absinken_mm": 0.026978302949642038,
       "unruhe": 1.494540064614225,
-      "unruhe_wirksam": 0.5657413055633053
+      "unruhe_wirksam": 0.5657413055633053,
+      "objektweg_mm": 61.05268964832298,
+      "objektweg_max_mm": 61.662795544294134,
+      "schwingen_mm_s": 33.86360779282867,
+      "drehschwingen_deg_s": 59.87219874887545,
+      "aktion_frequenz_hz": 10.358284211058995
      },
      "fingernutzung": {
       "finger": [
@@ -5809,6 +7418,85 @@
        0.0
       ],
       "finger_mit_kontakt": 2.169490934788955
+     },
+     "stall_je_servo": {
+      "servo": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.000171097041503234,
+       0.9116789144911963,
+       0.8869787302476093,
+       0.9526099976011899,
+       0.08045060598977284,
+       0.8093939994200753,
+       0.7472313328124447
+      ]
+     },
+     "servo_schutz": {
+      "stall_dauer_median_s": 4.3,
+      "schutz_anteil": 0.9989539748953975,
+      "stall80_servo_anteil": 0.641244001308893,
+      "stall_dauer_real_median_s": 4.266666666666667,
+      "schutz_anteil_real": 0.9989539748953975
+     },
+     "servo_last_real": {
+      "servo": [
+       "forearm_left",
+       "wrist_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil": [
+       0.00037330263523213474,
+       0.0,
+       0.03468992502066194,
+       0.22752406850148374,
+       0.9506890455798624,
+       0.08710394789772614,
+       0.202913313320834,
+       0.00012054564270568879
+      ],
+      "anteil_halten": [
+       0.0,
+       0.0,
+       0.009780334730566359,
+       0.20498605297145797,
+       0.9996513250482632,
+       0.04607740594814512,
+       0.16485355655510742,
+       0.0
+      ],
+      "mittel": 0.18792676857481325,
+      "mittel_halten": 0.1781685844066925,
+      "servo_bisher_80": [
+       "forearm_left",
+       "thumb_left_rotator",
+       "thumb_left_proximal",
+       "index_left_proximal",
+       "middle_left_proximal",
+       "ring_left_proximal",
+       "pinky_left_proximal"
+      ],
+      "anteil_bisher_80": [
+       0.00037330263523213474,
+       0.9373045857512552,
+       0.8942386895168776,
+       0.9552231157299864,
+       0.09250517028761895,
+       0.8335303458147468,
+       0.775540115956897
+      ]
      }
     }
    ],
@@ -5969,7 +7657,8 @@
     "stall_anteil": 0.9970085545017999,
     "absinken_mm": 0.05778266915651673,
     "unruhe": 1.1860880368810103,
-    "unruhe_wirksam": 0.5624787902627063
+    "unruhe_wirksam": 0.5624787902627063,
+    "objektweg_mm": 123.77742719068458
    },
    "fehler": {
     "startfehler": 0.0,
@@ -6606,7 +8295,8 @@
     "stall_anteil": 0.9983104653218613,
     "absinken_mm": 0.01322184163056453,
     "unruhe": 1.0706256054435692,
-    "unruhe_wirksam": 0.4840358113368703
+    "unruhe_wirksam": 0.4840358113368703,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,
@@ -7243,7 +8933,8 @@
     "stall_anteil": 0.9973917760284644,
     "absinken_mm": 0.003173174735778532,
     "unruhe": 1.6761543831624235,
-    "unruhe_wirksam": 0.7294752305912287
+    "unruhe_wirksam": 0.7294752305912287,
+    "objektweg_mm": null
    },
    "fehler": {
     "startfehler": 0.0,

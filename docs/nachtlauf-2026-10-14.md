@@ -1,6 +1,6 @@
 # Nachtlauf 2026-10-13/14 — Servo-Stall wie am echten Servo, Fingereinsatz
 
-Stand 2026-10-13 abends — **gestartet ~23:45** (Freigabe Leon, mit EXP-041; Index danach auf „Servo-Last real“). Letzter Lauf vor der Präsentation
+Stand 2026-10-14 mittags — **gelaufen 23:16–12:32**, Ergebnis unten (Entwürfe, Urteil Leon). Index steht jetzt auf „Servo-Last real“. Letzter Lauf vor der Präsentation
 (Do 2026-10-15); **EXP-036 bleibt Spitzenkandidat**, ein neues Experiment ersetzt es nur, wenn es gesichert besser ist und
 die Videos überzeugen. Eltern **EXP-036** (CAPS + PID-Lagrange), je Experiment genau eine Änderung zum Vorgänger, 5 Seeds,
 1024 Umgebungen × 300 Iterationen, eval-v2, Urteile als Entwurf (Leon). Stall-Grenze bleibt **20 %** (Leon).
@@ -62,6 +62,42 @@ Fällt ein Kurztest durch, läuft die Kette weiter.
 **Vorher festgelegte Kriterien** (nur erfolgreiche Seeds): Leistung nicht gesichert schlechter als EXP-036 (P(besser) KI
 nicht unter 0,5 ganz unten), Unruhe ≤ 0,1, Transport ≥ 95 %. EXP-039: kein Servo über 30 % (wie real, Haltephase), Schutz
 > 2 s ≤ 50 %. EXP-040: Fingerzahl ≥ 4. Index nur zur Info.
+
+## Ergebnis (2026-10-14, Entwürfe — Urteil Leon)
+
+Kette vollständig: 4 × 5 Seeds trainiert und bewertet, Nachbewertung der Hauptbedingung für alle 24 Policies, Belastungstest,
+beste Videos, `done` mit HF-Backup. Werte über die erfolgreichen Seeds (wie Leaderboard v3), Finger = Hauptbedingung, Haltephase.
+
+| EXP | Leistung · Seeds | Servo-Last real · Schutz > 2 s | Finger | Transport · Rampe (Top) | Index |
+|---|---|---|---|---|---|
+| 036 (Eltern) | 83 % · 4/5 | 13 % · 85 % | 3,3 | 95 % · 108 m/s² | 0,66 |
+| 038 Stall wie real | 75 % · 3/5 | 13 % · 94 % | 3,8 | 79 % · 112 m/s² | 0,41 |
+| 039 + Grenze je Servo | 75 % · 3/5 | 12 % · 83 % | 2,9 | 61 % · 82 m/s² | 0,30 |
+| 040 + je Servo + Fingerzahl | 79 % · 2/5 | **5 % · 21 %** | 4,1 | 83 % · 71 m/s² | 0,47 |
+| 041 wie real + Fingerzahl | 82 % · 3/5 | 14 % · 87 % | 3,5 | 82 % · 75 m/s² | 0,51 |
+
+Leistung nirgends gesichert verschieden (P(besser) KI schließt 0,5 ein), Zuverlässigkeit nicht unterscheidbar (5 Seeds).
+Gescheiterte Seeds halten fast alle, kippen aber über 45°.
+
+1. **EXP-038 (Kosten wie real)**: ändert die Servo-Last nicht (13 %) und entlastet das Erkunden nicht messbar; eher schlechter
+   in Zuverlässigkeit/Transport (nicht gesichert). Als Kostendefinition trotzdem die richtige (Handgelenk gemessen, keine
+   Anschlag-Artefakte).
+2. **2 × 2 (038/039/041/040)**: Weder Grenze je Servo (Schutz 83 %) noch Fingerzahl (87 %) allein verteilen die Last — erst
+   **beides zusammen** (040: Schutz 21 %, Servo-Last 5 %, 4,1 Finger; über alle 5 Seeds 3,7). Die Hypothese der Wechselwirkung ist bestätigt,
+   das Ziel ≥ 4 Finger über die erfolgreichen Seeds erreicht. Die Fingerzahl allein (041: 3,5) ändert wenig.
+3. **Preis: Griffreserve.** Wer die Servos schont, drückt weniger: Grenzbeschleunigung 71 statt 108 m/s², Transport 83 statt
+   95 %. Zielkonflikt Servo-Schonung ↔ Halten bei bewegtem Arm — die Grenze 20 % bei 80 % Moment ist ein Parameter, kein
+   Naturgesetz (Überlastschutz real ungeprüft, M3).
+4. **Top-Seed EXP-040 s42**: Ø 6 94 %, Servo-Last 3 %, max. ein Servo 14 % der Haltephase, Schutz 12 %, Kippen 22°, Unruhe
+   0,02 — erster Seed, der ruhig, kühl und erfolgreich zugleich ist (Videos: Leon).
+5. **Index auf Servo-Last real umgestellt** (Nachbewertung aller 24): Seitlich jetzt **EXP-024 0,70** vor EXP-036 0,66 (bisher
+   0,64 / 0,66) — EXP-024 wurde von der alten Messung bestraft (Rotator am Anschlag, Mittelfinger am offenen Anschlag), real
+   21 % statt 43 %; Schutz > 2 s bleibt 100 % (Zeigefinger zieht die ganze Haltephase). Für die Präsentation: EXP-024 und
+   EXP-036 gleichauf, EXP-036 bleibt Kandidat (ruhiger, Last im Mittel niedriger).
+
+**Nächste Schritte (Vorschlag, nach der Präsentation)**: Grenze langsam einblenden wie CaT (Risiko 1, Transport), Grenze auf
+die Lauflänge statt den Anteil (misst direkt den Überlastschutz), mehr Seeds für 040 (10), Kippen als eigene Nebenbedingung
+(häufigste Fehlerart der neuen Läufe), Sehne/Feder im Aktuatormodell.
 
 ## Prüfung vor dem Start (2026-10-13 abends)
 
