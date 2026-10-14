@@ -1,7 +1,7 @@
 """
 config/pib_hand_config_v5.py — v5 counterpart of pib_hand_config_v4.py.
 
-All values verified directly against pib_upperbody_urdf_v5/robot.urdf (not copied/guessed from the
+All values verified directly against ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf (not copied/guessed from the
 v4 config) — reason: isaac_sim/setup_stage.py:_BODY_LIMITS used to be shared by v4 AND v5,
 although two body joints have different limits in v5 than in v4 (see "body DOFs" below).
 This file is the record that the values were checked against the v5 source — the actual enforcement stays
@@ -23,7 +23,7 @@ v5 naming scheme: NO "dof_" prefix (unlike v4), the thumb middle joint is called
 ROBOT_PRIM_PATH = "/World/pib_upperbody_urdf_v5/root_joint"
 
 # ── Body DOFs (head, shoulders, arms, wrists) ─────────────────────────────────
-# Limits from pib_upperbody_urdf_v5/robot.urdf (extracted in that session and cross-checked against
+# Limits from ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf (extracted in that session and cross-checked against
 # ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf, identical).
 #
 # Differences from v4 (config/pib_hand_config_v4.py), do NOT simply copy:
@@ -158,7 +158,7 @@ def wrist_transmission(theta_deg: float) -> float:
     """
     Transmission of the wrist linkage n = dφ_servo / dθ_wrist (≥ 1, "in/out")
     at wrist angle theta_deg ∈ [-60, 0]. Analytically from the velocity of the
-    two joint pins along the rigid connecting rod (as in tendondrive/ for the fingers).
+    two joint pins along the rigid connecting rod (as in tendondrive/ for the fingers, commit 1d0cd9c).
     """
     import math
     a, b, c, d = (WRIST_LINKAGE[k] for k in ("crank_mm", "rod_mm", "lever_mm", "frame_mm"))
@@ -241,7 +241,7 @@ def servo_actuator(name: str):
 
 # ── Real left hand (prototype, STM32 Nucleo) ──────────────────────────────────
 # The 8 servo joints = action space of the RL policy (feature/rl-grasping). Names from
-# pib_upperbody_urdf_v5/robot.urdf. All other joints of the left hand
+# ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf. All other joints of the left hand
 # (*_distal, *_tip) are passive mimic followers (ADR-011).
 LEFT_HAND_SERVO_JOINTS = [
     "forearm_left",          # forearm rotation

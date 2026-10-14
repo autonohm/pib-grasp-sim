@@ -81,7 +81,7 @@ def _fmt(v, spec=".4g"):
 
 def _load_urdf() -> dict:
     stage_name = Path(stage.GetRootLayer().realPath).name
-    path = ROOT / ("pib_upperbody_urdf_v5/robot.urdf" if "v5" in stage_name
+    path = ROOT / ("ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf" if "v5" in stage_name
                    else "ros2_ws/src/pib_description_v4/urdf/pib_upperbody.urdf")
     if not path.is_file():
         emit(f"URDF nicht gefunden: {path} — kein Vergleich")

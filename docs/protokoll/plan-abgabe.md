@@ -105,6 +105,14 @@ Erledigt: Tag + Release `v0.1-praesentation` (5 Policies: EXP-024 s44, 036 s42, 
 `CITATION.cff` (Nachname offen), Name aus Doku/Code/Paketdateien (Autor nur README/CITATION), Code-Kommentare und Docstrings
 englisch (52 Dateien; per AST geprüft: Code unverändert bis auf zwei gewollte Stellen).
 
-Offen (nach der Präsentation, braucht Isaac): Selbsttest-Skript und Durchlauf der Anleitung auf frischem Klon, absolute Pfade
-in drei USD-Metadaten (GUI), „Dein erstes Experiment“ in `experiments/README.md`, Leaderboard als CSV/HTML, `gitleaks`,
+Aufräumen (2026-10-14, Fortsetzung): `sensor_mount/`, `scripts/`, `isaac_sim/autostart.py`, `.vscode/tasks.json`,
+`docs/archiv/superpowers/` und `pib_upperbody_urdf_v5/` entfernt (Duplikat von `pib_description_v5` und
+`isaac_sim/usd/configuration/`; Onshape-Link jetzt `ros2_ws/src/pib_description_v5/onshape_config.json`). **Absolute Pfade in
+`pib_upperbody_v5.usd`** (Referenz/Payloads auf `file:/home/…/configuration/…`) und `configuration/pib_upperbody_v5_physics.usd`
+(Sublayer) per `Sdf` relativ gemacht — ohne das hätte die v5-Stage auf anderen Rechnern keinen Roboter geladen; offline
+geprüft (alle Layer aufgelöst, 44 Gelenke), **im GUI noch nicht geöffnet**. Branches `experiment/omnigraph-lightweight`,
+`sandbox`, `feature/ros2-control` gelöscht (vollständig in `main`), Tags `archiv/ros2-control`, `archiv/session-collision-dev`.
+
+Offen (nach der Präsentation, braucht Isaac): v5-Stage im GUI öffnen, Play, Pickup-Demo (wegen der USD-Pfade), Selbsttest-Skript
+und Durchlauf der Anleitung auf frischem Klon, „Dein erstes Experiment“ in `experiments/README.md`, Leaderboard als CSV/HTML, `gitleaks`,
 Lizenzentscheidung, Umzug ins Ziel-Repo (Release-Links im README anpassen).

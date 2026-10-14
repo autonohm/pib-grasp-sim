@@ -25,7 +25,7 @@ out = io.StringIO()
 
 ROBOT = "/World/pib_upperbody_urdf_v5"
 
-# fingertips → child link of the *_tip joint (from pib_upperbody_urdf_v5/robot.urdf).
+# fingertips → child link of the *_tip joint (from ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf).
 # Order = order in the bundled topic (phase 2).
 FINGERTIPS = {
     "thumb_left": "urdf_thumb_tip",

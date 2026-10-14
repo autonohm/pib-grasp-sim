@@ -18,7 +18,6 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | `experiments/` | aktuell | ein Ordner je Experiment (Plan, Ergebnisse, Bericht, Diagramme, beste Videos), `leaderboard.md`, `index.md` |
 | `ros2_ws/` | aktuell | ROS-2-Jazzy-Workspace: Roboterbeschreibungen v4/v5, `ros2_control`-Start, Demo-Clients |
 | `pib_hand_left_urdf_v5/` | aktuell | `onshape-to-robot`-Export linke v5-Hand + Unterarm (Quelle von `pib_hand_left_v5.usd`); `config.json` verweist auf das Onshape-Dokument |
-| `pib_upperbody_urdf_v5/` | aktuell | roher `onshape-to-robot`-Export des v5-Oberkörpers (Quelle der Gelenknamen) |
 | `docs/` | aktuell | siehe unten |
 | `videos/` | aktuell | Demo-Videos (Zwilling, erste Policies, YCB) |
 | `logs/`, `outputs/` | ignoriert | Trainingsläufe, Checkpoints, Bewertungen (nicht im Git; Sicherung auf Hugging Face) |
@@ -33,7 +32,6 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | `usd/configuration/` | aktuell | Teil-Layer der v5-Stage (Basis, Physik, Roboter, Sensoren) |
 | `usd/pib_upperbody_v4.usd` | Altlast | v4-Referenzstage |
 | `start.py`, `setup_stage.py` | aktuell | vor Play ausführen: Antriebe, Servo-Modell, Mimic Joints, Grenzen, Startpose |
-| `autostart.py` | Altlast | vollautomatischer Start, nur v4 |
 | `tools/bake_hand_asset_v5.py` | Werkzeug | Mimic/Grenzen/Antriebe in die Hand-USD einbrennen (nach Änderungen an der Config erneut) |
 | `tools/audit_asset.py` | Werkzeug | Massen, Collider, Antriebe, effektive Gelenkträgheit, Stabilitätskennzahlen |
 | `tools/build_contact_sensors_v5.py`, `tools/build_fingertip_force_graph_v5.py` | Werkzeug | Fingerspitzen-Sensoren und ihren ROS-2-Graph neu bauen (ADR-013) |
@@ -67,7 +65,7 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 
 | Pfad | Status | Was |
 |---|---|---|
-| `pib_description_v5/` · `pib_description_v4/` | aktuell · Altlast | URDF + Meshes + `ros2_control`-Tags |
+| `pib_description_v5/` · `pib_description_v4/` | aktuell · Altlast | URDF + Meshes + `ros2_control`-Tags; v5-URDF = `onshape-to-robot`-Export + `ros2_control`-Block (Quelle der Gelenknamen), `onshape_config.json` = Link zum Onshape-Dokument |
 | `pib_bringup/` | aktuell | Launch-Dateien, Controller-Konfiguration, Demo-Clients (Pickup/Putdown, Mimic-Tests) |
 | `topic_based_ros2_control/` | Fremdpaket | Hardware-Interface-Bridge (eigene Lizenz) |
 

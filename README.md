@@ -42,12 +42,17 @@ conda-Umgebung, ROS 2 Jazzy (nur für Weg A). Training: 1024 Umgebungen × 300 I
 
 ## Branches
 
-| Branch | Inhalt |
+| Branch / Tag | Inhalt |
 |---|---|
 | `main` | aktueller Stand (= `feature/rl-grasping`) |
 | `feature/rl-grasping` | Arbeitsbranch Zwilling + RL-Greifen |
-| `feature/ros2-control` | ältere Team-Integration (robot_io, ControlMode, LSTM-Pipeline) — nicht weitergeführt |
-| `experiment/omnigraph-lightweight` | Vorstufe des Zwillings (Action Graph statt eigener Bridge) |
+| Tag `v0.1-praesentation` | Stand zur Präsentation 2026-10-15, Release mit den 5 besten Policies |
+| Tag `archiv/ros2-control` | ältere Team-Integration (robot_io, ControlMode, Sequenz-Executor, LSTM-Pipeline) — nicht weitergeführt |
+| Tag `archiv/session-collision-dev` | WIP Servo-Steuerung + Collision Groups (Juni 2026), nie übernommen |
+| Tags `backup/*` | Stände vor Umbauten (ADR-009/011) |
+
+Die früheren Branches `experiment/omnigraph-lightweight`, `sandbox` und `feature/ros2-control` sind vollständig in `main`
+enthalten und wurden 2026-10-14 gelöscht.
 
 ## Lizenz
 

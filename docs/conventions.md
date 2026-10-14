@@ -1,7 +1,6 @@
 # Konventionen
 
-**Branch `experiment/omnigraph-lightweight`.** Beschreibt den Stand dieses Branches — kein
-`robot_io.py`, kein `control/`, keine Sequenz-Pipeline. Voller Stand auf `feature/ros2-control`.
+Stand `main`: kein `robot_io.py`, kein `control/`, keine Sequenz-Pipeline (die liegen im Tag `archiv/ros2-control`).
 
 ## Winkel und Vorzeichen
 
@@ -44,10 +43,10 @@
 **v5** — Schema: `{teil}_{seite}_{position}` (**kein** `dof_`-Präfix — bewusst so aus Onshape
 exportiert, nicht angleichen). Sonst identisch, mit einer Abweichung: Daumen-Mittelgelenk
 heißt `tip` statt `distal` (`thumb_right_tip` statt `dof_thumb_right_distal` in v4).
-- Nie erfinden — immer aus `config/pib_hand_config_v5.py` oder `pib_upperbody_urdf_v5/robot.urdf`
+- Nie erfinden — immer aus `config/pib_hand_config_v5.py` oder `ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf`
 
 ### Python-Dateien
-- `isaac_sim/` — alles was Isaac Sim braucht (`start.py`, `setup_stage.py`, `autostart.py`)
+- `isaac_sim/` — alles was Isaac Sim braucht (`start.py`, `setup_stage.py`)
 - `config/` — reine Daten/Konfiguration, keine Isaac-Imports
 - `ros2_ws/src/pib_bringup/pib_bringup/` — ROS2-Test-Clients (reines rclpy, kein Isaac-Import)
 - Prefix `_` für interne Hilfsfunktionen: `_load_mod()`, `_find_root()`

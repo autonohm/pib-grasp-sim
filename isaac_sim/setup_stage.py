@@ -91,7 +91,7 @@ def _v5_actuator(name: str):
 # generatedSchema.usda): q_follower + gearing * q_reference + offset = 0.
 # gearing=-1, offset=0  =>  theta_follower = theta_reference. Exact at 0° and 90°;
 # in the middle the real four-bar coupling deviates by up to ~10° (PIP) / ~22° (DIP)
-# (tendondrive/finger_analytisch.py). The only place for gearing/offset —
+# (tendondrive/finger_analytisch.py in commit 1d0cd9c). The only place for gearing/offset —
 # a later adaptive stage 2 only changes these values.
 # v4 joints (dof_ prefix) are deliberately not included.
 MIMIC_GEARING = -1.0
@@ -322,7 +322,7 @@ _BODY_LIMITS = {
     "dof_elbow_right":               (-45.0,  90.0),
     "dof_forearm_right":             (-90.0,  90.0),
     "dof_wrist_right":               (  0.0,  90.0),
-    # v5 (no prefix, source: pib_upperbody_urdf_v5/robot.urdf, see
+    # v5 (no prefix, source: ros2_ws/src/pib_description_v5/urdf/pib_upperbody_v5.urdf, see
     # config/pib_hand_config_v5.py)
     "head_horizontal":           (-90.0,  90.0),
     "head_vertical":             (-45.0,  70.0),

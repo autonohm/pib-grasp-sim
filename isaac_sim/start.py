@@ -6,9 +6,6 @@ PhysX does not cache these values, they must be set after every session start.
 
 Script Editor workflow:
   load the USD (contains the Action Graph) → start.py → Play
-
-Standalone workflow:
-  autostart.py calls start.run() automatically — not needed manually.
 """
 import os
 import sys

@@ -1,11 +1,8 @@
 # Architektur
 
-**Branch `feature/rl-grasping`** (= `experiment/omnigraph-lightweight` + RL-Greifen in Isaac
-Lab, Abschnitt „RL-Greifen“ unten). Die Simulations-/ROS2-Teile beschreiben den Stand von
-`experiment/omnigraph-lightweight`. Der
-vollständige Stand mit `robot_io.py`, ControlMode-Architektur (`direct`/`servo`/`nn`),
-Sequenz-Executor und Sprint-3/4-Fahrplan liegt auf `feature/ros2-control` (eigene Version
-dieser Datei dort).
+Stand `main` (= `feature/rl-grasping`): digitaler Zwilling mit Action Graph plus RL-Greifen in Isaac Lab (Abschnitt
+„RL-Greifen“ unten). Der ältere Stand mit `robot_io.py`, ControlMode-Architektur (`direct`/`servo`/`nn`),
+Sequenz-Executor und Sprint-3/4-Fahrplan liegt im Tag `archiv/ros2-control` (eigene Version dieser Datei dort).
 
 ## Team-Kontext
 RoboCup 2027 @Home. Mehrere Gruppen:
@@ -107,7 +104,6 @@ Gilt **nur für `pib_upperbody_v5.usd`** — für v4 bleibt der obige Aufbau unv
 | `config/pib_hand_config_v5.py` | dasselbe für v5 (Namen ohne `dof_`-Präfix) |
 | `isaac_sim/setup_stage.py` | Physics Scene, Boden/Licht, Joint-Drives (Stiffness/Damping/maxForce), Servo-Aktuatormodell (Armature, maxJointVelocity, ADR-012), Mimic Joints (`MIMIC_JOINTS`, ADR-011), Limits, Initialpose |
 | `isaac_sim/start.py` | Bündelt `setup_stage`-Aufrufe, vor Play im Script Editor ausführen |
-| `isaac_sim/autostart.py` | Vollautomatisch: USD laden → `start.py` → Play (`--exec`, kein Script Editor nötig) |
 
 Läuft jede Session neu (PhysX cached Drive-Stiffness/Damping nicht zwischen Sessions).
 Was dagegen dauerhaft in der USD steht (GUI-Änderungen, gespeichert): Action-Graph-Aufbau,
@@ -251,4 +247,4 @@ v5-Reimport-Entscheidung (bisher nur in `docs/protokoll/current-sprint.md` nache
 
 ## Bewusst nicht Teil dieses Branches
 Team-Integration (Koordinatenrahmen, IK-/Greifpunkt-Interface), LSTM-Gelenkdynamik,
-AS5600-Sensordaten — voller Fahrplan dazu auf `feature/ros2-control`.
+AS5600-Sensordaten — voller Fahrplan dazu im Tag `archiv/ros2-control`.

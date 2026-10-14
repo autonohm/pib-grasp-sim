@@ -15,8 +15,7 @@ __pycache__/
 venv/
 
 # IDE — tasks.json einchecken (Team-Workflow), Rest ignorieren
-.vscode/*
-!.vscode/tasks.json
+.vscode/
 .idea/
 
 # Logs

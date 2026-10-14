@@ -2,7 +2,7 @@
 """
 test_client_mimic_load_v5.py — load test of the mimic joints (v5): the left hand moves its fingers
 against the table. Replica of the table test from the rejected force feedback (ADR-010,
-formerly tendondrive/test_coupling_reflection.sh), now with diagnostics.
+formerly tendondrive/test_coupling_reflection.sh, commit 1d0cd9c), now with diagnostics.
 
 Sequence:
   1. Left arm in the test pose (hand just above the table, values from the Physics Inspector):

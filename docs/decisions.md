@@ -2,11 +2,9 @@
 
 Format: Problem → Entscheidung → Begründung → Konsequenzen
 
-**Branch `experiment/omnigraph-lightweight`:** ADR-001/003/004 beziehen sich auf
-`robot_io.py`/`_launch_helper.py` — auf diesem Branch entfernt, siehe ADR-006. Als
-historischer Kontext (warum diese Entscheidungen ursprünglich getroffen wurden) stehen
-gelassen, gelten aber nicht mehr für den aktuellen Code hier. Voller Stand auf
-`feature/ros2-control`.
+**Hinweis:** ADR-001/003/004 beziehen sich auf `robot_io.py`/`_launch_helper.py` — im aktuellen Stand entfernt, siehe
+ADR-006. Als historischer Kontext (warum diese Entscheidungen ursprünglich getroffen wurden) stehen gelassen, gelten aber
+nicht mehr für den aktuellen Code. Der alte Stand liegt im Tag `archiv/ros2-control`.
 
 ---
 
