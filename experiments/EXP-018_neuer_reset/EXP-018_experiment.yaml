@@ -109,8 +109,8 @@ laeufe:
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: '10 Seeds (5 im Nachtlauf nachtrainiert): 5/10 greifen, Leistung 86 % [81–89];
   die übrigen lernen nie zu greifen.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf (zu bestätigen): Mit sauberem Reset hängt das Entdecken
+urteil: 'kein Unterschied; nur 5/10 Seeds greifen → Anlass für die Prüfung gegen die Vorbilder (ADR-022) (bestätigt 2026-10-14)'
+schluss: 'Mit sauberem Reset hängt das Entdecken
   des Griffs am Zufall (kein Signal fürs Zugreifen, ADR-022) → EXP-019. Als Basis
   für EXP-019–021 genutzt.'
 nachtrag:

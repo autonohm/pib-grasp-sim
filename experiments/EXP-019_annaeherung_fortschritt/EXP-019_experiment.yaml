@@ -109,7 +109,7 @@ laeufe:
 ergebnis: '10/10 Seeds greifen (EXP-018: 5/10, Fisher p = 0,03 gesichert besser),
   Leistung 81 % [78–83] (kein gesicherter Unterschied); Leitplanken verletzt: Kippen
   29° (23°), Unterarm 41° (32°), Unruhe wirksam 0,56 (0,45).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Die Annäherung als Fortschritt (DexPBT) löst das Entdeckungsproblem;
+urteil: 'Leistung kein Unterschied, Zuverlässigkeit gesichert besser (10/10); Leitplanken Kippen/Unterarm/Unruhe verletzt — Fortschritt übernommen (bestätigt 2026-10-14)'
+schluss: 'Die Annäherung als Fortschritt (DexPBT) löst das Entdeckungsproblem;
   Nebenwirkung mehr Unterarm/Kippen (vermutlich nähert sie die Spitzen auch über den
   Unterarm an) → mit Aktionsgrenze kombiniert (EXP-022).'

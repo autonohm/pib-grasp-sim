@@ -3,7 +3,7 @@ id: EXP-032
 titel: Großes Netz mit 8-fachem Budget (4096 Umgebungen × 600 Iterationen)
 datum: '2026-10-12'
 eltern: EXP-031
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Das große Netz braucht mehr Daten: mit 8× Budget (≈ 79 Mio. statt 9,8
   Mio. Schritte, PPO-Batch wie Dexsuite) steigt die Leistung gegenüber EXP-031.'
@@ -89,5 +89,5 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-12_13-08-48_EXP-032_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 85 % [82–87] (ggü. EXP-031 gesichert besser, P = 0,82; ggü. EXP-024 87 % kein Unterschied), 5/5 Seeds; Kippwinkel 30°, Unterarm 43° (EXP-031: 41°/53°), Robust 55 %, Objektweg 120 mm, Servo-Last 55 %; Leitplanke Unruhe verletzt (3,85, an den Servos 1,07; EXP-031: 0,86/0,32) bei gleichem Aktionsrauschen (σ ≈ 0,8). Trainingsterm success 3,3–3,8 (EXP-031: 1,8–2,3). Index v3 seitlich 0,08.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese bestätigt für die Leistung — das große Netz profitiert vom 8-fachen Budget (+10 PP ggü. EXP-031, 5/5), Kippen und Unterarm gehen zurück, bleiben aber über EXP-024 (13°/11°) bei gleicher Leistung. Preis: deutlich unruhiger (Mittelwert der Policy springt, nicht das Rauschen), Leitplanke verletzt. Mehr Budget löst das Kippen nur teilweise; der Aktionsraum (Skala 0,03, Filter) wirkt stärker. Nicht als Basis; Budget-Frage für das kleine Netz (EXP-024-Rezept × 4096/600) offen. Für die NPU: 220 kB int8, passt.'
+urteil: 'kein Unterschied zu EXP-024 (gesichert besser als EXP-031), Leitplanke Unruhe verletzt — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Hypothese bestätigt für die Leistung — das große Netz profitiert vom 8-fachen Budget (+10 PP ggü. EXP-031, 5/5), Kippen und Unterarm gehen zurück, bleiben aber über EXP-024 (13°/11°) bei gleicher Leistung. Preis: deutlich unruhiger (Mittelwert der Policy springt, nicht das Rauschen), Leitplanke verletzt. Mehr Budget löst das Kippen nur teilweise; der Aktionsraum (Skala 0,03, Filter) wirkt stärker. Nicht als Basis; Budget-Frage für das kleine Netz (EXP-024-Rezept × 4096/600) offen. Für die NPU: 220 kB int8, passt.'

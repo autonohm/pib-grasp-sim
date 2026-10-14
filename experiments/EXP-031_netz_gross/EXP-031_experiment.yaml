@@ -3,7 +3,7 @@ id: EXP-031
 titel: Großes Netz 512-256-128 wie Dexsuite
 datum: '2026-10-12'
 eltern: EXP-027
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Ein Actor wie Dexsuite (512-256-128 statt 256-128-64, int8 ≈ 220 kB) lernt
   bei gleichem Budget mindestens gleich gut und ruhiger.
@@ -88,5 +88,5 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-12_07-40-42_EXP-031_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 75 % [70–80] (ggü. EXP-027 kein gesicherter Unterschied, P = 0,28), 3/5 Seeds (s42/45: hält, aber gekippt); Kippwinkel 41°, Unterarm 53° (wie EXP-027), Robust 42 %, Unruhe an den Servos 0,32 (EXP-027: 0,66), Servo-Last 53 %. Index v3 seitlich 0,05.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese nicht widerlegt, aber ohne Gewinn — das größere Netz (Dexsuite 512-256-128) ändert bei 300 Iterationen nichts an Leistung und Unterarm-Kippen; ruhiger, aber nicht gesichert. Das Kippen ist kein Kapazitätsproblem. Für die NPU bleibt 256-128-64 (Netzgröße wäre aber kein Engpass: 220 kB int8). EXP-032 prüft zusätzlich das Budget.'
+urteil: 'kein Unterschied — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Hypothese nicht widerlegt, aber ohne Gewinn — das größere Netz (Dexsuite 512-256-128) ändert bei 300 Iterationen nichts an Leistung und Unterarm-Kippen; ruhiger, aber nicht gesichert. Das Kippen ist kein Kapazitätsproblem. Für die NPU bleibt 256-128-64 (Netzgröße wäre aber kein Engpass: 220 kB int8). EXP-032 prüft zusätzlich das Budget.'

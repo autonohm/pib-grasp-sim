@@ -3,7 +3,7 @@ id: EXP-037
 titel: Servo-Last als Beobachtung (zu PID-Lagrange)
 datum: '2026-10-12'
 eltern: EXP-035
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Ohne Sicht auf die Last kann die Policy das Moment nur über Gelenkwinkel
   und FSR erraten. Der ST3215 meldet seine Last („Present Load“); sieht die Policy
@@ -93,6 +93,6 @@ laeufe:
 ergebnis: 'Leistung 60 % [58–62] (ggü. EXP-035 gesichert schlechter, P = 0,00), 1/5 (vier Seeds halten, aber gekippt; Kippen
   alle Seeds 57°). Leitplanken Kippen, Stall-Anteil, Unruhe verletzt. Erfolgreicher Seed s45: Servo-Last 16 %, Schutz > 2 s
   93 %, Transport 60 %. λ-Verlauf wie EXP-035 (s42 erst ab It. ~100).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese nicht bestätigt — mit Servo-Last als Eingang greift die Policy schlechter und kippt; verworfen.
+urteil: 'schlechter, Leitplanke verletzt — verworfen (bestätigt 2026-10-14)'
+schluss: 'Hypothese nicht bestätigt — mit Servo-Last als Eingang greift die Policy schlechter und kippt; verworfen.
   Ursache nicht geklärt (40 zusätzliche verrauschte Eingänge, Training sonst gleich).'

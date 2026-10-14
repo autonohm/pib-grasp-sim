@@ -63,6 +63,10 @@ Bezeichner, Kommandozeilen-Optionen und JSON-Schlüssel nicht umbenennen (alte B
 - Orchestrierung: `conda activate env_isaaclab && /usr/bin/python3 isaac_lab/experiments.py …`; Prozesse nicht per `pkill -f`
   suchen/beenden (trifft die eigene Shell), sondern über `ps -eo pid,args`; während eines `run` nichts unter `isaac_lab/` ändern
 
+## Stand
+Basis des Kraftgriffs seitlich ist **EXP-036** (CAPS + PID-Lagrange auf den Servo-Stall, ohne Aktionsfilter; ADR-023).
+Neue Experimente: `experiments.py new --eltern EXP-036 …`. Von oben genügt die Regel EXP-028.
+
 ## Arbeitsweise
 - Bewährte Praxis (NVIDIA, Literatur) zuerst und mit Quelle; eigene Terme nur einzeln und begründet
 - Keine automatischen Commits ohne Rückfrage; Commit-Nachrichten deutsch
@@ -70,5 +74,5 @@ Bezeichner, Kommandozeilen-Optionen und JSON-Schlüssel nicht umbenennen (alte B
 
 ## Wo was steht
 [docs/repo-karte.md](docs/repo-karte.md) (alle Dateien) · [docs/architecture.md](docs/architecture.md) ·
-[docs/conventions.md](docs/conventions.md) · [docs/decisions.md](docs/decisions.md) (ADR-001–022) ·
+[docs/conventions.md](docs/conventions.md) · [docs/decisions.md](docs/decisions.md) (ADR-001–023) ·
 [docs/hardware-annahmen.md](docs/hardware-annahmen.md) · [docs/protokoll/current-sprint.md](docs/protokoll/current-sprint.md)

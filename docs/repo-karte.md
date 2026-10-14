@@ -74,9 +74,10 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | Pfad | Status | Was |
 |---|---|---|
 | `getting-started.md` | aktuell | Installation und drei Einstiegswege |
-| `architecture.md`, `conventions.md`, `decisions.md` | aktuell | Aufbau, Einheiten/Vorzeichen/Namen/Schnittstellen, Entscheidungen ADR-001–022 |
+| `architecture.md`, `conventions.md`, `decisions.md` | aktuell | Aufbau, Einheiten/Vorzeichen/Namen/Schnittstellen, Entscheidungen ADR-001–023 |
 | `repo-karte.md`, `glossar.md` | aktuell | diese Karte; Begriffe Doku (deutsch) ↔ Code |
 | `weitermachen.md`, `hardware-annahmen.md` | aktuell | offene Aufgaben; Annahmen der Sim über die echte Hand |
 | `int8/` | aktuell | Ergebnis der int8-Prüfung (M2) |
+| `env_isaaclab-freeze.txt` | aktuell | `pip freeze` der conda-Umgebung (Referenz für exakte Versionen) |
 | `protokoll/` | Protokoll | Projekt-Tagebuch: Sprint (`current-sprint.md`), Session-Übergabe (`handoff.md`), Nachtläufe, Pläne, Startpose-Suche |
 | `archiv/` | Altlast | alte Pläne und Prompts |

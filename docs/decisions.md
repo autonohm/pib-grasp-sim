@@ -876,6 +876,49 @@ Vorbildern; die Korrekturen übernehmen jeweils das bewährte Gegenstück (DexPB
 
 ---
 
+## ADR-023: Basis EXP-036 (CAPS + Stall-Grenze) und Kennzahl „Servo-Last real“
+
+**Problem**: Nach den Nachtläufen 2026-10-11 bis 10-14 (EXP-024–041) standen zwei Kandidaten für die Basis des Kraftgriffs
+seitlich nebeneinander — EXP-024 (Aktionsfilter) und EXP-036 (CAPS + PID-Lagrange auf den Servo-Stall) —, die Leistung
+war nirgends gesichert verschieden. Zugleich zeigte die Diagnose `isaac_lab/tools/diag_stall.py`, dass die bisherige
+Servo-Last Artefakte enthielt (Drücken gegen den eigenen Anschlag, das die Firmware real verhindert) und das Handgelenk nie
+mitgezählt hatte (seine Grenze steht in Isaac Lab für das Pleuel auf 10⁹).
+
+**Entscheidung** (2026-10-14):
+1. **Basis ist EXP-036** (Task `Pib-Grasp-Hand-Left-HeavyMultiProgressDexCapsLagrange-v0`, Top-Seed s42 im Release
+   `v0.1-praesentation`): bestes Rezept **ohne Aktionsfilter** — volle Servo-Leistung, Verhalten über Verlust und Kosten
+   gesteuert (CAPS gegen Unruhe, PID-Lagrange gegen Dauer-Stall), wie in ADR-022 (Nachtrag) angestrebt.
+2. **Kennzahl „Servo-Last real“** (`mdp.servo_stall`, `eval_policy` → `servo_last_real`): Anteil der Schritte mit ≥ 80 %
+   Stall-Moment über alle 8 Servos, Handgelenk mit winkelabhängigem Stall-Moment über das Pleuel, ohne Drücken gegen den
+   Anschlag. Alle 24 Policies der Leaderboards nachbewertet; der Wünschbarkeitsindex (Leaderboard v3) rechnet damit.
+
+**Begründung** (Leaderboard v3, erfolgreiche Seeds, Hauptbedingung):
+
+| | EXP-036 (Basis) | EXP-024 (Filter) |
+|---|---|---|
+| Leistung · Seeds | 83 % · 4/5 | 87 % · 5/5 |
+| Unruhe an den Servos | **0,04** | 0,17 |
+| Servo-Last real · Schutz > 2 s | **13 % · 85 %** | 21 % · 100 % |
+| Kippen (Median) | 28° | **13°** |
+| Rampe (Top) · Transport | 108 m/s² · 95 % | 106 m/s² · 97 % |
+| Index v3 (Top-Seed) | 0,66 (0,81) | 0,70 (0,84) |
+
+EXP-024 liegt im Index knapp vorn, braucht aber einen Filter in der Firmware (gleitender Mittelwert α 0,3), der die Servos
+verlangsamt, und hält einen Servo in jeder Episode im Dauer-Stall. EXP-036 ist ruhiger, belastet die Servos im Mittel weniger
+und kommt ohne Nachbearbeitung der Aktion aus (nur Skala 0,1 rad).
+
+**Konsequenzen**:
+- Neue Experimente starten von EXP-036 (`experiments.py new --eltern EXP-036 …`).
+- Firmware: relative Ziele × 0,1 rad, keine Begrenzung/kein Filter; Winkelgrenzen kappen (kein Drücken gegen den Anschlag).
+- Offen an der Basis: Kippen (häufigste Fehlerart, 1 von 5 Seeds hält gekippt), Transport 95 %, die Last sammelt sich weiter
+  auf einem Servo (Überlastschutz > 2 s in 85 % der Griffe). Grenze je Servo + Fingerzahl-Belohnung (EXP-040) senkt das auf
+  21 %, kostet aber Griffreserve (Rampe 71 m/s²) und Zuverlässigkeit (2/5) — mit mehr Seeds und langsam eingeblendeter Grenze
+  erneut prüfen (`docs/weitermachen.md`).
+- Die Servo-Last ist eine PD-Schätzung der Simulation; Sehne und Rückstellfeder der echten Finger fehlen im Aktuatormodell
+  (`docs/hardware-annahmen.md`).
+
+---
+
 ## Template für neue Entscheidungen
 
 **Problem**: [Was ist das konkrete Problem oder der Trade-off?]

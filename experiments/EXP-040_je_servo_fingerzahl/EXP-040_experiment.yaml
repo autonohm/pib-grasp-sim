@@ -3,7 +3,7 @@ id: EXP-040
 titel: Grenze je Servo + Belohnung nach Fingerzahl
 datum: '2026-10-13'
 eltern: EXP-039
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Die Grenze je Servo zwingt zum Verteilen der Last, die Belohnung nach Fingerzahl zeigt wohin (allein wirkte sie in EXP-005/026 nicht, weil Sammeln nichts kostete). Erwartet: Finger im Mittel ≥ 4, Kriterien von EXP-039 eingehalten, Leistung nicht gesichert schlechter als EXP-036.'
 aenderung: 'Zusätzlich Belohnung nach Zahl der Finger am Objekt bei Daumenkontakt (Term aus EXP-005/026, Gewicht 1,0; Task HeavyMultiProgressDexCapsLagrangeJeServoFinger-v0).'
@@ -88,5 +88,5 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-14_05-05-51_EXP-040_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 79 % [70–85] (ggü. EXP-039 P = 0,44, kein Unterschied), 2/5 (s43, s44, s46 gekippt; Leitplanke Kippen verletzt). Erfolgreiche Seeds: Servo-Last real 5 %, Schutz > 2 s 21 % (EXP-036 85 %), Finger 4,1 (alle 5 Seeds 3,7; EXP-039 2,9), Unruhe 0,03, Transport 83 %, Rampe Top 71 m/s² (EXP-036 108). Top s42: Ø 6 94 %, Servo-Last 3 %, max. Servo 14 %, Schutz 12 %, Kippen 22°. Index 0,47 (Top 0,58).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Wechselwirkung bestätigt — erst Grenze je Servo + Fingerzahl senkt den Überlastschutz deutlich (21 % gegen 83/87 % mit nur einer der beiden Änderungen) und erhöht die Fingerzahl (4,1, Ziel ≥ 4 erreicht; Fingerzahl allein, EXP-041: 3,5). Preis: weniger Haltekraft — Grenzbeschleunigung 71 statt 108 m/s², Transport 83 %, nur 2/5 Seeds. Zielkonflikt Servo-Schonung ↔ Griffreserve; s42 als Kandidat für Videos.'
+urteil: 'kein Unterschied, Leitplanke Kippen verletzt; Überlastschutz deutlich besser (21 %), weniger Griffreserve — Kandidat für mehr Seeds (bestätigt 2026-10-14)'
+schluss: 'Wechselwirkung bestätigt — erst Grenze je Servo + Fingerzahl senkt den Überlastschutz deutlich (21 % gegen 83/87 % mit nur einer der beiden Änderungen) und erhöht die Fingerzahl (4,1, Ziel ≥ 4 erreicht; Fingerzahl allein, EXP-041: 3,5). Preis: weniger Haltekraft — Grenzbeschleunigung 71 statt 108 m/s², Transport 83 %, nur 2/5 Seeds. Zielkonflikt Servo-Schonung ↔ Griffreserve; s42 als Kandidat für Videos.'

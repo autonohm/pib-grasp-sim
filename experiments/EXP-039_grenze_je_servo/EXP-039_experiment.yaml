@@ -3,7 +3,7 @@ id: EXP-039
 titel: Stall-Grenze je Servo (8 λ, jeder Servo ≤ 20 %)
 datum: '2026-10-13'
 eltern: EXP-038
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Mit einem λ je Servo (CaT: Grenze je Gelenk) darf kein einzelner Servo die Last sammeln (EXP-036: Zeigefinger 54 % der Schritte ≥ 80 %). Erwartet: kein Servo über 30 % (Servo-Last real, Haltephase), Schutz > 2 s ≤ 50 %, Finger im Mittel ≥ 3,5; Leistung nicht gesichert schlechter als EXP-036, Unruhe ≤ 0,1, Transport ≥ 95 %.'
 aenderung: 'Ein λ je Servo (8) statt eines λ auf den Mittelwert; jeder Servo ≤ 20 %, Strafe (1/8)·Σ λ_i·c_i (Task HeavyMultiProgressDexCapsLagrangeJeServo-v0).'
@@ -88,5 +88,5 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-14_02-57-13_EXP-039_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 75 % [59–86] (ggü. EXP-038 P = 0,52, kein Unterschied), 3/5 (s43, s46 gekippt). Erfolgreiche Seeds: Servo-Last real 12 %, Schutz > 2 s 83 %, Finger 2,9, Unruhe 0,03, Transport 61 %, Rampe Top 82 m/s². Je Servo (Haltephase) weiter einzelne Servos bis 69–96 % (s44 klein, s45 Daumen-MCP), s42 verteilt (max. 35 %). Index 0,30.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Kriterien verfehlt (kein Servo > 30 %: nein; Schutz ≤ 50 %: 83 %; Finger ≥ 3,5: 2,9; Transport 61 %). Die Grenze je Servo allein verteilt die Last nur in einem Teil der Seeds; unter Rauschen (Risiko im Plan) bremst sie den Griff — Transport deutlich schlechter.'
+urteil: 'kein Unterschied, Kriterien verfehlt — allein nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Kriterien verfehlt (kein Servo > 30 %: nein; Schutz ≤ 50 %: 83 %; Finger ≥ 3,5: 2,9; Transport 61 %). Die Grenze je Servo allein verteilt die Last nur in einem Teil der Seeds; unter Rauschen (Risiko im Plan) bremst sie den Griff — Transport deutlich schlechter.'

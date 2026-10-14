@@ -3,7 +3,7 @@ id: EXP-023
 titel: EXP-022 mit Strafe auf die Verschiebung in der Tischebene
 datum: '2026-10-10'
 eltern: EXP-022
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Die Policies der Linie mit 18 Formen ziehen das Objekt beim Zugreifen ~13 cm in der Tischebene
   Richtung Unterarm (EXP-022 s42, Ø 6: Objektweg 142 mm), weil nichts in der Belohnung die Lage in xy hält.
@@ -96,7 +96,7 @@ laeufe:
 ergebnis: 'Leistung 87 % [83–89] (ggü. EXP-022 kein Unterschied), 5/5 Seeds. Objektweg Ø 6 im Mittel 112 → 75 mm
   (je Seed EXP-022 142/140/113/41/123, EXP-023 144/37/73/73/47 mm; Ø 8 70, Quader 68 mm): halbiert in 3/5 Seeds, s42 zieht
   unverändert. Leitplanke Unruhe verletzt: 1,65 (EXP-022 0,36), s42/45/46 1,5–3,9, s43/44 ≈ 0,27.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Die Strafe senkt das Ziehen, aber nicht zuverlässig, und macht mehrere Seeds unruhig (vermutlich
+urteil: 'kein Unterschied, Leitplanke Unruhe verletzt — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Die Strafe senkt das Ziehen, aber nicht zuverlässig, und macht mehrere Seeds unruhig (vermutlich
   Nachregeln gegen die Strafe). So nicht als neue Basis; für „von oben“ zunächst ohne xy-Strafe (EXP-022-Rezept).
   Möglich: kleineres Gewicht oder Strafe nur vor dem Absenken; Videos s43 (37 mm) vs. s42 ansehen.'

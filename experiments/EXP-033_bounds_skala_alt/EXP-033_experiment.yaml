@@ -4,7 +4,7 @@ titel: EXP-027 mit der alten Skala 0,03 für Unterarm und Handgelenk (nur bounds
   statt Begrenzung)
 datum: '2026-10-12'
 eltern: EXP-027
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-027 kippt das Objekt mit dem Unterarm (Kipp 44°, Unterarm 51°, 3/5
   Seeds verletzen die Anforderung). Ursache ist die volle Stellgröße an Unterarm/Handgelenk
@@ -94,5 +94,5 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-12_09-37-18_EXP-033_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 79 % [74–84] (ggü. EXP-027 kein gesicherter Unterschied, P = 0,54), 4/5 Seeds (s46: hält, aber gekippt); Kippwinkel 30° (EXP-027 44°, EXP-022 20°, EXP-024 13°), Unterarm 34° (51° / 25° / 11°), Robust 55 % (38 %), Unruhe an den Servos 0,42 (0,66), Objektweg 124 mm. Index v3 seitlich 0,17 (EXP-027 0,06).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Die kleinere Unterarm-/Handgelenkskala erklärt das Kippen nur zum Teil (44° → 30°). Reihenfolge über die Rezepte mit Skala 0,03: Filter (EXP-024) 13° < Begrenzung ±1 (EXP-022) 20° < nur bounds_loss (EXP-033) 30° — je weniger das Rauschen der relativen Aktion am Unterarm aufsummiert werden kann, desto weniger kippt die Policy (Vermutung: gekippte Haltegriffe werden durch die Drift früh gefunden). bounds_loss ist kein Ersatz für die Begrenzung. Nächster Schritt im Sinne „Steuerung über Kosten“: Kippen bzw. Unterarmabweichung direkt bepreisen (offen).'
+urteil: 'kein Unterschied, Leitplanke verletzt — erklärt das Kippen nur zum Teil (bestätigt 2026-10-14)'
+schluss: 'Die kleinere Unterarm-/Handgelenkskala erklärt das Kippen nur zum Teil (44° → 30°). Reihenfolge über die Rezepte mit Skala 0,03: Filter (EXP-024) 13° < Begrenzung ±1 (EXP-022) 20° < nur bounds_loss (EXP-033) 30° — je weniger das Rauschen der relativen Aktion am Unterarm aufsummiert werden kann, desto weniger kippt die Policy (Vermutung: gekippte Haltegriffe werden durch die Drift früh gefunden). bounds_loss ist kein Ersatz für die Begrenzung. Nächster Schritt im Sinne „Steuerung über Kosten“: Kippen bzw. Unterarmabweichung direkt bepreisen (offen).'

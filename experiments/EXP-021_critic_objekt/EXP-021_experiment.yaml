@@ -94,6 +94,6 @@ laeufe:
 ergebnis: 4/5 Seeds, Leistung 85 % [82–88] (kein Unterschied); Unterarm 41° (32°,
   verletzt). Bewertung nach Export-Fix nachgeholt (Critic mit +6 Eingängen lud nicht
   in die Basisaufgabe).
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Critic mit Objektgröße/Masse/Reibung bringt bei 5 Seeds nichts
+urteil: 'kein Unterschied, Leitplanke Unterarm verletzt — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Critic mit Objektgröße/Masse/Reibung bringt bei 5 Seeds nichts
   Messbares — nicht übernommen, auf neuer Basis ggf. später erneut.'

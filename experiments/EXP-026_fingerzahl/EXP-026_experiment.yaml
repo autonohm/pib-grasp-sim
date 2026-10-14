@@ -3,7 +3,7 @@ id: EXP-026
 titel: EXP-022 mit Belohnung nach Zahl der Finger am Objekt
 datum: '2026-10-11'
 eltern: EXP-022
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-022 greift mit Daumen + ~2 Fingern (2,9–3,8 im Mittel, je Seed andere), die Regel mit allen fünf. Der Term aus
   EXP-005 (damals mit fehlerhafter Annäherung, eval-v1) auf der heutigen Basis: mehr Finger am Objekt (≥ 4), weniger
@@ -94,6 +94,6 @@ laeufe:
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 81 % [78–85] (kein Unterschied), 5/5; Leitplanke Unruhe verletzt (0,77 vs. 0,36). Finger am Objekt 3,26 (EXP-022
   3,21) — keine Wirkung; Ring/klein je nach Seed weiter selten.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese widerlegt — wie EXP-005 bringt der Term keine zusätzlichen Finger, aber Unruhe. Verworfen. Welche Finger greifen,
+urteil: 'kein Unterschied, Leitplanke Unruhe verletzt — verworfen (bestätigt 2026-10-14)'
+schluss: 'Hypothese widerlegt — wie EXP-005 bringt der Term keine zusätzlichen Finger, aber Unruhe. Verworfen. Welche Finger greifen,
   bleibt eine Eigenschaft des Seeds (Ring/klein je Seed 0–100 %); die Regel nutzt alle fünf — erreichbar sind sie also.'

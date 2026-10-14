@@ -3,7 +3,7 @@ id: EXP-035
 titel: 'Servo-Stall: PID-Lagrange auf den Stall-Anteil (Grenze 20 %)'
 datum: '2026-10-12'
 eltern: EXP-027
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-027 liegt fast immer im Stall (Daumen, Zeige- und kleiner Finger 82–98
   % der Schritte ≥ 90 % Moment); die echten ST3215 schalten nach > 2 s über 80 % Blockiermoment
@@ -99,7 +99,7 @@ ergebnis: 'Leistung 84 % [81–86] (ggü. EXP-027 kein Unterschied, P = 0,67), n
   87 %, Transport 95 % (s44 98, s45 92). λ steigt bis It. 100–200 auf 5–8, fällt bis It. 300 auf 2–5; J_c im Training am Ende
   0,16–0,18 (≤ 0,2). Rauschen σ sinkt auf 0,39–0,46 (EXP-027 0,71–0,87). Stall je Servo: die Last sammelt sich auf einem
   Servo (Zeigefinger 95–97 % oder Daumen 35–55 % der Zeit), die übrigen ≤ 5 %.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Mittel-Grenze wirkt (J_c ≤ 0,2, Griffkraft −40 %), der Überlastschutz aber kaum: Kosten = Anteil der Servos
+urteil: 'kein Unterschied, Stall-Grenze wirkt im Mittel — Bestandteil der Basis (bestätigt 2026-10-14)'
+schluss: 'Mittel-Grenze wirkt (J_c ≤ 0,2, Griffkraft −40 %), der Überlastschutz aber kaum: Kosten = Anteil der Servos
   erlauben einen Servo im Dauer-Stall (1/7 = 14 % < 20 %). Für den Schutz braucht es eine Grenze je Servo (je ein λ) oder
   Kosten auf die Lauflänge > 2 s. Zuverlässigkeit 2/5 nicht trennscharf (EXP-027 ebenfalls 2/5).'

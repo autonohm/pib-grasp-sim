@@ -3,7 +3,7 @@ id: EXP-016
 titel: Randomisierung der Hand wie Dexsuite (Servo-Gains 0,5–2, Gelenkreibung)
 datum: '2026-10-08'
 eltern: EXP-013
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Breitere Randomisierung der Hand wie Dexsuite (Servo-Gains 0,5–2, Gelenkreibung)
   macht die Policy robuster gegenüber Servo-Streuung (wichtig für die echte Hand),
@@ -72,8 +72,8 @@ laeufe:
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: Leistung 65 % (Ø 6 78 · Ø 8 68 · Quader 57), 4/5 Seeds, Unruhe 1,24; ggü.
   EXP-013 kein gesicherter Unterschied (P = 0,40).
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Breite Randomisierung kostet tendenziell Leistung; der Nutzen (Robustheit
+urteil: 'kein Unterschied (Leistung tendenziell niedriger) — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Breite Randomisierung kostet tendenziell Leistung; der Nutzen (Robustheit
   gegen Servo-Streuung) wird erst mit einer Robustheitsbedingung im Benchmark messbar
   — bis dahin nicht übernehmen.'
 nachtrag:

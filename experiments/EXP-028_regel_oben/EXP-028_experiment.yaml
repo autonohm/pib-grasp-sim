@@ -3,7 +3,7 @@ id: EXP-028
 titel: 'Regel-Baseline von oben: alle Finger schließen (kein RL), gestreute Vorgreifpose'
 datum: '2026-10-12'
 eltern: EXP-014
-status: bewertet
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Wie gut greift eine einfache Regel von oben (Startpose aus der Suche)?
   Maßstab für den Spezialisten.
@@ -57,8 +57,8 @@ laeufe:
 - logs/regel/EXP-028
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Raster (Seed 2000): 96,4–98,5 %, gewählt schliessen=0.4, rotator_deg=90. Leistung 100 % (Kugel Ø 7 100, Kugel Ø 5 90, Dose 100, Schachtel 100 %, Suppendose YCB 100 %), Robust (Kugel Ø 7 gestört) 99 %, Unruhe 0,01, Unterarm 1°, Servo-Last 0 %, Objektweg 22 mm, 3,4 Finger. Leaderboard v3 oben Index 0,92.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Mit der gefundenen Vorgreifpose (20° gekippt, Rotator 75°, Höhe je Objekt) genügt von oben eine einfache Regel — die Startpose ist der eigentliche Hebel. Maßstab für die Spezialisten EXP-029/030; RL muss sich hier über Kugel Ø 5, Störungen oder Kraft beweisen.'
+urteil: 'Referenz (Regel-Baseline von oben, 100 %) — von oben genügt die Regel (bestätigt 2026-10-14)'
+schluss: 'Mit der gefundenen Vorgreifpose (20° gekippt, Rotator 75°, Höhe je Objekt) genügt von oben eine einfache Regel — die Startpose ist der eigentliche Hebel. Maßstab für die Spezialisten EXP-029/030; RL muss sich hier über Kugel Ø 5, Störungen oder Kraft beweisen.'
 laeufe_von: null
 greifart: oben
 regel:

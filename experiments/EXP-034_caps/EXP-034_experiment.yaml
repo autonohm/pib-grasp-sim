@@ -3,7 +3,7 @@ id: EXP-034
 titel: 'Unruhe: CAPS-Verlust auf den Mittelwert der Policy (zeitlich + räumlich)'
 datum: '2026-10-12'
 eltern: EXP-027
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'EXP-027 ist unruhig (Unruhe an den Servos 0,66, EXP-024 mit Filter 0,17).
   Die Strafe action_rate_l2 wirkt auf die verrauschte Aktion und misst vor allem Exploration
@@ -101,6 +101,6 @@ ergebnis: 'Leistung 78 % [67–82] (ggü. EXP-027 kein Unterschied, P = 0,46), 4
   Transport 88 % (s42 97, s43 80, s45 92, s46 82) < Kriterium 97 %. Index 0,39 (Top s42 0,68). CAPS-Anteil am
   Actor-Gradienten anfangs 14–17 %, am Ende 2–7 %; Rauschen σ bleibt bei 0,74–0,83 wie EXP-027 (CAPS wirkt nur auf den
   Mittelwert).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese zur Unruhe bestätigt — ohne Filter ruhiger als EXP-024, Leistung gleich. Transport-Kriterium verfehlt,
+urteil: 'kein Unterschied, Unruhe ohne Filter gelöst — Bestandteil der Basis (bestätigt 2026-10-14)'
+schluss: 'Hypothese zur Unruhe bestätigt — ohne Filter ruhiger als EXP-024, Leistung gleich. Transport-Kriterium verfehlt,
   Stall unverändert → allein keine Basis; CAPS bleibt Baustein (EXP-036).'

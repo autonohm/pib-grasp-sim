@@ -3,7 +3,7 @@ id: EXP-036
 titel: CAPS + PID-Lagrange auf den Stall-Anteil
 datum: '2026-10-12'
 eltern: EXP-034
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'CAPS (EXP-034) und Stall-Grenze (EXP-035) greifen an verschiedenen Stellen
   an (Verlust auf den Mittelwert vs. Kosten in der Belohnung) und vertragen sich:
@@ -94,7 +94,7 @@ ergebnis: 'Leistung 83 % [80–86] (ggü. EXP-034 kein Unterschied, P = 0,67), 4
   Kippen 28° (EXP-024 13°), Robust 70 % (72), Schutz > 2 s 85 % (100). Transport 95 % (s42 99, s43 84, s44 99, s45 97)
   knapp unter 97 % (EXP-024 Top s44 94 %); Drehen Top 99–100 %. λ wie EXP-035 (Spitze 4–7, Ende 0–3), CAPS-Anteil
   am Ende 2–3 %. Stall wieder auf einem Servo gesammelt (Zeigefinger oder Daumen).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese weitgehend bestätigt — ruhig und im Mittel kühl zugleich, Leistung gleich; Kandidat neue Basis neben
+urteil: 'kein Unterschied in der Leistung — **neue Basis** (bestes Rezept ohne Filter: CAPS + Stall-Grenze, ADR-023) (bestätigt 2026-10-14)'
+schluss: 'Hypothese weitgehend bestätigt — ruhig und im Mittel kühl zugleich, Leistung gleich; Kandidat neue Basis neben
   EXP-024 (Videos sichten). Offen: Transport-Mittel 2 PP unter dem Kriterium (ein Seed, s43), Kippen 28° statt 13°,
   Überlastschutz wie EXP-035 nur im Mittel → nächster Schritt Grenze je Servo.'

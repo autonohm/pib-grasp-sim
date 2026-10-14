@@ -4,7 +4,7 @@ title: "pib Hand Simulation: digitaler Zwilling und RL-Greifen für die pib-Hand
 type: software
 authors:
   - given-names: Leon
-    family-names: "<Nachname>"
+    family-names: Krampf
 version: "0.1"
 date-released: "2026-10-15"
 repository-code: "https://github.com/churro206/pib-hand-sim"

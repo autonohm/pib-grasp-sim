@@ -142,6 +142,6 @@ Nur ein Isaac-Prozess gleichzeitig (8 GB VRAM). Logs und Checkpoints landen in `
 | Ubuntu / Treiber / GPU | 24.04 / 580.178 / RTX 3060 Ti 8 GB |
 | Isaac Sim | 5.1.0 |
 | Isaac Lab | 2.3.2, rsl-rl-lib 3.1.2 |
-| Python (env_isaaclab) | 3.11, torch 2.7.0+cu128, numpy 1.26.0, gymnasium 1.2.1, onnxruntime 1.30.0 |
+| Python (env_isaaclab) | 3.11, torch 2.7.0+cu128, numpy 1.26.0, gymnasium 1.2.1, onnxruntime 1.30.0 — alle Pakete: [env_isaaclab-freeze.txt](env_isaaclab-freeze.txt) |
 | ROS 2 | Jazzy |
 | ST Edge AI Core (M2) | 4.0.1 |

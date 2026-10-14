@@ -3,7 +3,7 @@ id: EXP-030
 titel: Spezialist von oben, Rezept EXP-022 (Rückfallebene)
 datum: '2026-10-12'
 eltern: EXP-028
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: Wie EXP-029, mit dem erprobten Rezept EXP-022 (5/5 Seeds seitlich) — Rückfallebene
   für die Präsentation.
@@ -71,7 +71,7 @@ laeufe:
 - logs/rsl_rl/pib_grasp_hand_left/2026-10-12_05-43-59_EXP-030_s46
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Leistung 100 % [99–100] (ggü. Regel EXP-028 kein gesicherter Unterschied, P = 0,35), 5/5 Seeds; Kugel Ø 5 89 % (Regel 90 %); Robust 98 % (Regel 99 %); Unruhe 0,11; wie EXP-029 drehen alle Seeds den Unterarm voll (90°), Objekt danach gekippt (81°) und ~10 cm verschoben; Griffkraft 156 N, Stall 98 %, Servo-Last 70 %. Index oben 0,13 (Regel 0,92).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese nicht bestätigt — RL erreicht von oben die Regel, schlägt sie aber nicht. Die Unterarmdrehung tritt auch mit Skala 0,03 und Begrenzung ±1 auf (EXP-029: Skala 0,1) → von oben liegt sie nicht am Aktionsraum, sondern an der Aufgabe: die Belohnung von oben (Dexsuite Lift, ohne Orientierung) setzt Unterarm und Objektlage nichts entgegen. Was die Drehung bringt (Objekt gekippt und verschoben), ist noch nicht im Video geprüft. Vorschlag nächstes Experiment: Kosten auf die Unterarmabweichung von der Vorgreifpose (oder Unterarm von oben aus dem Aktionsraum, da der Arm die Pose hält) — offen.'
+urteil: 'kein Unterschied zur Regel EXP-028, Leitplanke verletzt — Regel bleibt (bestätigt 2026-10-14)'
+schluss: 'Hypothese nicht bestätigt — RL erreicht von oben die Regel, schlägt sie aber nicht. Die Unterarmdrehung tritt auch mit Skala 0,03 und Begrenzung ±1 auf (EXP-029: Skala 0,1) → von oben liegt sie nicht am Aktionsraum, sondern an der Aufgabe: die Belohnung von oben (Dexsuite Lift, ohne Orientierung) setzt Unterarm und Objektlage nichts entgegen. Was die Drehung bringt (Objekt gekippt und verschoben), ist noch nicht im Video geprüft. Vorschlag nächstes Experiment: Kosten auf die Unterarmabweichung von der Vorgreifpose (oder Unterarm von oben aus dem Aktionsraum, da der Arm die Pose hält) — offen.'
 laeufe_von: null
 greifart: oben

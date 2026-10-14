@@ -3,7 +3,7 @@ id: EXP-025
 titel: EXP-022 mit Strafe auf das normierte Servo-Moment
 datum: '2026-10-11'
 eltern: EXP-022
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Alle Policies halten mit vollem Moment (Stall 97–99 %, Griffkraft 83–130 N), weil nichts die Kraft kostet. Für die
   echte Hand schädlich (ST3215 im Dauer-Stall: Wärme, Strom, Überlastschutz). Eine Strafe auf das normierte Servo-Moment
@@ -95,7 +95,7 @@ laeufe:
 ergebnis: 'Leistung 86 % [83–89] (kein Unterschied), 4/5 (Seed 44 hält gekippt); Leitplanke Kippwinkel verletzt (26° vs. 20°).
   Stall-Anteil 96,5 % (97,4 %), Griffkraft 88 N (104); nur Seed 42 halbiert die Kraft (46 N), bleibt aber an Daumen und
   Zeigefinger im Stall (91 %).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Hypothese nicht bestätigt — W = −0,1 zu schwach gegen die Haltebelohnung. Ursache des Stalls ist die Aktionsart: volle
+urteil: 'kein Unterschied, Leitplanke Kippen verletzt — verworfen (bestätigt 2026-10-14)'
+schluss: 'Hypothese nicht bestätigt — W = −0,1 zu schwach gegen die Haltebelohnung. Ursache des Stalls ist die Aktionsart: volle
   relative Aktion (0,1 rad) > 5° Sättigungsfehler → bei blockiertem Finger volles Moment; die Regel hält mit 0,2 ohne Stall
   (47 N). Nächster Versuch: stärkere Strafe oder kleinere Aktionsskala der Finger (offen), mit Filter (EXP-024).'

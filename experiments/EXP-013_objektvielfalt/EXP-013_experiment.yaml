@@ -3,7 +3,7 @@ id: EXP-013
 titel: Objektvielfalt im Training (18 Formen der Kategorie seitlich)
 datum: '2026-10-08'
 eltern: EXP-006
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Training an 18 Formen der Kategorie (statt nur am Ø-6-cm-Zylinder) hebt den Engpass Quader
   (EXP-006: Leistung 55 %) deutlich (≥ +15 PP), die Leistung über die Benchmark-Objekte ist mindestens gleich
@@ -75,8 +75,8 @@ laeufe:
 ergebnis: Leistung 77 % (Ø 6 83 · Ø 8 83 · Quader 57), Testobjekte Flasche 84 · Saftpackung
   67 %, 3/5 Seeds (43/44 lernen nicht zu greifen), Unruhe 0,70; ggü. EXP-006 kein
   gesicherter Unterschied (P = 0,44).
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Objektvielfalt löst den Quader-Engpass nicht, verbessert aber Ø
+urteil: 'kein Vergleich (Eltern unter eval-v1); Objektvielfalt als Setup der Kategorie übernommen (bestätigt 2026-10-14)'
+schluss: 'Objektvielfalt löst den Quader-Engpass nicht, verbessert aber Ø
   8 cm und die Testobjekte; als Setup für die Kategorie übernommen (Eltern für EXP-014–017).'
 protokoll_vorher: eval-v1
 nachtrag:

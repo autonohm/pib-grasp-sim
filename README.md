@@ -12,7 +12,7 @@ Ziel-Hardware STM32N657 mit NPU). Entstanden als Projektarbeit für RoboCup 2027
 |---|---|
 | Digitaler Zwilling v5: Fingerkopplung (Mimic Joints), Servo-Modell nach Datenblatt, Handgelenk über Pleuel, Kontaktsensoren an allen Fingerspitzen | ✓ ([ADR-011–014](docs/decisions.md)) |
 | ROS 2 Jazzy über `ros2_control` und Action Graph, Pickup-/Putdown-Demo | ✓ v4 und v5 |
-| Greif-Policy „Kraftgriff seitlich“ (blind: nur Gelenkwinkel + Fingerkräfte) | 83–87 % Erfolg, Regel-Baseline 69 % ([Leaderboard](experiments/leaderboard.md)) |
+| Greif-Policy „Kraftgriff seitlich“ (blind: nur Gelenkwinkel + Fingerkräfte) | 83–87 % Erfolg, Regel-Baseline 69 % ([Leaderboard](experiments/leaderboard.md)); Basis **EXP-036** (CAPS + Stall-Grenze, ADR-023) |
 | Griff „von oben“ | Regel mit guter Vorgreifpose 100 % — RL nicht nötig ([EXP-028](experiments/)) |
 | Policy int8 auf der NPU des STM32N657 | geprüft mit `stedgeai analyze` (71 kB, alle Schichten auf der NPU) — noch nicht auf dem Board |
 | Echte Hand | **noch nicht getestet** — offene Lücken in [Hardware-Annahmen](docs/hardware-annahmen.md) |
@@ -28,7 +28,7 @@ Ziel-Hardware STM32N657 mit NPU). Entstanden als Projektarbeit für RoboCup 2027
 4. **[Hardware-Annahmen](docs/hardware-annahmen.md)** — was die Simulation über die echte Hand annimmt und wie man es misst.
 
 Vertiefung: [Architektur](docs/architecture.md) · [Konventionen](docs/conventions.md) (Einheiten, Vorzeichen, Namen,
-Schnittstelle Policy ↔ Firmware) · [Entscheidungen ADR-001–022](docs/decisions.md) · [Experimente](experiments/README.md) ·
+Schnittstelle Policy ↔ Firmware) · [Entscheidungen ADR-001–023](docs/decisions.md) · [Experimente](experiments/README.md) ·
 [Glossar Deutsch ↔ Code](docs/glossar.md) · [Projekt-Protokoll](docs/protokoll/) (Sprint-Tagebuch, Nachtläufe, Pläne).
 
 **Sprache:** Dokumentation, Berichte und Ausgaben der Werkzeuge sind deutsch; Code-Kommentare englisch. Bezeichner,

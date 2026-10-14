@@ -3,7 +3,7 @@ id: EXP-015
 titel: 'Regel-Baseline: schließen bis Kontakt, taktiler Reflex (kein RL)'
 datum: '2026-10-08'
 eltern: EXP-013
-status: bewertet
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Ein taktiler Reflexgriff (schließen bis FSR-Kontakt, dann gezielt nachdrücken)
   ist die stärkere Regel: besser als EXP-014 bei Kippen und am Quader; RL (EXP-013)
@@ -58,8 +58,8 @@ laeufe:
 # --- 7. Dokumentieren & Entscheiden (nach der Auswertung, von Hand) ---
 ergebnis: 'Regel „bis Kontakt“ (nachdruck 2° aus 2/4/5,7°): Leistung 68 % (Ø 6 76
   · Ø 8 70 · Quader 51), Flasche 72 · Saft 62 %; mehr Nachdrücken war im Raster schlechter.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Der taktile Reflex ist nicht besser als „alle schließen“ — vermutlich
+urteil: 'Referenz (Regel-Baseline); nicht besser als EXP-014 (bestätigt 2026-10-14)'
+schluss: 'Der taktile Reflex ist nicht besser als „alle schließen“ — vermutlich
   lösen Fremdkontakte (Nachbarfinger, Tisch) die FSR aus.'
 regel:
   name: bis_kontakt

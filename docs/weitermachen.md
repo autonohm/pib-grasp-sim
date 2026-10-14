@@ -42,8 +42,8 @@ Nach Nutzen für das Ziel „pib greift mit der echten Hand“ sortiert, je mit 
 | **Zuverlässigkeit** | oft nur 2–4 von 5 Seeds | mehr Budget (EXP-032: 5/5, aber unruhig), Curriculum |
 
 Vor jeder Änderung: ein Experiment anlegen (`experiments.py new`), `tools/reward_diag.py`, genau eine Änderung, 5 Seeds
-([experiments/README.md](../experiments/README.md)). Aktueller Stand und Kandidaten: [Leaderboard](../experiments/leaderboard.md)
-(seitlich: EXP-024 und EXP-036).
+([experiments/README.md](../experiments/README.md)). Ausgangspunkt ist die **Basis EXP-036** (CAPS + Stall-Grenze, ohne Aktionsfilter; ADR-023), Alternative mit Filter EXP-024 —
+[Leaderboard](../experiments/leaderboard.md).
 
 ## 6. Weitere Greifarten und Team-Anbindung
 

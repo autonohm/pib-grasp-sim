@@ -3,7 +3,7 @@ id: EXP-012
 titel: Belohnung wie Dexsuite (Annäherung mit Handfläche, Position 3D zur Startposition)
 datum: '2026-10-08'
 eltern: EXP-006
-status: trainiert
+status: ausgewertet
 # --- 1. Planen (vor dem Start festlegen, danach nicht mehr ändern) ---
 hypothese: 'Mit der Belohnung so nah an Dexsuite wie die Aufgabe erlaubt hört das Anheben vor dem
   Absenken auf (EXP-006: 3–6 cm; im Verlaufsdiagramm bleibt die Objekthöhe nahe der Starthöhe), der
@@ -63,8 +63,8 @@ laeufe:
 ergebnis: 'Leistung 73 % (Ø 6 93 · Ø 8 71 · Quader 50), 3/5 Seeds; Anheben vor dem
   Absenken weg (4 statt 59 mm), Kippwinkel 17° (EXP-006: 30°), Unruhe 2,80 (0,31);
   Seeds 43/45 lernen nicht zu greifen.'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Die Dexsuite-Belohnung beseitigt das Anheben und halbiert das Kippen,
+urteil: 'kein Unterschied, Leitplanke Unruhe verletzt — nicht übernommen (bestätigt 2026-10-14)'
+schluss: 'Die Dexsuite-Belohnung beseitigt das Anheben und halbiert das Kippen,
   ohne Leistungsgewinn; die Unruhe steigt stark. Nicht als Baseline übernommen; Anteil
   von Annäherungs-Fix vs. milderer Haltebelohnung ungeklärt.'
 nachtrag:

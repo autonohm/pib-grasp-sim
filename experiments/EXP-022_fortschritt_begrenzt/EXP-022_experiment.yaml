@@ -92,6 +92,6 @@ laeufe:
 ergebnis: '5/5 Seeds greifen, Leistung 83 % [80–87] (ggü. EXP-019 kein Unterschied),
   alle Leitplanken eingehalten: Kippen 20° (EXP-019: 29°), Unruhe 0,36 (1,19); YCB
   84/93/83 %. Weiter volle Griffkraft (Stall ~98 %).'
-urteil: ""                      # bestätigtes Urteil (besser | schlechter | kein Unterschied | Leitplanke verletzt)
-schluss: 'Entwurf: Bestes Gesamtbild — Kandidat für die neue Basis, wenn die Videos
+urteil: 'kein Unterschied, alle Leitplanken eingehalten — Zwischenbasis (bestätigt 2026-10-14)'
+schluss: 'Bestes Gesamtbild — Kandidat für die neue Basis, wenn die Videos
   passen. Firmware muss die Netzausgabe auf ±1 begrenzen.'

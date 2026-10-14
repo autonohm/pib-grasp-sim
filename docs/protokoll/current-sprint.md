@@ -416,7 +416,8 @@ unter dem Daumen). Seitlich greifen braucht ≥ ~15 cm Objekthöhe (Fingerspitze
        Transport 61 %. **EXP-040** Grenze je Servo + Fingerzahl: **Schutz > 2 s 21 %** (EXP-036 85 %), Servo-Last 5 %, 4,1 Finger,
        aber Rampe 71 statt 108 m/s², Transport 83 %, 2/5 — Zielkonflikt Servo-Schonung ↔ Griffreserve; Top s42 (94 %, Schutz 12 %).
        **EXP-041** Fingerzahl allein: Schutz 87 % (Kontrolle). Häufigste Fehlerart der neuen Läufe: Kippen > 45°
-5k. [ ] **Repo abgabebereit für künftige pib-Studierende** — Plan `docs/protokoll/plan-abgabe.md`, Entwürfe `docs/repo-karte.md`, `docs/glossar.md` (Entscheidungen des Autors)
+5l. [x] **Basis EXP-036** (CAPS + Stall-Grenze, ohne Filter; ADR-023), alle Urteile bestätigt (2026-10-14)
+5k. [x] **Repo abgabebereit für künftige pib-Studierende** — Plan `docs/protokoll/plan-abgabe.md`, Entwürfe `docs/repo-karte.md`, `docs/glossar.md` (Entscheidungen des Autors)
 6. [ ] **GPU besser nutzen** (2026-10-09, GPU im Training 83 %): (a) Bewertung in einem Isaac-Prozess je Seed statt je
        Bedingung (~35 s je Bedingung, großteils Start/Szenenaufbau ≈ ¼ der Laufzeit) — Zahlen vorher/nachher gleich prüfen;
        (b) `experiments.py bench` 2048 Umgebungen messen, bei deutlichem Gewinn eigenes Experiment „2048 statt 1024“
