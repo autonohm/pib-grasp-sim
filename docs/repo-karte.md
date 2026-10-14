@@ -20,9 +20,7 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | `pib_hand_left_urdf_v5/` | aktuell | `onshape-to-robot`-Export linke v5-Hand + Unterarm (Quelle von `pib_hand_left_v5.usd`); `config.json` verweist auf das Onshape-Dokument |
 | `pib_upperbody_urdf_v5/` | aktuell | roher `onshape-to-robot`-Export des v5-Oberkörpers (Quelle der Gelenknamen) |
 | `docs/` | aktuell | siehe unten |
-| `scripts/` | Altlast | `launch.sh`, `start_isaac.sh`, `start_ros2.sh` — Start des Zwillings per Knopfdruck (nur v4) |
 | `videos/` | aktuell | Demo-Videos (Zwilling, erste Policies, YCB) |
-| `sensor_mount/` | unklar | 3D-Druckdatei `sensor_mount_distal_v3.1_+_v4.2.3mf` (Sensorhalter am Fingerendglied, 2026-06-18 ohne Beschreibung) |
 | `logs/`, `outputs/` | ignoriert | Trainingsläufe, Checkpoints, Bewertungen (nicht im Git; Sicherung auf Hugging Face) |
 | `LICENSE`, `THIRD_PARTY.md`, `CITATION.cff` | aktuell | Lizenz (Platzhalter), Fremdbestandteile, Zitation |
 

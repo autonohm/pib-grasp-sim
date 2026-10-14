@@ -46,7 +46,7 @@ source /opt/ros/jazzy/setup.bash && source $REPO/ros2_ws/install/setup.bash && e
 ```
 Im Fenster: *File → Open* → `isaac_sim/usd/pib_upperbody_v5.usd`, *Window → Script Editor* → `isaac_sim/start.py` ausführen
 (setzt Antriebe, Servo-Modell, Fingerkopplung, Grenzen, T-Pose), dann **Play**. Der Action Graph ist Teil der USD und läuft
-mit. Schnellstart nur für v4: `./scripts/start_isaac.sh` (lädt v4, führt `start.py` aus, drückt Play).
+mit.
 
 **3. ros2_control starten** (Terminal 2):
 ```bash
