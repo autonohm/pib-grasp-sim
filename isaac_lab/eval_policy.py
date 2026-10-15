@@ -18,7 +18,8 @@ per protocol version, nothing is overwritten by a new version. Another condition
   ~/IsaacLab/isaaclab.sh -p isaac_lab/eval_policy.py --policy <run>/exported/policy.pt --num_envs 16 --real_time
   ~/IsaacLab/isaaclab.sh -p isaac_lab/eval_policy.py --checkpoint <run>/model_299.pt --headless
 With --checkpoint: loads like Isaac Lab's play.py and exports to <run>/exported/ (JIT + ONNX).
-With --video N: records the first N steps (<out>/videos/), needs cameras.
+With --video N: records the first N steps (<out>/videos/), needs cameras. --kamera 2x2: 4 hands closer;
+--kamera einzeln: one hand from two angles side by side (one run, both halves show the same episodes).
 With --verlauf: additionally the time series over the episode (per time step, mean over running episodes:
 object height vs. start, tilt angle, fingers on the object, grip force, fraction of running episodes) →
 verlauf-v1[_<bedingung>].json. --nur-medien: write no evaluation files (video/time series only,
@@ -54,6 +55,9 @@ parser.add_argument("--bedingung", type=str, default="zylinder_seitlich", help="
 parser.add_argument("--out", type=str, default=None, help="Ausgabeordner (<protokoll>.json/.txt); "
                     "Standard: Laufordner bzw. isaac_sim/tools/")
 parser.add_argument("--video", type=int, default=0, help="Schritte Video am Anfang (0 = aus)")
+parser.add_argument("--kamera", choices=["raster", "2x2", "einzeln"], default="raster",
+                    help="Video-Ansicht: alle Umgebungen (Standard), 2×2 Hände oder eine Hand aus zwei Winkeln "
+                         "nebeneinander (setzt --num_envs auf 4 bzw. 1)")
 parser.add_argument("--real_time", action="store_true", help="Auf Echtzeit bremsen (zum Zuschauen)")
 parser.add_argument("--verlauf", action="store_true", help="Verlauf über die Episode messen")
 parser.add_argument("--action_clip", type=float, default=0.0,
@@ -114,6 +118,28 @@ else:
     cfg, TASK = apply_object(PibGraspEnvCfg(), args_cli.objekt), "Pib-Grasp-Hand-Left-v0"
 cfg.scene.num_envs = args_cli.num_envs
 cfg.seed = args_cli.seed
+# Close-up video views. The env grid is centred on the world origin (1 env: env 0 at the origin), so a target in the
+# env frame also works in world coordinates. "a" = viewing direction of the raster camera (env cfg), "b" = second angle
+# for "einzeln" (from the palm/object side). Distances in m.
+KAMERA = {
+    "seitlich": {"ziel": (-0.05, -0.31, 0.52), "a": (1.75, -1.75, 1.31), "b": (-1.2, -1.6, 0.9)},
+    "oben": {"ziel": (-0.02, -0.29, 0.31), "a": (1.45, -2.1, 1.1), "b": (-1.6, -1.4, 0.7)},   # oben: not checked yet
+}
+KAMERA_ABSTAND = {"2x2": 1.5, "einzeln": 0.34}
+KAMERA_B = "/World/KameraB"
+
+
+def kamera_eye(ziel, richtung, abstand):
+    n = math.sqrt(sum(x * x for x in richtung))
+    return tuple(z + abstand * x / n for z, x in zip(ziel, richtung))
+
+
+if args_cli.kamera != "raster":
+    k = KAMERA[args_cli.greifart]
+    cfg.scene.num_envs = 4 if args_cli.kamera == "2x2" else 1
+    cfg.viewer.lookat = k["ziel"]
+    cfg.viewer.eye = kamera_eye(k["ziel"], k["a"], KAMERA_ABSTAND[args_cli.kamera])
+    cfg.viewer.resolution = (1920, 1080) if args_cli.kamera == "2x2" else (960, 1080)   # einzeln: 2 halves → 1920×1080
 if args_cli.action_filter > 0:                                 # as in training (env.yaml: actions.servos.alpha)
     from pib_grasp.env_cfg import filtered_servo_action
     cfg.actions.servos = filtered_servo_action(args_cli.action_filter)
@@ -142,6 +168,37 @@ if getattr(cfg.terminations, "object_tilted", None) is not None:   # training-sp
 torch.manual_seed(args_cli.seed)
 env = gym.make(TASK, cfg=cfg, render_mode="rgb_array" if args_cli.video else None)
 uenv = env.unwrapped
+if args_cli.video and args_cli.kamera == "einzeln":
+    # Second camera with the optics of the viewport camera; one render pass feeds both, render() returns them
+    # side by side (RecordVideo calls render() of the unwrapped env)
+    import numpy as np
+    import omni.replicator.core as rep
+    import omni.usd
+    from pxr import Gf, UsdGeom
+    stage = omni.usd.get_context().get_stage()
+    cam_a = UsdGeom.Camera(stage.GetPrimAtPath(cfg.viewer.cam_prim_path))
+    cam_b = UsdGeom.Camera.Define(stage, KAMERA_B)
+    for get, make in ((cam_a.GetFocalLengthAttr, cam_b.CreateFocalLengthAttr),
+                      (cam_a.GetHorizontalApertureAttr, cam_b.CreateHorizontalApertureAttr),
+                      (cam_a.GetVerticalApertureAttr, cam_b.CreateVerticalApertureAttr),
+                      (cam_a.GetClippingRangeAttr, cam_b.CreateClippingRangeAttr)):
+        make().Set(get().Get())
+    k = KAMERA[args_cli.greifart]
+    eye_b = kamera_eye(k["ziel"], k["b"], KAMERA_ABSTAND["einzeln"])
+    view = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*eye_b), Gf.Vec3d(*k["ziel"]), Gf.Vec3d(0, 0, 1))
+    UsdGeom.Xformable(cam_b).AddTransformOp().Set(view.GetInverse())
+    rp_b = rep.create.render_product(KAMERA_B, cfg.viewer.resolution)
+    rgb_b = rep.AnnotatorRegistry.get_annotator("rgb", device="cpu")
+    rgb_b.attach([rp_b])
+    render_a = uenv.render
+
+    def render_beide(recompute: bool = False):
+        a = render_a(recompute)
+        b = np.frombuffer(rgb_b.get_data(), dtype=np.uint8)
+        b = b.reshape(*rgb_b.get_data().shape)[:, :, :3] if b.size else np.zeros_like(a)
+        return np.hstack([a, b])
+
+    uenv.render = render_beide
 
 if args_cli.checkpoint:
     # as in ~/IsaacLab/scripts/reinforcement_learning/rsl_rl/play.py: load, export the actor
@@ -185,8 +242,49 @@ out_dir = Path(args_cli.out) if args_cli.out else (
     else Path(__file__).resolve().parent.parent / "isaac_sim" / "tools")
 out_dir.mkdir(parents=True, exist_ok=True)
 STEM = PROTOCOL if args_cli.bedingung == "zylinder_seitlich" else f"{PROTOCOL}_{args_cli.bedingung}"
+
+
+class StreamingRecordVideo(gym.wrappers.RecordVideo):
+    """RecordVideo that pipes every frame straight into ffmpeg. gymnasium 1.2 keeps all frames in RAM until the end
+    (6 episodes at 1920×1080 ≈ 10 GB → kernel OOM kill on 2026-10-15); here memory stays constant with video length.
+    Same writer and codec as gymnasium (moviepy FFMPEG_VideoWriter, libx264)."""
+
+    class _Sink:
+        # stands in for the recorded_frames list: RecordVideo only appends, extends and checks len()
+        def __init__(self, path: str, fps: float):
+            self.path, self.fps, self.writer, self.n = path, fps, None, 0
+
+        def append(self, frame):
+            if self.writer is None:
+                from moviepy.video.io.ffmpeg_writer import FFMPEG_VideoWriter
+                self.writer = FFMPEG_VideoWriter(self.path, (frame.shape[1], frame.shape[0]), self.fps)
+            self.writer.write_frame(frame)
+            self.n += 1
+
+        def __iadd__(self, frames):
+            for f in frames:
+                self.append(f)
+            return self
+
+        def __len__(self):
+            return self.n
+
+        def close(self):
+            if self.writer is not None:
+                self.writer.close()
+
+    def start_recording(self, video_name: str):
+        super().start_recording(video_name)
+        self.recorded_frames = self._Sink(os.path.join(self.video_folder, f"{video_name}.mp4"), self.frames_per_sec)
+
+    def stop_recording(self):
+        assert self.recording, "stop_recording was called, but no recording was started"
+        self.recorded_frames.close()
+        self.recorded_frames, self.recording, self._video_name = [], False, None
+
+
 if args_cli.video:
-    env = gym.wrappers.RecordVideo(env, video_folder=str(out_dir / ("videos" if STEM == PROTOCOL else f"videos_{args_cli.bedingung}")), step_trigger=lambda s: s == 0,
+    env = StreamingRecordVideo(env, video_folder=str(out_dir / ("videos" if STEM == PROTOCOL else f"videos_{args_cli.bedingung}")), step_trigger=lambda s: s == 0,
                                    video_length=args_cli.video, disable_logger=True)
 class RuleGrasp(torch.nn.Module):
     """Rule-based grasp in the same action space as the policy (relative servo targets, scale like ActionsCfg) and

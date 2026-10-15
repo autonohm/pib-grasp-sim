@@ -24,6 +24,9 @@ experiments/
     diagramme/              automatisch: EXP-NNN_<name>.svg (Training, Bedingungen, Verlauf)
                             + EXP-NNN_training.json (Endwerte je Seed)
     beste_videos/           automatisch (`medien`): EXP-NNN_<objekt>_s<seed>.mp4, bester Seed, 3 Episoden (im Git)
+    beste_videos_2x2/       auf Wunsch (`medien --kamera 2x2`): 4 Hände näher, 6 Episoden, Benchmark + YCB (im Git)
+    beste_videos_einzeln/   auf Wunsch (`medien --kamera einzeln`): eine Hand aus zwei Winkeln nebeneinander,
+                            ≥ 6 Episoden, Benchmark + YCB (im Git)
     videos/                 automatisch (`medien`): EXP-NNN_<objekt>_s<seed>.mp4 je Seed und Benchmark-Objekt
                             (nicht im Git, auf HF)
 logs/rsl_rl/pib_grasp_hand_left/<zeit>_EXP-NNN_s<seed>/   (gitignored)
@@ -72,6 +75,7 @@ Befehle (conda-Umgebung `env_isaaclab` aktiv, Orchestrierung mit System-Python):
 /usr/bin/python3 isaac_lab/experiments.py bericht EXP-002                # Bericht + Diagramme neu, ohne Neubewertung
 /usr/bin/python3 isaac_lab/experiments.py leaderboard [--bewerten]       # Rangliste (--bewerten: fehlende Benchmark-Bewertungen)
 /usr/bin/python3 isaac_lab/experiments.py medien [EXP-006] --videos --verlauf   # Videos + Verlauf über die Episode
+/usr/bin/python3 isaac_lab/experiments.py medien EXP-036 --kamera einzeln       # Nahansicht (2x2 | einzeln), bester Seed
 ```
 
 Regeln:

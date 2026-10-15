@@ -43,10 +43,16 @@ EXP_DIR = REPO / "experiments"
 RUNS = REPO / "logs" / "rsl_rl" / "pib_grasp_hand_left"
 LOGS = REPO / "logs" / "experiments"
 ISAACLAB = Path.home() / "IsaacLab" / "isaaclab.sh"
+# Isaac runs in its own systemd scope with a memory cap: running out of memory then ends only this scope. 2026-10-15
+# the global OOM killer hit Isaac inside the VS Code scope and systemd (OOMPolicy=stop) stopped that whole scope,
+# terminal and Claude session included. systemd-run --scope execs the command, so the PID (killpg) stays the same.
+ISAAC = (["systemd-run", "--user", "--scope", "--quiet", "-p", "MemoryMax=75%"]
+         if shutil.which("systemd-run") and Path(f"/run/user/{os.getuid()}/bus").exists() else []) + [str(ISAACLAB)]
 BENCH = EXP_DIR / "_bench.json"
 SMOKE = {"iterationen": 3, "umgebungen": 256, "seed": 0}
+EPISODE_SCHRITTE = 270                     # 4.5 s × 60 Hz
 EVAL = {"umgebungen": 256, "episoden": 1000, "video_umgebungen": 16, "video_schritte": 300,
-        "beste_video_schritte": 3 * 270}     # best videos: 3 episodes (4.5 s × 60 Hz each), ~14 s
+        "beste_video_schritte": 3 * EPISODE_SCHRITTE}     # best videos: 3 episodes, ~14 s
 BOOT = 2000
 # Current evaluation protocol (eval_policy.PROTOCOL). eval-v2 (2026-10-09, ADR-021) = eval-v1 with a reset without
 # overlap/fall; eval-v1 cannot be reproduced with today's code → only PROTOKOLL is evaluated, older experiments keep
@@ -224,7 +230,7 @@ def check_env():
 
 def train(run_name: str, task: str, envs: int, iters: int, seed: int, extra: list, log_file: Path) -> tuple[Path | None, dict]:
     before = set(RUNS.glob("*")) if RUNS.exists() else set()
-    cmd = [str(ISAACLAB), "-p", "isaac_lab/train.py", "--task", task, "--headless", "--num_envs", str(envs),
+    cmd = [*ISAAC, "-p", "isaac_lab/train.py", "--task", task, "--headless", "--num_envs", str(envs),
            "--max_iterations", str(iters), "--seed", str(seed), "--run_name", run_name, *extra]
     log(f"  Training {run_name}: {envs} Umgebungen, {iters} Iterationen, Seed {seed}")
     start, vram, run_dir, done_at = time.time(), 0, None, None
@@ -263,7 +269,7 @@ def train(run_name: str, task: str, envs: int, iters: int, seed: int, extra: lis
 
 
 def write_meta(run_dir: Path, exp_id: str, seed: int, train_info: dict, cmdline: str):
-    versions = sh(str(ISAACLAB), "-p", "-c",
+    versions = sh(*ISAAC, "-p", "-c",
                   "import importlib.metadata as m, torch, json;"
                   "print(json.dumps({p: m.version(p) for p in ['isaaclab','isaaclab_tasks','isaaclab_rl','rsl-rl-lib']}"
                   " | {'torch': torch.__version__}))").splitlines()
@@ -377,7 +383,7 @@ def evaluate_condition(run_dir: Path, exp: dict, cond: dict, video: bool, out):
         src = ["--policy", str(exported)] + clip_args(run_dir)
     else:
         src = ["--checkpoint", str(ckpts[-1])] + clip_args(run_dir)
-    base = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--max_kipp_deg", str(req if req is not None else -1),
+    base = [*ISAAC, "-p", "isaac_lab/eval_policy.py", "--headless", "--max_kipp_deg", str(req if req is not None else -1),
             "--objekt", cond.get("objekt_id") or DEFAULT_OBJECT, "--bedingung", cond["name"]] + greifart_args(cond) + stoerung_args(cond) + bewegung_args(cond)
     log(f"    Bedingung {cond['name']}")
     subprocess.run(base + src + ["--num_envs", str(EVAL["umgebungen"]), "--episodes", str(EVAL["episoden"]),
@@ -532,7 +538,7 @@ def training_plots(d: Path, exp: dict, training: bool, conditions: bool) -> dict
     if os.environ.get("CONDA_DEFAULT_ENV") != "env_isaaclab":
         log("  WARNUNG: Diagramme übersprungen — conda-Umgebung env_isaaclab nicht aktiv")
     else:
-        cmd = [str(ISAACLAB), "-p", "isaac_lab/plot_training.py", "--exp-dir", str(d.relative_to(REPO))]
+        cmd = [*ISAAC, "-p", "isaac_lab/plot_training.py", "--exp-dir", str(d.relative_to(REPO))]
         if conditions:
             cmd += ["--bedingungen", str(exp_file(d, "results.json").relative_to(REPO))]
         if training:
@@ -918,7 +924,7 @@ def run_rule(d: Path, exp: dict):
         vals = []
         for c in benchmark(exp):
             shutil.rmtree(tmp, ignore_errors=True)
-            cmd = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--regel", r["name"], "--regel-param", ps,
+            cmd = [*ISAAC, "-p", "isaac_lab/eval_policy.py", "--headless", "--regel", r["name"], "--regel-param", ps,
                    "--objekt", c["objekt_id"], "--bedingung", c["name"], "--max_kipp_deg", kipp_arg(c), *greifart_args(c),
                    "--num_envs", "256", "--episodes", "256", "--seed", "2000", "--out", str(tmp)]
             with open(LOGS / f"{exp['id']}_raster.log", "a", encoding="utf-8") as f:
@@ -1148,7 +1154,7 @@ def backup():
         return
     log_file = LOGS / "backup.log"
     with open(log_file, "w", encoding="utf-8") as out:
-        rc = subprocess.run([str(ISAACLAB), "-p", "isaac_lab/backup_policies.py", "--upload"], cwd=REPO,
+        rc = subprocess.run([*ISAAC, "-p", "isaac_lab/backup_policies.py", "--upload"], cwd=REPO,
                             stdout=out, stderr=subprocess.STDOUT).returncode
     if rc == 0:
         log("Sicherung auf Hugging Face fertig")
@@ -1438,6 +1444,9 @@ def cmd_medien(a):
     exps = [(d, e) for d, e in trained_experiments() if not a.ids or e["id"] in a.ids]
     tmp = LOGS / "_medien_tmp"
     for d, exp in exps:
+        if a.kamera != "raster":    # close-up views of the best seed → beste_videos_<kamera>/ (benchmark + YCB)
+            record_best_videos(d, exp, tmp, neu=a.neu, ycb=True, kamera=a.kamera, episoden=a.episoden)
+            continue
         if a.beste or a.ycb:        # only the long videos of the best seed (--beste: new; --ycb: plus YCB)
             record_best_videos(d, exp, tmp, neu=a.beste, ycb=a.ycb)
             report(exp["id"])
@@ -1451,7 +1460,7 @@ def cmd_medien(a):
             policy = run / "exported" / "policy.pt"
             src = rule_args(exp) if exp.get("regel") else ["--policy", str(policy)] + clip_args(run)
             for c in benchmark(exp):
-                base = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--nur-medien", *src,
+                base = [*ISAAC, "-p", "isaac_lab/eval_policy.py", "--headless", "--nur-medien", *src,
                         "--objekt", c["objekt_id"], "--bedingung", c["name"],
                         "--max_kipp_deg", kipp_arg(c), *greifart_args(c)]
                 vstem = stem(exp, c).replace(exp["protokoll"], "verlauf-v1", 1)
@@ -1481,7 +1490,8 @@ def cmd_medien(a):
             record_best_videos(d, exp, tmp, neu=a.neu)
         report(exp["id"])
     shutil.rmtree(tmp, ignore_errors=True)
-    cmd_done(a)
+    if a.kamera == "raster":   # close-up views add only MP4s (in git) — index, leaderboard and backup stay unchanged
+        cmd_done(a)
 
 
 def ycb_objekte(exp: dict) -> list[dict]:
@@ -1489,15 +1499,19 @@ def ycb_objekte(exp: dict) -> list[dict]:
     return [c for c in testobjekte(exp) if c["objekt_id"].startswith("ycb_")]
 
 
-def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bool = False):
+def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bool = False, kamera: str = "raster",
+                       episoden: int = 3):
     """Long videos (3 episodes) of the best seed per benchmark object → <experiment>/beste_videos/ (in git);
-    with ycb=True additionally per YCB test object. Videos of other seeds there are removed."""
+    with ycb=True additionally per YCB test object. Videos of other seeds there are removed.
+    kamera 2x2/einzeln (eval_policy --kamera): close-up views → beste_videos_<kamera>/, length `episoden` episodes
+    (2x2: per hand; einzeln: one hand from two angles side by side, at least `episoden` episodes)."""
     bench = benchmark(exp)
     best, _ = best_seed({c["name"]: aggregate(exp, c) for c in bench}, bench)
     if exp.get("regel"):
         best = 0                                             # one run, label s0
-    out = d / "beste_videos"
-    keep = ({exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos").name for c in bench + ycb_objekte(exp)}
+    sub = "beste_videos" if kamera == "raster" else f"beste_videos_{kamera}"
+    out = d / sub
+    keep = ({exp_file(d, f"{c['objekt_id']}_s{best}.mp4", sub).name for c in bench + ycb_objekte(exp)}
             if best is not None else set())
     for old in out.glob("*.mp4") if out.exists() else []:
         if old.name not in keep:
@@ -1509,17 +1523,18 @@ def record_best_videos(d: Path, exp: dict, tmp: Path, neu: bool = False, ycb: bo
         return
     out.mkdir(exist_ok=True)
     for c in bench + (ycb_objekte(exp) if ycb else []):
-        target = exp_file(d, f"{c['objekt_id']}_s{best}.mp4", "beste_videos")
+        target = exp_file(d, f"{c['objekt_id']}_s{best}.mp4", sub)
         if target.exists() and not neu:
             continue
-        log(f"  Bestes Video {exp['id']} s{best} {c['kurz']} (3 Episoden)")
+        log(f"  Bestes Video {exp['id']} s{best} {c['kurz']} ({episoden} Episoden, Ansicht {kamera})")
         shutil.rmtree(tmp, ignore_errors=True)
         src = rule_args(exp) if exp.get("regel") else (["--policy", str(REPO / run / "exported" / "policy.pt")]
                                                        + clip_args(REPO / run))
-        cmd = [str(ISAACLAB), "-p", "isaac_lab/eval_policy.py", "--headless", "--nur-medien", *src,
+        cmd = [*ISAAC, "-p", "isaac_lab/eval_policy.py", "--headless", "--nur-medien", *src,
                "--objekt", c["objekt_id"], "--bedingung", c["name"],
                "--max_kipp_deg", kipp_arg(c), *greifart_args(c), "--num_envs", str(EVAL["video_umgebungen"]),
-               "--episodes", str(EVAL["video_umgebungen"]), "--video", str(EVAL["beste_video_schritte"]), "--out", str(tmp)]
+               "--episodes", str(EVAL["video_umgebungen"] if kamera == "raster" else episoden),
+               "--video", str(episoden * EPISODE_SCHRITTE), "--kamera", kamera, "--out", str(tmp)]
         try:
             with open(LOGS / f"medien_beste_{exp['id']}.log", "a", encoding="utf-8") as f:
                 subprocess.run(cmd, cwd=REPO, stdout=f, stderr=subprocess.STDOUT, timeout=1800)
@@ -1842,6 +1857,10 @@ def main():
     md.add_argument("--neu", action="store_true")
     md.add_argument("--beste", action="store_true", help="nur die langen Videos des besten Seeds (neu aufnehmen)")
     md.add_argument("--ycb", action="store_true", help="lange Videos des besten Seeds zusätzlich je YCB-Testobjekt")
+    md.add_argument("--kamera", choices=["raster", "2x2", "einzeln"], default="raster",
+                    help="Nahansicht des besten Seeds (Benchmark + YCB) → beste_videos_<kamera>/ (2x2 = 4 Hände, "
+                         "einzeln = eine Hand aus zwei Winkeln nebeneinander)")
+    md.add_argument("--episoden", type=int, default=6, help="Länge der Nahansicht in Episoden (mit --kamera)")
     bl = sub.add_parser("belastung")
     bl.add_argument("ids", nargs="+", help="Experimente (Belastungstest „Arm bewegt sich“, nur Bewertung)")
     lb = sub.add_parser("leaderboard")
