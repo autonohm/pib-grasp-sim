@@ -39,13 +39,14 @@ Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assi
   (vorher `file:/home/…`). Offline geprüft (alle Layer aufgelöst, 44 Gelenke) — einmal öffnen, `start.py`, Play, Pickup-Demo.
 - Anleitung `docs/getting-started.md` nie auf einem frischen Klon durchgespielt; kein Selbsttest-Skript.
 - **Ungeprüft im GUI**: neue Repo-Suche der Isaac-Sim-Skripte (2026-10-16, außerhalb von Isaac getestet) — beim GUI-Test oben mit.
-- Umzug: GitHub-Repo (seit 2026-10-16 `churro206/pib-grasp-sim`) an die Schule übertragen; danach Link in der HF-Model-Card
-  (`isaac_lab/backup_policies.py` → `MODEL_CARD`, hochladen wie dort) anpassen. HF-Repo bleibt bei `churro206` oder wird mit übertragen.
+- Repo seit 2026-10-16 bei der Schule: `autonohm/pib-grasp-sim` (alte Adressen leiten weiter). HF-Repo
+  `churro206/pib-grasp-policies` bleibt beim Autor, öffentlich. Integration in den Roboter macht das Team als eigenes Paket,
+  das dieses Repo klont (Absprache 2026-10-16) — dieses Repo bleibt eigenständig.
 - `--kamera einzeln` (Nahansicht aus zwei Winkeln) nie gelaufen.
 
 ### Nächste Schritte (in Reihenfolge)
 
-1. Repo an die Schule übertragen, v5-Stage im GUI prüfen, Anleitung auf frischem Klon durchspielen.
+1. v5-Stage im GUI prüfen (Zwilling + ros2_control liefen 2026-10-16), Anleitung auf frischem Klon durchspielen.
 2. Inhaltlich (`docs/weitermachen.md`): Policy auf den Nucleo (M2), echte Hand vermessen (M3, `docs/hardware-annahmen.md`),
    Sehne + Feder ins Aktuatormodell, Kippen als Nebenbedingung, EXP-040 mit 10 Seeds.
 
