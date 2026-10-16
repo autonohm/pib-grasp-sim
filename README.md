@@ -66,4 +66,4 @@ und alle Läufe auf Hugging Face [`churro206/pib-grasp-policies`](https://huggin
 
 ## Autor
 
-Leon (Projektarbeit 2026).
+Leon Krampf (Projektarbeit 2026).
