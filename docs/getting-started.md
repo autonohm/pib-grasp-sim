@@ -1,6 +1,6 @@
 # Getting Started
 
-Von null bis „die Hand greift“. Alle Befehle aus dem Wurzelverzeichnis des Repos (`$REPO`, beliebiger Ort).
+Von null bis „die Hand greift“. Alle Befehle aus dem Wurzelverzeichnis des Klons (beliebiger Ort) — in jedem neuen Terminal zuerst dorthin `cd`.
 Versionen, mit denen alles entwickelt und geprüft wurde, stehen am Ende.
 
 ## 0 — Voraussetzungen
@@ -17,7 +17,6 @@ Versionen, mit denen alles entwickelt und geprüft wurde, stehen am Ende.
 
 ```bash
 git clone <repo-url> pib-grasp-sim && cd pib-grasp-sim
-export REPO=$(pwd)
 ```
 
 Feste Pfade gibt es nicht: Die Isaac-Sim-Skripte finden das Repo über die geöffnete Stage bzw. ihren eigenen Ort
@@ -43,9 +42,14 @@ Feste Pfade gibt es nicht: Die Isaac-Sim-Skripte finden das Repo über die geöf
 
 **1. Workspace bauen** (einmalig): `source /opt/ros/jazzy/setup.bash && cd ros2_ws && colcon build && cd ..`
 
+Jedes Terminal braucht einmal `source ros2_ws/env.sh` (aus dem Repo-Ordner): schaltet `.venv`/conda ab, sourct ROS 2 Jazzy
+und den Workspace, setzt `ROS_DOMAIN_ID=0` (überall gleich, sonst sehen sich Isaac und ros2_control nicht; anderer Wert über
+`PIB_ROS_DOMAIN_ID`). Umgebungsvariablen gelten nur in der Shell, die sie setzt — deshalb je Terminal. Bequemer mit einem Alias
+in `~/.bashrc`: `alias pib='source <Pfad zum Klon>/ros2_ws/env.sh'`.
+
 **2. Isaac Sim starten** (Terminal 1) — ROS 2 **vorher** in derselben Shell sourcen (Isaac nutzt sein eigenes rclpy):
 ```bash
-source /opt/ros/jazzy/setup.bash && source $REPO/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0
+source ros2_ws/env.sh
 ~/isaacsim/isaac-sim.sh
 ```
 Im Fenster: *File → Open* → `isaac_sim/usd/pib_upperbody_v5.usd`, *Window → Script Editor* → `isaac_sim/start.py` ausführen
@@ -54,12 +58,13 @@ mit.
 
 **3. ros2_control starten** (Terminal 2):
 ```bash
-source /opt/ros/jazzy/setup.bash && source $REPO/ros2_ws/install/setup.bash && export ROS_DOMAIN_ID=0
-ros2 launch pib_bringup pib_sim_v5.launch.py
-ros2 control list_controllers        # beide „active“
+source ros2_ws/env.sh
+ros2 launch pib_bringup pib_sim_v5.launch.py       # läuft im Vordergrund weiter
 ```
 
-**4. Demo** (Terminal 3): `ros2 run pib_bringup test_client_pickup_v5`, danach `test_client_putdown_v5`.
+**4. Prüfen und Demo** (Terminal 3, ebenfalls `source ros2_ws/env.sh`): `ros2 topic list` (zeigt `/pib/hw/joint_states`,
+`/pib/hw/joint_commands`, `/pib/fingertip_forces`), `ros2 control list_controllers` (beide „active“), dann
+`ros2 run pib_bringup test_client_pickup_v5` und `test_client_putdown_v5`.
 Weitere Tests: `test_client_mimic_v5 --finger all` (Fingerkopplung), `test_client_mimic_load_v5 --reset` (Finger gegen Tisch).
 
 Schnittstelle für andere Teams (Topics, Einheiten, Fingerkräfte): [conventions.md](conventions.md) → „ROS2-Konventionen“.
@@ -132,7 +137,7 @@ Nur ein Isaac-Prozess gleichzeitig (8 GB VRAM). Logs und Checkpoints landen in `
 |---|---|
 | `ModuleNotFoundError: rclpy._rclpy_pybind11` | ROS 2 **vor** Isaac Sim in derselben Shell sourcen |
 | `controller_manager` wartet auf `/robot_description` | `robot_state_publisher` läuft im Launch mit — Launch-Datei aus dem Repo nutzen |
-| `Package 'pib_bringup' not found` | `ros2_ws/install/setup.bash` in dieser Shell sourcen |
+| `Package 'pib_bringup' not found` | `source ros2_ws/env.sh` in dieser Shell (aus dem Repo-Ordner) |
 | Hand schließt in die falsche Richtung | nach einem Onshape-Neuimport `isaac_sim/tools/flip_joint_sign.py` ausführen (ADR-007) |
 | `/pib/fingertip_forces` leer nach Graph-Änderung | per Skript gesetzte OmniGraph-Werte stehen nur im laufenden Graph → speichern **und neu öffnen** (ADR-013) |
 | v5-Stage stürzt bei Play ab (`isaacsim.sensors.physics.plugin`) | Compound-Subgraph im Action Graph entfernen, Kraft-Knoten flach neu bauen (ADR-013) |

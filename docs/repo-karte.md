@@ -16,7 +16,7 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | `isaac_sim/` | aktuell | Digitaler Zwilling in Isaac Sim 5.1: USD-Stages mit Action Graph, Startskripte, Asset-Werkzeuge |
 | `isaac_lab/` | aktuell | RL-Greifen in Isaac Lab 2.3.2: Aufgabe, Training, Bewertung, Experiment-Framework |
 | `experiments/` | aktuell | ein Ordner je Experiment (Plan, Ergebnisse, Bericht, Diagramme, beste Videos), `leaderboard.md`, `index.md` |
-| `ros2_ws/` | aktuell | ROS-2-Jazzy-Workspace: Roboterbeschreibungen v4/v5, `ros2_control`-Start, Demo-Clients |
+| `ros2_ws/` | aktuell | ROS-2-Jazzy-Workspace: Roboterbeschreibungen v4/v5, `ros2_control`-Start, Demo-Clients; `env.sh` = Umgebung je Terminal |
 | `pib_hand_left_urdf_v5/` | aktuell | `onshape-to-robot`-Export linke v5-Hand + Unterarm (Quelle von `pib_hand_left_v5.usd`); `config.json` verweist auf das Onshape-Dokument |
 | `docs/` | aktuell | siehe unten |
 | `videos/` | aktuell | Demo-Videos (Zwilling, erste Policies, YCB) |

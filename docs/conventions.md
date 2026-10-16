@@ -56,10 +56,8 @@ heißt `tip` statt `distal` (`thumb_right_tip` statt `dof_thumb_right_distal` in
 ### Domain ID
 `ROS_DOMAIN_ID=0` — Projektstandard für alle Teams.
 
-Isaac Sim wird ohne gesetztes `ROS_DOMAIN_ID` gestartet (Default = 0). Im Terminal vor jeder ROS2-Session setzen:
-```bash
-export ROS_DOMAIN_ID=0
-```
+Alle Terminals (Isaac Sim, ros2_control, Clients) müssen dieselbe Domain haben — `source ros2_ws/env.sh` setzt sie (0,
+anderer Wert über `PIB_ROS_DOMAIN_ID`) und überschreibt einen Wert aus der `~/.bashrc`.
 
 ### Topics (dieser Branch)
 
@@ -122,7 +120,7 @@ mit Play/Stop.
 ### Workflow
 ```bash
 deactivate 2>/dev/null; conda activate env_isaaclab
-cd $REPO                                                                  # Wurzel des Klons
+cd pib-grasp-sim                                                          # Wurzel des Klons
 ~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py                 # Asset-Prüfung (Fenster)
 ~/IsaacLab/isaaclab.sh -p isaac_lab/scripted_grasp_test.py --num_envs 16 --real_time --thumb_rot 0,45,90
 ~/IsaacLab/isaaclab.sh -p isaac_lab/train.py --task Pib-Grasp-Hand-Left-v0 --headless --num_envs 1024
