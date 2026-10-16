@@ -29,7 +29,7 @@ Ziel-Hardware STM32N657 mit NPU). Entstanden als Projektarbeit für RoboCup 2027
 
 Vertiefung: [Architektur](docs/architecture.md) · [Konventionen](docs/conventions.md) (Einheiten, Vorzeichen, Namen,
 Schnittstelle Policy ↔ Firmware) · [Entscheidungen ADR-001–023](docs/decisions.md) · [Experimente](experiments/README.md) ·
-[Glossar Deutsch ↔ Code](docs/glossar.md) · [Projekt-Protokoll](docs/protokoll/) (Sprint-Tagebuch, Nachtläufe, Pläne).
+[Glossar Deutsch ↔ Code](docs/glossar.md) · [Literatur](docs/literatur.md) · [Projekt-Protokoll](docs/protokoll/) (Sprint-Tagebuch, Nachtläufe, Pläne).
 
 **Sprache:** Dokumentation, Berichte und Ausgaben der Werkzeuge sind deutsch; Code-Kommentare englisch. Bezeichner,
 Kommandozeilen-Optionen und JSON-Schlüssel bleiben, wie sie sind (z. B. `--objekt`, `--bedingung`), damit alte Berichte

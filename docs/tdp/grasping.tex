@@ -1,0 +1,12 @@
+% Grasping part of the RoboCup@Home team description paper (LNCS template: github.com/RoboCupAtHome/TDPTemplate).
+% Bibliography: docs/literatur.bib. Numbers: simulation only, 5 seeds, evaluation protocol eval-v2 (experiments/leaderboard.md).
+\subsection{Learning Grasps for a Low-Cost Servo Hand}
+
+pib's 3D-printed hand has eight bus servos and force sensors in the fingertips, but no camera or torque sensing. We train a
+grasp policy that uses only joint angles and fingertip forces with PPO in Isaac Lab~\cite{mittal2025isaaclab} on a digital twin
+of the hand, randomizing object shape, mass and friction. Cheap servos wear out when they jitter and shut down when they push
+against their torque limit for too long. We therefore smooth the policy with CAPS~\cite{mysore2021caps} and limit the time
+servos spend near (${\geq}\,80\,\%$) their stall torque with a PID Lagrangian~\cite{stooke2020pid}. In simulation (five
+seeds), the policy holds 83\,\% of the benchmark objects (scripted grasp: 69\,\%) and 74--82\,\% of unseen YCB
+objects~\cite{calli2015ycb}, while servos spend 13\,\% instead of 32\,\% of the time near stall. Code and all trained policies
+are open source\footnote{\url{https://github.com/churro206/pib-grasp-sim}}; tests on the real hand are pending.
