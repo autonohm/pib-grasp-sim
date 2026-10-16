@@ -3,7 +3,7 @@
   <name>pib_description_v5</name>
   <version>0.1.0</version>
   <description>pib Roboter URDF (v5-Hand) mit ros2_control Hardware-Interface</description>
-  <maintainer email="todo@example.com">pib-hand-sim</maintainer>
+  <maintainer email="todo@example.com">pib-grasp-sim</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

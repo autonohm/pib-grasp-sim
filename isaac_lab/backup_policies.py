@@ -32,8 +32,7 @@ tags: [reinforcement-learning, isaac-lab, robotics, dexterous-grasping, rsl-rl, 
 
 Alle in Isaac Lab trainierten Greif-Policies der realen linken **pib-v5-Hand** (8 Servos, 5 FSR an den Fingerspitzen;
 Roboter [pib](https://pib.rocks) von isento) aus der Projektarbeit 2026 für RoboCup 2027 @Home. Code, Bewertung und
-Anleitung: GitHub-Repo **pib-grasp-sim** ([github.com/churro206/pib-hand-sim](https://github.com/churro206/pib-hand-sim),
-alter Name, leitet weiter). Ziel-Hardware: STM32N657 (Neural-ART-NPU, int8).
+Anleitung: GitHub-Repo [**pib-grasp-sim**](https://github.com/churro206/pib-grasp-sim). Ziel-Hardware: STM32N657 (Neural-ART-NPU, int8).
 
 **Welche Policy?** Basis für den Kraftgriff seitlich ist **EXP-036** (CAPS + PID-Lagrange auf den Servo-Stall, ohne
 Aktionsfilter), bester Seed `runs/2026-10-13_03-17-52_EXP-036_s42/`. Rangliste aller Policies:

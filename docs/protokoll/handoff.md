@@ -19,7 +19,7 @@ Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assi
 - **Bewertung**: Protokoll eval-v2, Leaderboard v3 (Wünschbarkeitsindex mit „Servo-Last real“); alle Urteile EXP-000–041
   bestätigt (2026-10-14).
 - **Repo**: Name **pib-grasp-sim** (vorher pib-hand-sim), Lizenz **AGPL-3.0** wie die pib-Repos von isento (pib-Geometrie
-  dort GPL-3.0/AGPL-3.0, README → Lizenz); `main` = `feature/rl-grasping`; Doku deutsch, Code-Kommentare englisch; alte
+  dort GPL-3.0/AGPL-3.0, README → Lizenz); Arbeitsbranch `main` (`feature/rl-grasping` identisch); Doku deutsch, Code-Kommentare englisch; alte
   Branches als Tags `archiv/*`. Keine festen Pfade: Isaac-Sim-Skripte finden das Repo selbst (`PIB_GRASP_SIM_ROOT`),
   Isaac Lab über `ISAACLAB_PATH`; HF-Sicherung nur mit `PIB_HF_REPO`.
 - **Policies**: alle 185 Läufe öffentlich auf Hugging Face `churro206/pib-grasp-policies` (Model Card AGPL-3.0), die fünf
@@ -39,13 +39,13 @@ Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assi
   (vorher `file:/home/…`). Offline geprüft (alle Layer aufgelöst, 44 Gelenke) — einmal öffnen, `start.py`, Play, Pickup-Demo.
 - Anleitung `docs/getting-started.md` nie auf einem frischen Klon durchgespielt; kein Selbsttest-Skript.
 - **Ungeprüft im GUI**: neue Repo-Suche der Isaac-Sim-Skripte (2026-10-16, außerhalb von Isaac getestet) — beim GUI-Test oben mit.
-- Umzug: GitHub-Repo umbenennen (`pib-grasp-sim`) und an die Schule übertragen; danach Link in der HF-Model-Card
-  (`isaac_lab/backup_policies.py` → `MODEL_CARD`) anpassen. HF-Repo bleibt bei `churro206` oder wird mit übertragen.
+- Umzug: GitHub-Repo (seit 2026-10-16 `churro206/pib-grasp-sim`) an die Schule übertragen; danach Link in der HF-Model-Card
+  (`isaac_lab/backup_policies.py` → `MODEL_CARD`, hochladen wie dort) anpassen. HF-Repo bleibt bei `churro206` oder wird mit übertragen.
 - `--kamera einzeln` (Nahansicht aus zwei Winkeln) nie gelaufen.
 
 ### Nächste Schritte (in Reihenfolge)
 
-1. Repo umbenennen/übertragen, v5-Stage im GUI prüfen, Anleitung auf frischem Klon durchspielen.
+1. Repo an die Schule übertragen, v5-Stage im GUI prüfen, Anleitung auf frischem Klon durchspielen.
 2. Inhaltlich (`docs/weitermachen.md`): Policy auf den Nucleo (M2), echte Hand vermessen (M3, `docs/hardware-annahmen.md`),
    Sehne + Feder ins Aktuatormodell, Kippen als Nebenbedingung, EXP-040 mit 10 Seeds.
 

@@ -44,8 +44,8 @@ conda-Umgebung, ROS 2 Jazzy (nur für Weg A). Training: 1024 Umgebungen × 300 I
 
 | Branch / Tag | Inhalt |
 |---|---|
-| `main` | aktueller Stand (= `feature/rl-grasping`) |
-| `feature/rl-grasping` | Arbeitsbranch Zwilling + RL-Greifen |
+| `main` | aktueller Stand: Zwilling + RL-Greifen (2026-10-16 aus `feature/rl-grasping` übernommen) |
+| `feature/rl-grasping` | bisheriger Arbeitsbranch, identisch mit `main` |
 | Tag `v0.1-praesentation` | Stand zur Präsentation 2026-10-15, Release mit den 5 besten Policies |
 | Tag `archiv/ros2-control` | ältere Team-Integration (robot_io, ControlMode, Sequenz-Executor, LSTM-Pipeline) — nicht weitergeführt |
 | Tag `archiv/session-collision-dev` | WIP Servo-Steuerung + Collision Groups (Juni 2026), nie übernommen |
