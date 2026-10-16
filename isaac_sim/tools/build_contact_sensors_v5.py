@@ -13,6 +13,7 @@ Run in the Script Editor with pib_upperbody_v5.usd open and the simulation STOPP
 Then save the stage (Ctrl+S). Output additionally to
 isaac_sim/tools/_contact_sensors_build.txt (gitignored).
 """
+import os
 import io
 from pathlib import Path
 
@@ -47,14 +48,23 @@ def emit(line: str = "") -> None:
 
 
 def _find_project_root() -> Path:
-    stage_file = Path(stage.GetRootLayer().realPath)
-    for ancestor in [stage_file.parent, stage_file.parent.parent, stage_file.parent.parent.parent]:
-        if (ancestor / "config" / "pib_hand_config_v4.py").is_file():
-            return ancestor
-    for candidate in [Path.home() / "repos" / "pib-hand-sim", Path.home() / "pib-hand-sim"]:
-        if (candidate / "config" / "pib_hand_config_v4.py").is_file():
-            return candidate
-    raise FileNotFoundError("pib-hand-sim nicht gefunden.")
+    # Repo root without a fixed install path: PIB_GRASP_SIM_ROOT, else upwards from this file, the open stage or the
+    # working directory until config/ is found (__file__ is not defined in the Script Editor's exec context)
+    if os.environ.get("PIB_GRASP_SIM_ROOT"):
+        return Path(os.environ["PIB_GRASP_SIM_ROOT"])
+    starts = [Path.cwd()]
+    try:
+        import omni.usd  # type: ignore
+        starts.insert(0, Path(omni.usd.get_context().get_stage().GetRootLayer().realPath or "."))
+    except Exception:
+        pass
+    if "__file__" in globals():
+        starts.insert(0, Path(__file__))
+    for start in starts:
+        for d in [start.resolve(), *start.resolve().parents]:
+            if (d / "config" / "pib_hand_config_v4.py").is_file():
+                return d
+    raise FileNotFoundError("Repo-Wurzel nicht gefunden — Stage aus dem Repo öffnen oder PIB_GRASP_SIM_ROOT setzen")
 
 
 def _ensure_sensor(link_path: str) -> str:

@@ -31,7 +31,29 @@ EXPECTED_JOINTS = 17          # 8 Servos + 9 Mimic-Folgegelenke (linke Hand)
 EXPECTED_MIMIC = 9
 
 stage = omni.usd.get_context().get_stage()
-_root = os.environ.get("PIB_HAND_SIM_ROOT", str(Path.home() / "repos" / "pib-hand-sim"))
+
+
+def _find_root() -> Path:
+    # Repo root without a fixed install path: PIB_GRASP_SIM_ROOT, else upwards from this file, the open stage or the
+    # working directory until config/ is found (__file__ is not defined in the Script Editor's exec context)
+    if os.environ.get("PIB_GRASP_SIM_ROOT"):
+        return Path(os.environ["PIB_GRASP_SIM_ROOT"])
+    starts = [Path.cwd()]
+    try:
+        import omni.usd  # type: ignore
+        starts.insert(0, Path(omni.usd.get_context().get_stage().GetRootLayer().realPath or "."))
+    except Exception:
+        pass
+    if "__file__" in globals():
+        starts.insert(0, Path(__file__))
+    for start in starts:
+        for d in [start.resolve(), *start.resolve().parents]:
+            if (d / "config" / "pib_hand_config_v4.py").is_file():
+                return d
+    raise FileNotFoundError("Repo-Wurzel nicht gefunden — Stage aus dem Repo öffnen oder PIB_GRASP_SIM_ROOT setzen")
+
+
+_root = _find_root()
 _report_path = os.path.join(_root, "isaac_sim", "tools", "_hand_asset_bake.txt")
 _lines = []
 

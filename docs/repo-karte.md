@@ -21,7 +21,7 @@ verschoben: Experimentberichte, Logs und ADRs verweisen auf diese Pfade.
 | `docs/` | aktuell | siehe unten |
 | `videos/` | aktuell | Demo-Videos (Zwilling, erste Policies, YCB) |
 | `logs/`, `outputs/` | ignoriert | Trainingsläufe, Checkpoints, Bewertungen (nicht im Git; Sicherung auf Hugging Face) |
-| `LICENSE`, `THIRD_PARTY.md`, `CITATION.cff` | aktuell | Lizenz (Platzhalter), Fremdbestandteile, Zitation |
+| `LICENSE` | aktuell | AGPL-3.0 (Herkunft der pib-Daten und Fremdcode: README → Lizenz) |
 
 ## `isaac_sim/`
 

@@ -42,7 +42,9 @@ REPO = Path(__file__).resolve().parent.parent
 EXP_DIR = REPO / "experiments"
 RUNS = REPO / "logs" / "rsl_rl" / "pib_grasp_hand_left"
 LOGS = REPO / "logs" / "experiments"
-ISAACLAB = Path.home() / "IsaacLab" / "isaaclab.sh"
+# Isaac Lab from the conda environment (env_isaaclab sets ISAACLAB_PATH), otherwise the install path of getting-started
+ISAACLAB = Path(os.environ.get("ISAACLAB_PATH", Path.home() / "IsaacLab")) / "isaaclab.sh"
+ISAACSIM_VERSION = ISAACLAB.parent / "_isaac_sim" / "VERSION"      # symlink _isaac_sim → Isaac Sim install
 # Isaac runs in its own systemd scope with a memory cap: running out of memory then ends only this scope. 2026-10-15
 # the global OOM killer hit Isaac inside the VS Code scope and systemd (OOMPolicy=stop) stopped that whole scope,
 # terminal and Claude session included. systemd-run --scope execs the command, so the PID (killpg) stays the same.
@@ -278,7 +280,7 @@ def write_meta(run_dir: Path, exp_id: str, seed: int, train_info: dict, cmdline:
         "branch": sh("git", "rev-parse", "--abbrev-ref", "HEAD"),
         "uncommitted": bool(sh("git", "status", "--porcelain", "--untracked-files=no")),
         "untracked": sh("git", "ls-files", "--others", "--exclude-standard").splitlines(),
-        "isaacsim": (Path.home() / "isaacsim" / "VERSION").read_text().strip() if (Path.home() / "isaacsim" / "VERSION").exists() else None,
+        "isaacsim": ISAACSIM_VERSION.read_text().strip() if ISAACSIM_VERSION.exists() else None,
         "versions": json.loads(versions[-1]) if versions and versions[-1].startswith("{") else None,
         "gpu": sh("nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"),
         "befehl": cmdline, "training": train_info, "zeit": f"{dt.datetime.now():%Y-%m-%d %H:%M}",
@@ -1149,12 +1151,16 @@ def backup():
     if unpushed:
         log(f"WARNUNG: Trainings-Commit(s) {', '.join(unpushed)} nicht auf origin — Sicherung verweist auf "
             "einen nur lokal vorhandenen Code-Stand (git push)")
+    if not os.environ.get("PIB_HF_REPO"):      # opt-in: backup only to a configured Hugging Face repo
+        log("Sicherung übersprungen — PIB_HF_REPO nicht gesetzt (experiments/README.md → Sicherung)")
+        return
     if os.environ.get("CONDA_DEFAULT_ENV") != "env_isaaclab":
         log("WARNUNG: Sicherung übersprungen — conda-Umgebung env_isaaclab nicht aktiv")
         return
     log_file = LOGS / "backup.log"
     with open(log_file, "w", encoding="utf-8") as out:
-        rc = subprocess.run([*ISAAC, "-p", "isaac_lab/backup_policies.py", "--upload"], cwd=REPO,
+        rc = subprocess.run([*ISAAC, "-p", "isaac_lab/backup_policies.py", "--upload",
+                             "--repo-id", os.environ["PIB_HF_REPO"]], cwd=REPO,
                             stdout=out, stderr=subprocess.STDOUT).returncode
     if rc == 0:
         log("Sicherung auf Hugging Face fertig")

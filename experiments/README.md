@@ -38,18 +38,19 @@ logs/rsl_rl/pib_grasp_hand_left/<zeit>_EXP-NNN_s<seed>/   (gitignored)
     video_eval/videos/            Video der ersten Episoden (erster Seed)
 ```
 
-`experiments/` ist im Git (nur Text), Checkpoints/Logs nicht. **Sicherung der Policies** in das
-private Hugging-Face-Repo [`churro206/pib-grasp-policies`](https://huggingface.co/churro206/pib-grasp-policies)
+`experiments/` ist im Git (nur Text), Checkpoints/Logs nicht. **Sicherung der Policies** (optional) in ein
+Hugging-Face-Repo, das die Umgebungsvariable `PIB_HF_REPO` nennt (Projekt 2026, öffentlich:
+[`churro206/pib-grasp-policies`](https://huggingface.co/churro206/pib-grasp-policies) — alle 185 Läufe)
 (je Lauf letzter Checkpoint, Export, Konfiguration, Metadaten, Bewertung, Log, Video; ~5 MB/Lauf;
 dazu `experiments/`; unveränderte Dateien werden nicht erneut hochgeladen) — **automatisch** am Ende
-von `experiments.py done`, also auch nach `run` und `eval`. Ein Fehlschlag (kein Netz, Login) ist nur
+von `experiments.py done`, wenn `PIB_HF_REPO` gesetzt ist (sonst übersprungen), also auch nach `run` und `eval`. Ein Fehlschlag (kein Netz, Login) ist nur
 eine Warnung (`logs/experiments/backup.log`) und wird beim nächsten `done` nachgeholt; Warnung auch,
 wenn ein Trainings-Commit nicht auf `origin` liegt. Abschalten mit `--kein-backup`, von Hand:
 ```bash
 ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py            # Probelauf: was, wie groß
 ~/IsaacLab/isaaclab.sh -p isaac_lab/backup_policies.py --upload   # hochladen
 ```
-Anmeldung einmalig `hf auth login` (fine-grained Token „pib-hand-sim backup“: Repos lesen, Repos
+Anmeldung einmalig `hf auth login` (fine-grained Token: Repos lesen, Repos
 anlegen/nur selbst angelegte beschreiben). Meilenstein-Policies zusätzlich als GitHub Release mit
 Tag am Trainings-Commit.
 

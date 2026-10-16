@@ -1,6 +1,6 @@
 # Hinweise für KI-Coding-Assistenten (und Menschen)
 
-pib-Hand-Sim: digitaler Zwilling des pib-Oberkörpers (v4/v5) in NVIDIA Isaac Sim 5.1 und RL-Greifen in Isaac Lab 2.3.2 für
+pib-grasp-sim: digitaler Zwilling des pib-Oberkörpers (v4/v5) in NVIDIA Isaac Sim 5.1 und RL-Greifen in Isaac Lab 2.3.2 für
 die reale linke v5-Hand (RoboCup 2027 @Home). Einstieg für Menschen: [README.md](README.md), [docs/getting-started.md](docs/getting-started.md).
 
 ## Session-Start

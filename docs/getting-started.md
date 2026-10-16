@@ -1,6 +1,6 @@
 # Getting Started
 
-Von null bis „die Hand greift“. Alle Befehle aus dem Wurzelverzeichnis des Repos (`$REPO`, z. B. `~/repos/pib-hand-sim`).
+Von null bis „die Hand greift“. Alle Befehle aus dem Wurzelverzeichnis des Repos (`$REPO`, beliebiger Ort).
 Versionen, mit denen alles entwickelt und geprüft wurde, stehen am Ende.
 
 ## 0 — Voraussetzungen
@@ -16,9 +16,13 @@ Versionen, mit denen alles entwickelt und geprüft wurde, stehen am Ende.
 - Für Weg B und C zusätzlich **Isaac Lab 2.3.2** (unten).
 
 ```bash
-git clone <repo-url> pib-hand-sim && cd pib-hand-sim
+git clone <repo-url> pib-grasp-sim && cd pib-grasp-sim
 export REPO=$(pwd)
 ```
+
+Feste Pfade gibt es nicht: Die Isaac-Sim-Skripte finden das Repo über die geöffnete Stage bzw. ihren eigenen Ort
+(sonst `PIB_GRASP_SIM_ROOT` setzen), die Isaac-Lab-Skripte über `ISAACLAB_PATH` aus der conda-Umgebung
+(Standard `~/IsaacLab`).
 
 ---
 
@@ -84,7 +88,7 @@ Prüfen: `~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py` (Fenster: Mim
 
 ## Weg B — Fertige Greif-Policy ansehen
 
-1. ZIP einer Policy aus dem [Release v0.1](https://github.com/churro206/pib-hand-sim/releases/tag/v0.1-praesentation) laden und
+1. ZIP einer Policy aus dem [Release v0.1](../../../releases/tag/v0.1-praesentation) laden und
    entpacken, z. B. `pib-grasp-exp-036-s42.zip` (CAPS + Stall-Grenze, ruhigste der fünf). Inhalt: `policy.pt`, `policy.onnx`,
    Trainingskonfiguration, Bewertung, README mit dem passenden Befehl.
 2. Im Fenster ansehen (16 Hände, Echtzeit):
@@ -106,7 +110,7 @@ Was die Policy sieht und tut (105 Eingänge, 8 Aktionen, Reihenfolge, Skalen): [
 
 Training und Bewertung laufen über das Experiment-Framework (ADR-016): je Experiment eine Hypothese und **genau eine
 Änderung** gegenüber den Eltern, 5 Seeds, festes Bewertungsprotokoll, automatischer Bericht. Orchestrierung mit System-Python
-bei aktiver conda-Umgebung:
+bei aktiver conda-Umgebung (System-Python braucht einmalig `sudo apt install python3-numpy python3-yaml python3-scipy`):
 ```bash
 conda activate env_isaaclab
 /usr/bin/python3 isaac_lab/experiments.py new --eltern EXP-036 --kurz mein_test --titel "…"   # Ordner + YAML anlegen

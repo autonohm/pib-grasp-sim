@@ -4,9 +4,9 @@ _Wird durch `/handoff` am Session-Ende aktualisiert._
 
 ---
 
-## Stand 2026-10-14 — Übergabe (Ende der Projektarbeit)
+## Stand 2026-10-16 — Übergabe (Ende der Projektarbeit)
 
-Die Projektarbeit endet mit der Präsentation am 2026-10-15; der ursprüngliche Autor arbeitet danach nicht weiter daran.
+Die Projektarbeit endete mit der Präsentation am 2026-10-15; der ursprüngliche Autor arbeitet nicht weiter daran.
 Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assistenten. Allgemeiner Einstieg: `README.md`,
 `docs/getting-started.md`, `docs/weitermachen.md`, `AGENTS.md`.
 
@@ -18,7 +18,12 @@ Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assi
 - **Von oben**: Regel EXP-028 mit gefundener Vorgreifpose (100 %) — RL nicht nötig.
 - **Bewertung**: Protokoll eval-v2, Leaderboard v3 (Wünschbarkeitsindex mit „Servo-Last real“); alle Urteile EXP-000–041
   bestätigt (2026-10-14).
-- **Repo**: `main` = `feature/rl-grasping`; Doku deutsch, Code-Kommentare englisch; alte Branches als Tags `archiv/*`.
+- **Repo**: Name **pib-grasp-sim** (vorher pib-hand-sim), Lizenz **AGPL-3.0** wie die pib-Repos von isento (pib-Geometrie
+  dort GPL-3.0/AGPL-3.0, README → Lizenz); `main` = `feature/rl-grasping`; Doku deutsch, Code-Kommentare englisch; alte
+  Branches als Tags `archiv/*`. Keine festen Pfade: Isaac-Sim-Skripte finden das Repo selbst (`PIB_GRASP_SIM_ROOT`),
+  Isaac Lab über `ISAACLAB_PATH`; HF-Sicherung nur mit `PIB_HF_REPO`.
+- **Policies**: alle 185 Läufe öffentlich auf Hugging Face `churro206/pib-grasp-policies` (Model Card AGPL-3.0), die fünf
+  besten als ZIP im Release `v0.1-praesentation`; Nahansicht-Videos (2x2) für EXP-036, EXP-014, EXP-040.
 
 ### Zuletzt gearbeitet an
 
@@ -33,13 +38,14 @@ Diese Seite ist der Einstieg für alle, die übernehmen — Menschen wie KI-Assi
 - **Ungeprüft im GUI**: `isaac_sim/usd/pib_upperbody_v5.usd` lädt seine Roboter-Layer seit 2026-10-14 über relative Pfade
   (vorher `file:/home/…`). Offline geprüft (alle Layer aufgelöst, 44 Gelenke) — einmal öffnen, `start.py`, Play, Pickup-Demo.
 - Anleitung `docs/getting-started.md` nie auf einem frischen Klon durchgespielt; kein Selbsttest-Skript.
-- Lizenz nur Platzhalter (`LICENSE`); Lizenz der pib-CAD-Daten bei isento offen (`THIRD_PARTY.md`); Nachname in `CITATION.cff`.
-- Zugang: GitHub-Repo (öffentlich, `churro206/pib-hand-sim`) und Hugging-Face-Repo `churro206/pib-grasp-policies` (privat,
-  alle Läufe/Checkpoints) müssen ins Team von isento/Hochschule übertragen werden.
+- **Ungeprüft im GUI**: neue Repo-Suche der Isaac-Sim-Skripte (2026-10-16, außerhalb von Isaac getestet) — beim GUI-Test oben mit.
+- Umzug: GitHub-Repo umbenennen (`pib-grasp-sim`) und an die Schule übertragen; danach Link in der HF-Model-Card
+  (`isaac_lab/backup_policies.py` → `MODEL_CARD`) anpassen. HF-Repo bleibt bei `churro206` oder wird mit übertragen.
+- `--kamera einzeln` (Nahansicht aus zwei Winkeln) nie gelaufen.
 
 ### Nächste Schritte (in Reihenfolge)
 
-1. Zugang übertragen, v5-Stage im GUI prüfen, Anleitung auf frischem Klon durchspielen.
+1. Repo umbenennen/übertragen, v5-Stage im GUI prüfen, Anleitung auf frischem Klon durchspielen.
 2. Inhaltlich (`docs/weitermachen.md`): Policy auf den Nucleo (M2), echte Hand vermessen (M3, `docs/hardware-annahmen.md`),
    Sehne + Feder ins Aktuatormodell, Kippen als Nebenbedingung, EXP-040 mit 10 Seeds.
 

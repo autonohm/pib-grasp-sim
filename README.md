@@ -1,4 +1,4 @@
-# pib Hand Simulation
+# pib-grasp-sim
 
 Digitaler Zwilling des humanoiden Roboters **pib** (Oberkörper v4/v5) in NVIDIA Isaac Sim 5.1 — über ROS 2 steuerbar —
 und **Greifen per Reinforcement Learning** in NVIDIA Isaac Lab 2.3.2 für die reale linke v5-Hand (8 Servos, 5 Kraftsensoren,
@@ -21,7 +21,7 @@ Ziel-Hardware STM32N657 mit NPU). Entstanden als Projektarbeit für RoboCup 2027
 
 1. **[Getting Started](docs/getting-started.md)** — Installation (Isaac Sim, Isaac Lab, ROS 2) und drei Wege:
    - **A — Zwilling mit ROS 2:** Isaac Sim starten, `ros2_control`, Pickup-Demo
-   - **B — Fertige Greif-Policy ansehen:** Policy aus dem [Release v0.1](https://github.com/churro206/pib-hand-sim/releases/tag/v0.1-praesentation) laden, im Fenster greifen lassen (~30 min inkl. Isaac-Lab-Installation)
+   - **B — Fertige Greif-Policy ansehen:** Policy aus dem [Release v0.1](../../releases/tag/v0.1-praesentation) laden, im Fenster greifen lassen (~30 min inkl. Isaac-Lab-Installation)
    - **C — Selbst trainieren und vergleichen:** ein Experiment anlegen, trainieren, bewerten ([experiments/README.md](experiments/README.md))
 2. **[Repo-Karte](docs/repo-karte.md)** — jeder Ordner und jedes Skript in einer Zeile: aktuell, Werkzeug, einmalige Diagnose oder Altlast.
 3. **[Weitermachen](docs/weitermachen.md)** — offene Aufgaben nach Nutzen, je mit Einstiegsdatei.
@@ -56,9 +56,14 @@ enthalten und wurden 2026-10-14 gelöscht.
 
 ## Lizenz
 
-Noch nicht festgelegt — siehe [LICENSE](LICENSE). Fremdbestandteile (pib-CAD von isento, Isaac Lab, `topic_based_ros2_control`,
-YCB) in [THIRD_PARTY.md](THIRD_PARTY.md).
+**AGPL-3.0** ([LICENSE](LICENSE)), wie die pib-Repos von isento. Die pib-Geometrie (Meshes, URDF, USD) ist aus dem öffentlichen
+Onshape-Modell von pib (isento GmbH, [pib.rocks](https://pib.rocks)) abgeleitet, das isento unter GPL-3.0
+([pib-stls](https://github.com/pib-rocks/pib-stls)) bzw. AGPL-3.0 ([digital_twin](https://github.com/pib-rocks/digital_twin))
+veröffentlicht. Fremdcode mit eigener Lizenz: `ros2_ws/src/topic_based_ros2_control/` (BSD, PickNik); Terme in
+`isaac_lab/pib_grasp/` sind an Isaac Labs Dexsuite angelehnt (BSD-3-Clause, NVIDIA). YCB-Objekte und Isaac-Sim-Assets liegen
+nicht im Repo, sie werden zur Laufzeit von NVIDIAs Asset-Server geladen. Trainierte Policies: [Release v0.1](../../releases/tag/v0.1-praesentation)
+und alle Läufe auf Hugging Face [`churro206/pib-grasp-policies`](https://huggingface.co/churro206/pib-grasp-policies).
 
 ## Autor
 
-Leon (Projektarbeit 2026) — Zitieren: [CITATION.cff](CITATION.cff).
+Leon (Projektarbeit 2026).

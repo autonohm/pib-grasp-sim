@@ -22,17 +22,24 @@ from pxr import UsdGeom, UsdLux, UsdPhysics, PhysxSchema, Gf  # type: ignore
 stage = omni.usd.get_context().get_stage()
 
 # ── Config laden ──────────────────────────────────────────────────────────────
-def _find_project_root() -> str:
-    if "PIB_HAND_SIM_ROOT" in os.environ:
-        return os.environ["PIB_HAND_SIM_ROOT"]
-    stage_file = Path(stage.GetRootLayer().realPath)
-    for ancestor in [stage_file.parent, stage_file.parent.parent]:
-        if (ancestor / "config" / "pib_hand_config_v4.py").is_file():
-            return str(ancestor)
-    for candidate in [Path.home() / "repos" / "pib-hand-sim", Path.home() / "pib-hand-sim"]:
-        if (candidate / "config" / "pib_hand_config_v4.py").is_file():
-            return str(candidate)
-    raise FileNotFoundError("pib-hand-sim nicht gefunden. PIB_HAND_SIM_ROOT setzen.")
+def _find_project_root() -> Path:
+    # Repo root without a fixed install path: PIB_GRASP_SIM_ROOT, else upwards from this file, the open stage or the
+    # working directory until config/ is found (__file__ is not defined in the Script Editor's exec context)
+    if os.environ.get("PIB_GRASP_SIM_ROOT"):
+        return Path(os.environ["PIB_GRASP_SIM_ROOT"])
+    starts = [Path.cwd()]
+    try:
+        import omni.usd  # type: ignore
+        starts.insert(0, Path(omni.usd.get_context().get_stage().GetRootLayer().realPath or "."))
+    except Exception:
+        pass
+    if "__file__" in globals():
+        starts.insert(0, Path(__file__))
+    for start in starts:
+        for d in [start.resolve(), *start.resolve().parents]:
+            if (d / "config" / "pib_hand_config_v4.py").is_file():
+                return d
+    raise FileNotFoundError("Repo-Wurzel nicht gefunden — Stage aus dem Repo öffnen oder PIB_GRASP_SIM_ROOT setzen")
 
 _root = _find_project_root()
 _spec = importlib.util.spec_from_file_location("pib_hand_config_v4", f"{_root}/config/pib_hand_config_v4.py")

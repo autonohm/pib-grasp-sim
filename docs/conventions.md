@@ -122,7 +122,7 @@ mit Play/Stop.
 ### Workflow
 ```bash
 deactivate 2>/dev/null; conda activate env_isaaclab
-cd ~/repos/pib-hand-sim
+cd $REPO                                                                  # Wurzel des Klons
 ~/IsaacLab/isaaclab.sh -p isaac_lab/check_hand_asset.py                 # Asset-Prüfung (Fenster)
 ~/IsaacLab/isaaclab.sh -p isaac_lab/scripted_grasp_test.py --num_envs 16 --real_time --thumb_rot 0,45,90
 ~/IsaacLab/isaaclab.sh -p isaac_lab/train.py --task Pib-Grasp-Hand-Left-v0 --headless --num_envs 1024

@@ -10,6 +10,7 @@ index_right is verified = reference wiring), once on v5.
 Writes to isaac_sim/tools/_action_graph_inventory_<stage>.txt (gitignored).
 Run in the Script Editor, play state does not matter.
 """
+import os
 import io
 from pathlib import Path
 
@@ -99,16 +100,23 @@ emit("Fertig.")
 
 
 def _find_project_root() -> Path:
-    # __file__ is not defined in the Script Editor (exec context) — find the root from the
-    # open stage instead, as in setup_stage.py.
-    stage_file = Path(stage.GetRootLayer().realPath)
-    for ancestor in [stage_file.parent, stage_file.parent.parent, stage_file.parent.parent.parent]:
-        if (ancestor / "config" / "pib_hand_config_v4.py").is_file():
-            return ancestor
-    for candidate in [Path.home() / "repos" / "pib-hand-sim", Path.home() / "pib-hand-sim"]:
-        if (candidate / "config" / "pib_hand_config_v4.py").is_file():
-            return candidate
-    raise FileNotFoundError("pib-hand-sim nicht gefunden.")
+    # Repo root without a fixed install path: PIB_GRASP_SIM_ROOT, else upwards from this file, the open stage or the
+    # working directory until config/ is found (__file__ is not defined in the Script Editor's exec context)
+    if os.environ.get("PIB_GRASP_SIM_ROOT"):
+        return Path(os.environ["PIB_GRASP_SIM_ROOT"])
+    starts = [Path.cwd()]
+    try:
+        import omni.usd  # type: ignore
+        starts.insert(0, Path(omni.usd.get_context().get_stage().GetRootLayer().realPath or "."))
+    except Exception:
+        pass
+    if "__file__" in globals():
+        starts.insert(0, Path(__file__))
+    for start in starts:
+        for d in [start.resolve(), *start.resolve().parents]:
+            if (d / "config" / "pib_hand_config_v4.py").is_file():
+                return d
+    raise FileNotFoundError("Repo-Wurzel nicht gefunden — Stage aus dem Repo öffnen oder PIB_GRASP_SIM_ROOT setzen")
 
 
 _out_path = (_find_project_root() / "isaac_sim" / "tools"

@@ -64,10 +64,11 @@ lines = [f"== int8-Quantisierung: {args.onnx}",
          f"{Path(args.onnx).stat().st_size / 1024:.0f} kB, int8 QDQ {q8.stat().st_size / 1024:.0f} kB", ""]
 
 # ST Edge AI: analysis for the STM32N6 with Neural-ART
-st = shutil.which("stedgeai") or str(Path.home() / "ST/STEdgeAI/4.0/4.0/Utilities/linux/stedgeai")
+ST_CORE = Path(os.environ.get("STEDGEAI_CORE_DIR", Path.home() / "ST/STEdgeAI/4.0/4.0"))   # ST installer default
+st = shutil.which("stedgeai") or str(ST_CORE / "Utilities/linux/stedgeai")
 cmd = [st, "analyze", "--model", str(q8.resolve()), "--target", "stm32n6", "--st-neural-art",
        "--input-data-type", "float32", "--output-data-type", "float32"]
-env = dict(os.environ, STEDGEAI_CORE_DIR=str(Path.home() / "ST/STEdgeAI/4.0/4.0"))
+env = dict(os.environ, STEDGEAI_CORE_DIR=str(ST_CORE))
 res = subprocess.run(cmd, cwd=out, capture_output=True, text=True, env=env, timeout=1800)
 (out / "stedgeai_analyze.txt").write_text(res.stdout + "\n" + res.stderr, encoding="utf-8")
 lines.append(f"stedgeai analyze (Rückgabe {res.returncode}) → {out / 'stedgeai_analyze.txt'}")
